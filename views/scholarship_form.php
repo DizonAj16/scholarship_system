@@ -16,12 +16,10 @@ if (!isset($_SESSION["loggedin"]) || $_SESSION["loggedin"] !== true) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Scholarship Application Form - Office of Scholarship Programs - ZPPSU</title>
-
-    <!-- Font Awesome Kit -->
     <script src="../js/fontawesome.js" crossorigin="anonymous"></script>
-
-    <!-- CSS file with cache-busting -->
     <link rel="stylesheet" href="../css/styles.css?v=<?php echo time(); ?>">
+    <link rel="stylesheet" href="../css/preloader.css?v=<?php echo time(); ?>">
+    <script src="../js/preloader.js"></script>
     <style>
         body {
             display: flex;
@@ -129,12 +127,22 @@ if (!isset($_SESSION["loggedin"]) || $_SESSION["loggedin"] !== true) {
 </head>
 
 <body>
+
+    <div class="preloader">
+    <img src="../assets/images/icons/scholarship_seal.png" alt="" style="height: 70px; width: 70px;">
+    <div class="lds-facebook">
+            <div></div>
+            <div></div>
+            <div></div>
+        </div>
+    </div>
+    
     <nav>
         <ul>
             <li>
                 <a href="#" class="logo">
                     <img src="../assets/images/icons/scholarship_seal.png" alt="Scholarship Seal">
-                    <span class="nav-item">OFFICE OF SCHOLARSHIP PROGRAMS</span>
+                    <span class="nav-item">OSP</span>
                 </a>
             </li>
             <li>
@@ -283,12 +291,11 @@ if (!isset($_SESSION["loggedin"]) || $_SESSION["loggedin"] !== true) {
                 <div>
                     <label for="religion">Religion:</label>
                     <select id="religion" name="religion" required>
-                        <option value="Christianity">Christianity</option>
+                        <option value="Roman Catholic">Roman Catholic</option>
                         <option value="Islam">Islam</option>
-                        <option value="Buddhism">Buddhism</option>
-                        <option value="Hinduism">Hinduism</option>
-                        <option value="Judaism">Judaism</option>
-                        <option value="Others">Others</option>
+                        <option value="Iglesia Ni Cristo">Iglesia ni Cristo</option>
+                        <option value="Seventh Day Adventist">Seventh Day Adventist</option>
+                        <option value="Aglipay">Aglipay</option>
                     </select>
                 </div>
             </div>

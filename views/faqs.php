@@ -17,20 +17,29 @@ if (!isset($_SESSION["loggedin"]) || $_SESSION["loggedin"] !== true) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>FAQs - Office of Scholarship Programs - ZPPSU</title>
 
-    <!-- Font Awesome Kit -->
     <script src="../js/fontawesome.js" crossorigin="anonymous"></script>
-
-    <!-- CSS file with cache-busting -->
     <link rel="stylesheet" href="../css/styles.css?v=<?php echo time(); ?>">
+    <link rel="stylesheet" href="../css/preloader.css?v=<?php echo time(); ?>">
+    <script src="../js/preloader.js"></script>
 </head>
 
 <body>
+
+    <div class="preloader">
+    <img src="../assets/images/icons/scholarship_seal.png" alt="" style="height: 70px; width: 70px;">
+    <div class="lds-facebook">
+            <div></div>
+            <div></div>
+            <div></div>
+        </div>
+    </div>
+
     <nav>
         <ul>
             <li>
                 <a href="#" class="logo">
                     <img src="../assets/images/icons/scholarship_seal.png" alt="Scholarship Seal">
-                    <span class="nav-item">OFFICE OF SCHOLARSHIP PROGRAMS</span>
+                    <span class="nav-item">OSP</span>
                 </a>
             </li>
             <li>
@@ -74,12 +83,12 @@ if (!isset($_SESSION["loggedin"]) || $_SESSION["loggedin"] !== true) {
 
     <div class="content">
         <h1>Frequently Asked Questions (FAQs)</h1>
-        
+
         <div class="faq-item">
             <h2>1. What types of scholarships are available?</h2>
             <p>We offer a variety of scholarships based on academic merit, financial need, and specific criteria such as field of study, community service, and more.</p>
         </div>
-        
+
         <div class="faq-item">
             <h2>2. How do I apply for a scholarship?</h2>
             <p>To apply for a scholarship, you must fill out our scholarship application form available on our website. Ensure that you provide all necessary documents and information.</p>

@@ -1,0 +1,546 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: "Poppins", sans-serif;
+}
+
+body {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  background: url(../assets/images/icons/tempbackground.jpg);
+  background-size: cover;
+}
+
+.box {
+  position: relative;
+  width: 380px;
+  height: 420px;
+  background: #5c1b1b;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.box::before {
+  content: "";
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 380px;
+  height: 420px;
+  background: linear-gradient(
+    0deg,
+    transparent,
+    transparent,
+    #ffd700,
+    #ffd700,
+    #ffd700
+  );
+  z-index: 1;
+  transform-origin: bottom right;
+  animation: animate 4s linear infinite;
+}
+
+.box::after {
+  content: "";
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 380px;
+  height: 420px;
+  background: linear-gradient(
+    0deg,
+    transparent,
+    transparent,
+    #ffd700,
+    #ffd700,
+    #ffd700
+  );
+  z-index: 1;
+  transform-origin: bottom right;
+  animation: animate 4s linear infinite;
+  animation-delay: -2s;
+}
+
+.borderLine {
+  position: absolute;
+  top: 0;
+  inset: 0;
+}
+
+.borderLine::before {
+  content: "";
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 380px;
+  height: 420px;
+  background: linear-gradient(
+    0deg,
+    transparent,
+    transparent,
+    #b22222,
+    #b22222,
+    #b22222
+  );
+  z-index: 1;
+  transform-origin: bottom right;
+  animation: animate 4s linear infinite;
+  animation-delay: -1s;
+}
+
+.borderLine::after {
+  content: "";
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 380px;
+  height: 420px;
+  background: linear-gradient(
+    0deg,
+    transparent,
+    transparent,
+    #b22222,
+    #b22222,
+    #b22222
+  );
+  z-index: 1;
+  transform-origin: bottom right;
+  animation: animate 4s linear infinite;
+  animation-delay: -3.5s;
+}
+
+@keyframes animate {
+  0% {
+    transform: rotate(0deg);
+  }
+
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+.box form {
+  position: absolute;
+  inset: 4px;
+  background: #2c2c2c;
+  padding: 50px 40px;
+  border-radius: 8px;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+}
+
+.box form h2 {
+  color: #fff;
+  font-weight: 500;
+  text-align: center;
+  letter-spacing: 0.1em;
+}
+
+.box form .inputBox {
+  position: relative;
+  width: 300px;
+  margin-top: 35px;
+}
+
+.box form .inputBox input {
+  position: relative;
+  width: 100%;
+  padding: 20px 10px 10px;
+  background: transparent;
+  outline: none;
+  border: none;
+  box-shadow: none;
+  font-size: 1em;
+  letter-spacing: 0.05em;
+  transition: 0.5s ease;
+  z-index: 10;
+}
+
+.box form .inputBox span {
+  position: absolute;
+  left: 0;
+  padding: 20px 0px 10px;
+  pointer-events: none;
+  color: #fff;
+  font-size: 1em;
+  letter-spacing: 0.05em;
+  transition: 0.3s ease;
+}
+
+.box form .inputBox input:focus ~ span,
+.box form .inputBox input:valid ~ span {
+  color: #fff;
+  /* Gold */
+  font-size: 0.75em;
+  transform: translateY(-34px);
+  transition: 0.3s ease;
+}
+
+.box form .inputBox i {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 100%;
+  height: 2px;
+  background: #fff;
+  border-radius: 4px;
+  overflow: hidden;
+  transform: 0.5s;
+  pointer-events: none;
+  transition: height 0.5s ease;
+}
+
+.box form .inputBox input:focus ~ i,
+.box form .inputBox input:valid ~ i {
+  height: 44px;
+  transition: height 0.5s ease;
+}
+
+.box form .links {
+  display: flex;
+  justify-content: space-between;
+}
+
+.box form .links a {
+  margin: 10px 0;
+  font-size: 0.75em;
+  color: #ffdf70;
+  text-decoration: none;
+}
+
+.box form .links a:hover {
+  color: #ffd900ad;
+}
+.box form input[type="submit"]:hover {
+  background: #e6be00;
+}
+
+.box form input[type="submit"]:active {
+  opacity: 0.8;
+}
+/*
+.btn-submit {
+    border: none;
+    outline: none;
+    background: #ffd700;
+    color: #fff;
+    cursor: pointer;
+    border-radius: 4px;
+    margin-top: 10px;
+    width: 80px;
+    padding: 9px 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-weight: 600;
+    transition: background 0.3s, transform 0.3s, box-shadow 0.3s; 
+}
+*/
+
+.btn-submit {
+  width: 80px;
+  border: none;
+  outline: none;
+  color: #fff;
+  background: #111;
+  cursor: pointer;
+  position: relative;
+  z-index: 0;
+  border-radius: 10px;
+  margin-top: 10px;
+  padding: 9px 0;
+  font-weight: 600;
+}
+.btn-submit::before {
+  content: "";
+  background: linear-gradient(
+    45deg,
+    #ff0000,
+    #ff7300,
+    #fffb00,
+    #48ff00,
+    #00ffd5,
+    #002bff,
+    #7a00ff,
+    #ff00c8,
+    #ff0000
+  );
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  background-size: 400%;
+  z-index: -1;
+  filter: blur(5px);
+  width: calc(100% + 4px);
+  height: calc(100% + 4px);
+  animation: glowing 20s linear infinite;
+  opacity: 0;
+  transition: opacity 0.3s ease-in-out;
+  border-radius: 10px;
+}
+.btn-submit:active {
+  color: #ffffff;
+}
+.btn-submit:active:after {
+  background: transparent;
+}
+.btn-submit:hover::before {
+  opacity: 1;
+}
+.btn-submit::after {
+  z-index: -1;
+  content: "";
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background: #111;
+  left: 0;
+  top: 0;
+  border-radius: 10px;
+}
+@keyframes glowing {
+  0% {
+    background-position: 0 0;
+  }
+  50% {
+    background-position: 400% 0;
+  }
+  100% {
+    background-position: 0 0;
+  }
+}
+.btn-submit i {
+  margin-left: 5px;
+  font-size: 12px;
+  z-index: 2;
+}
+.btn-submit:hover {
+  color: #fff;
+}
+
+.error-message {
+  display: none;
+  padding: 10px;
+  color: #fc0f0f;
+  transition: opacity 0.5s ease;
+  font-size: 15px;
+  border: none;
+}
+
+.error-message.show {
+  display: block;
+  opacity: 1;
+}
+p {
+  color: white;
+}
+.box2 {
+  position: relative;
+  width: 380px;
+  height: 450px;
+  background: #5c1b1b;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.box2::before {
+  content: "";
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 380px;
+  height: 450px;
+  background: linear-gradient(
+    0deg,
+    transparent,
+    transparent,
+    #ffd700,
+    #ffd700,
+    #ffd700
+  );
+  z-index: 1;
+  transform-origin: bottom right;
+  animation: animate 4s linear infinite;
+}
+
+.box2::after {
+  content: "";
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 380px;
+  height: 450px;
+  background: linear-gradient(
+    0deg,
+    transparent,
+    transparent,
+    #ffd700,
+    #ffd700,
+    #ffd700
+  );
+  z-index: 1;
+  transform-origin: bottom right;
+  animation: animate 4s linear infinite;
+  animation-delay: -2s;
+}
+
+.borderLine2 {
+  position: absolute;
+  top: 0;
+  inset: 0;
+}
+
+.borderLine2::before {
+  content: "";
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 380px;
+  height: 450px;
+  background: linear-gradient(
+    0deg,
+    transparent,
+    transparent,
+    #b22222,
+    #b22222,
+    #b22222
+  );
+  z-index: 1;
+  transform-origin: bottom right;
+  animation: animate 4s linear infinite;
+  animation-delay: -1s;
+}
+
+.borderLine2::after {
+  content: "";
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 380px;
+  height: 450px;
+  background: linear-gradient(
+    0deg,
+    transparent,
+    transparent,
+    #b22222,
+    #b22222,
+    #b22222
+  );
+  z-index: 1;
+  transform-origin: bottom right;
+  animation: animate 4s linear infinite;
+  animation-delay: -3.5s;
+}
+
+
+.box2 form {
+  position: absolute;
+  inset: 4px;
+  background: #2c2c2c;
+  padding: 40px 40px;
+  border-radius: 8px;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+}
+
+.box2 form h2 {
+  color: #fff;
+  font-weight: 500;
+  text-align: center;
+  letter-spacing: 0.1em;
+}
+
+.box2 form .inputBox {
+  position: relative;
+  width: 300px;
+  margin-top: 35px;
+}
+
+.box2 form .inputBox input {
+  position: relative;
+  width: 100%;
+  padding: 20px 10px 10px;
+  background: transparent;
+  outline: none;
+  border: none;
+  box-shadow: none;
+  font-size: 1em;
+  letter-spacing: 0.05em;
+  transition: 0.5s ease;
+  z-index: 10;
+}
+
+.box2 form .inputBox span {
+  position: absolute;
+  left: 0;
+  padding: 20px 0px 10px;
+  pointer-events: none;
+  color: #fff;
+  font-size: 1em;
+  letter-spacing: 0.05em;
+  transition: 0.3s ease;
+}
+
+.box2 form .inputBox input:focus ~ span,
+.box2 form .inputBox input:valid ~ span {
+  color: #fff;
+  /* Gold */
+  font-size: 0.75em;
+  transform: translateY(-34px);
+  transition: 0.3s ease;
+}
+
+.box2 form .inputBox i {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 100%;
+  height: 2px;
+  background: #fff;
+  border-radius: 4px;
+  overflow: hidden;
+  transform: 0.5s;
+  pointer-events: none;
+  transition: height 0.5s ease;
+}
+
+.box2 form .inputBox input:focus ~ i,
+.box2 form .inputBox input:valid ~ i {
+  height: 44px;
+  transition: height 0.5s ease;
+}
+
+.box2 form .links {
+  display: flex;
+  justify-content: space-between;
+}
+
+.box2 form .links a {
+  margin: 10px 0;
+  font-size: 0.75em;
+  color: #ffdf70;
+  text-decoration: none;
+}
+
+.box2 form .links a:hover {
+  color: #ffd900ad;
+}
+.box2 form input[type="submit"]:hover {
+  background: #e6be00;
+}
+
+.box2 form input[type="submit"]:active {
+  opacity: 0.8;
+}
+.box2 form p a{
+  color: #ffdf70;
+  text-decoration: none;
+}
+.box2 form p a:hover{
+  color: #ffd900ad;
+}
