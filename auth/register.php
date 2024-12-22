@@ -16,21 +16,18 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $username_err = "Username can only contain letters, numbers, and underscores.";
     } else {
         // Prepare a select statement
-        $sql = "SELECT id FROM users WHERE username = ?";
+        $sql = "SELECT id FROM users WHERE username = :username";
 
-        if ($stmt = $mysqli->prepare($sql)) {
+        if ($stmt = $pdo->prepare($sql)) {
             // Bind variables to the prepared statement as parameters
-            $stmt->bind_param("s", $param_username);
+            $stmt->bindParam(":username", $param_username, PDO::PARAM_STR);
 
             // Set parameters
             $param_username = trim($_POST["username"]);
 
             // Attempt to execute the prepared statement
             if ($stmt->execute()) {
-                // store result
-                $stmt->store_result();
-
-                if ($stmt->num_rows == 1) {
+                if ($stmt->rowCount() == 1) {
                     $username_err = "This username is already taken.";
                 } else {
                     $username = trim($_POST["username"]);
@@ -40,7 +37,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             }
 
             // Close statement
-            $stmt->close();
+            unset($stmt);
         }
     }
 
@@ -66,12 +63,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     // Check input errors before inserting in database
     if (empty($username_err) && empty($password_err) && empty($confirm_password_err)) {
 
-        // Prepare an insert statement with the default role 'student'
-        $sql = "INSERT INTO users (username, password, role) VALUES (?, ?, ?)";
+        // Prepare an insert statement
+        $sql = "INSERT INTO users (username, password, role) VALUES (:username, :password, :role)";
 
-        if ($stmt = $mysqli->prepare($sql)) {
+        if ($stmt = $pdo->prepare($sql)) {
             // Bind variables to the prepared statement as parameters
-            $stmt->bind_param("sss", $param_username, $param_password, $param_role);
+            $stmt->bindParam(":username", $param_username, PDO::PARAM_STR);
+            $stmt->bindParam(":password", $param_password, PDO::PARAM_STR);
+            $stmt->bindParam(":role", $param_role, PDO::PARAM_STR);
 
             // Set parameters
             $param_username = $username;
@@ -80,9 +79,17 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
             // Attempt to execute the prepared statement
             if ($stmt->execute()) {
+
+                $id = $pdo->lastInsertId();
+
+
+                $action = "Account created";
+                $details = "User '$username' account created.";
+                logActivity($pdo, $id, $action, $details);
+
                 // Show a JavaScript alert for successful registration
                 echo "<script>
-                        alert('Account successfully created');
+                        alert('Account successfully created, Proceed to log in');
                         window.location.href = './login.php';
                       </script>";
                 exit();
@@ -91,12 +98,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             }
 
             // Close statement
-            $stmt->close();
+            unset($stmt);
         }
     }
 
     // Close connection
-    $mysqli->close();
+    unset($pdo);
 }
 ?>
 
@@ -127,13 +134,15 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 ?>
             </div>
             <div class="inputBox">
-                <input type="text" name="username" <?php echo (!empty($username_err)) ? 'is-invalid' : ''; ?>" value="<?php echo $username; ?>" required>
+                <input type="text" name="username" <?php echo (!empty($username_err)) ? 'is-invalid' : ''; ?>"
+                    value="<?php echo $username; ?>" required>
                 <span>Username</span>
                 <i></i>
                 <span><?php echo $username_err; ?></span>
             </div>
             <div class="inputBox">
-                <input type="password" name="password" <?php echo (!empty($password_err)) ? 'is-invalid' : ''; ?>" value="<?php echo $password; ?>" required>
+                <input type="password" name="password" <?php echo (!empty($password_err)) ? 'is-invalid' : ''; ?>"
+                    value="<?php echo $password; ?>" required>
                 <span>Password</span>
                 <i></i>
                 <span><?php echo $password_err; ?></span>
@@ -154,7 +163,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     <i class="fas fa-arrow-right"></i>
                 </button>
             </div>
-            <p style="font-size: 12px; margin-top:10px;">Already have an account? <a href="./login.php">Login here</a>.</p>
+            <p style="font-size: 12px; margin-top:10px;">Already have an account? <a href="./login.php">Login here</a>.
+            </p>
         </form>
     </div>
 </body>

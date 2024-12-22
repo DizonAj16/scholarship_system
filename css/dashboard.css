@@ -1,0 +1,70 @@
+.username {
+    margin-left: 8px;
+    font-weight: bold;
+    font-size: 18px;
+}
+
+.content {
+    margin-top: 20px;
+    padding: 20px;
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.content h1,
+.content h2 {
+    color: #8B0000;
+}
+
+.card-container {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 20px;
+    flex-wrap: wrap;
+    justify-content: start; /* Centers cards on smaller screens */
+}
+
+.card {
+    background-color: #fff;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    width: calc(33.333% - 20px); /* Dynamic width for 3 cards per row, accounting for gap */
+    min-width: 250px; /* Ensures the card doesn't shrink too much */
+    max-width: 100%; /* Allows full width on small screens */
+    padding: 20px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease;
+}
+
+
+.card:hover {
+    transform: scale(1.05);
+}
+
+.card i {
+    font-size: 30px;
+    color: #dbba00;
+    margin-bottom: 10px;
+}
+
+.card h3 {
+    font-size: 18px;
+    color: #8B0000;
+}
+
+.card p {
+    font-size: 14px;
+    color: #555;
+}
+
+.logout a {
+    color: #f44336;
+}
+.card .card-value {
+    font-size: 35px;
+    font-weight: bold;
+    color: #4CAF50;
+    text-align: end;
+}

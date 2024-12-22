@@ -17,7 +17,7 @@ body {
 .box {
   position: relative;
   width: 380px;
-  height: 420px;
+  height: 450px;
   background: #5c1b1b;
   border-radius: 8px;
   overflow: hidden;
@@ -29,7 +29,7 @@ body {
   top: -50%;
   left: -50%;
   width: 380px;
-  height: 420px;
+  height: 450px;
   background: linear-gradient(
     0deg,
     transparent,
@@ -49,7 +49,7 @@ body {
   top: -50%;
   left: -50%;
   width: 380px;
-  height: 420px;
+  height: 450px;
   background: linear-gradient(
     0deg,
     transparent,
@@ -76,7 +76,7 @@ body {
   top: -50%;
   left: -50%;
   width: 380px;
-  height: 420px;
+  height: 450px;
   background: linear-gradient(
     0deg,
     transparent,
@@ -97,7 +97,7 @@ body {
   top: -50%;
   left: -50%;
   width: 380px;
-  height: 420px;
+  height: 450px;
   background: linear-gradient(
     0deg,
     transparent,
@@ -543,4 +543,10 @@ p {
 }
 .box2 form p a:hover{
   color: #ffd900ad;
+}
+.login-icon {
+  height: 100px;
+  width: 100px;
+  margin: auto;
+  position: relative;
 }

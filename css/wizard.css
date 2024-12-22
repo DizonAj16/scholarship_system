@@ -1,0 +1,48 @@
+.wizard-flow-chart {
+    border-top: #8B0000 3px solid;
+    display: flex;
+    justify-content: space-between;
+    margin: 45px 0px;
+}
+
+.wizard-flow-chart span {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 50%;
+    border: #8b0000a9 3px solid;
+    margin-top: -20px;
+    z-index: 100;
+    background: #f69125;
+    color: white;
+    font-weight: bold;
+}
+
+.button-row {
+    text-align: right;
+}
+.buttonNav{
+    width: 100px;
+    height: 30px;
+    border-radius: 5px;
+    background-color: #ffc72c;
+    font-weight: bold;
+}
+.buttonNav:hover{
+    background-color: #ffc72cba;
+}
+.submitBtn{
+    background-color: green;
+    color: white;
+    width: 100px;
+    height: 30px;
+    font-weight: bold;
+    border-radius: 5px;
+}
+.submitBtn:hover{
+    background-color: rgba(0, 128, 0, 0.637);
+
+}
+
+.wizard-flow-chart span.fill {
+    background: #8b0000;
+}
