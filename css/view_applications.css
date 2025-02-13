@@ -1,0 +1,157 @@
+
+
+/* Main Container */
+.container {
+    width: 80%;
+    max-width: 1000px;
+    margin: 30px auto;
+    background-color: #ffffff;
+    padding: 20px 30px;
+    border-radius: 10px;
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.15);
+    border-left: 8px solid #8B0000;
+}
+
+/* Page Heading */
+h1 {
+    text-align: center;
+    color: #8B0000;
+    font-size: 2.8em;
+    font-weight: bold;
+    text-transform: uppercase;
+    margin-bottom: 30px;
+}
+
+h2 {
+    color: #8B0000;
+    font-size: 1.8em;
+    margin-bottom: 20px;
+    border-bottom: 2px solid #f0ad4e;
+    padding-bottom: 5px;
+    text-transform: capitalize;
+}
+
+/* Section Styling */
+.section {
+    margin-bottom: 20px;
+    padding: 15px 20px;
+    border: 1px solid #f0f0f0;
+    background-color: #fafafa;
+    border-radius: 8px;
+    transition: transform 0.2s ease, box-shadow 0.3s ease;
+}
+
+.section:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* Details Styling */
+.details {
+    padding-left: 15px;
+}
+
+.details p {
+    font-size: 1.2em;
+    line-height: 1.8;
+    display: flex;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.details p strong {
+    color: #8B0000;
+    margin-right: 10px;
+    font-weight: bold;
+}
+
+.details i {
+    color: #f0ad4e;
+    margin-right: 10px;
+}
+
+/* Personal Info Styling */
+.submitted-info {
+    padding: 15px 20px;
+    background-color: #fdf6f0;
+    border-left: 5px solid #f0ad4e;
+    border-radius: 8px;
+    font-style: italic;
+    color: #444;
+    margin-bottom: 20px;
+}
+
+/* Back Button */
+.btn-back {
+    display: inline-block;
+    text-decoration: none;
+    background-color: #8B0000;
+    color: #fff;
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-size: 1.1em;
+    font-weight: bold;
+    text-align: center;
+    transition: background 0.3s ease, transform 0.2s ease;
+    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1);
+}
+
+.btn-back:hover {
+    background-color: #7A0000;
+    transform: scale(1.05);
+}
+
+/* Responsive Design */
+@media screen and (max-width: 768px) {
+    .container {
+        width: 95%;
+    }
+
+    h1 {
+        font-size: 2.4em;
+    }
+
+    h2 {
+        font-size: 1.6em;
+    }
+
+    .details p {
+        font-size: 1em;
+    }
+
+    .btn-back {
+        width: 100%;
+        padding: 10px;
+    }
+}
+
+/* Print View */
+@media print {
+    body {
+        font-size: 12px;
+        line-height: 1.4;
+        margin: 0;
+        padding: 1cm;
+        width: 21cm;
+        height: 29.7cm;
+    }
+
+    .container {
+        border: none;
+        padding: 0;
+        box-shadow: none;
+    }
+
+    h1, h2 {
+        text-align: center;
+        margin-bottom: 10px;
+    }
+
+    .btn-back, .preloader {
+        display: none;
+    }
+
+    .details p {
+        font-size: 1em;
+    }
+}

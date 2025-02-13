@@ -1,36 +1,29 @@
 /* HTML: <div class="loader"></div> */
 .loader {
-  width: 100px;
-  aspect-ratio: 1;
-  border: 15px solid #ddd;
-  border-radius: 50%;
-  position: relative;
-  transform: rotate(45deg);
+  width: fit-content;
+  font-size: 100px; /* Larger text for visibility */
+  font-family: monospace;
+  font-weight: bold;
+  text-transform: uppercase;
+  color: transparent; /* Transparent for gradient effect */
+  -webkit-text-stroke: 1px #8B0000; /* Maroon stroke for outline */
+  --g: conic-gradient(#FFD700 0 100%) no-repeat text; /* Maroon and Gold gradient */
+  background: var(--g) 0, var(--g) 1ch, var(--g) 2ch, var(--g) 3ch, var(--g) 4ch, var(--g) 5ch, var(--g) 6ch;
+  background-position-y: 100%;
+  animation: l15 5s infinite;
 }
-.loader::before {
-  content: "";
-  position: absolute;
-  inset: -15px;
-  border-radius: 50%;
-  border: 15px solid #bda100;
-  animation: l18 2s infinite linear;
+.loader:before {
+  content: "OSP";
 }
-@keyframes l18 {
-  0% {
-    clip-path: polygon(50% 50%, 0 0, 0 0, 0 0, 0 0, 0 0);
-  }
-  25% {
-    clip-path: polygon(50% 50%, 0 0, 100% 0, 100% 0, 100% 0, 100% 0);
-  }
-  50% {
-    clip-path: polygon(50% 50%, 0 0, 100% 0, 100% 100%, 100% 100%, 100% 100%);
-  }
-  75% {
-    clip-path: polygon(50% 50%, 0 0, 100% 0, 100% 100%, 0 100%, 0 100%);
-  }
-  100% {
-    clip-path: polygon(50% 50%, 0 0, 100% 0, 100% 100%, 0 100%, 0 0);
-  }
+@keyframes l15 {
+  0%     {background-size: 1ch 0   ,1ch 0   ,1ch 0   ,1ch 0   ,1ch 0   ,1ch 0   ,1ch 0   }
+  14.28% {background-size: 1ch 100%,1ch 0   ,1ch 0   ,1ch 0   ,1ch 0   ,1ch 0   ,1ch 0   }
+  28.57% {background-size: 1ch 100%,1ch 100%,1ch 0   ,1ch 0   ,1ch 0   ,1ch 0   ,1ch 0   }
+  42.85% {background-size: 1ch 100%,1ch 100%,1ch 100%,1ch 0   ,1ch 0   ,1ch 0   ,1ch 0   }
+  57.14% {background-size: 1ch 100%,1ch 100%,1ch 100%,1ch 100%,1ch 0   ,1ch 0   ,1ch 0   }
+  71.43% {background-size: 1ch 100%,1ch 100%,1ch 100%,1ch 100%,1ch 100%,1ch 0   ,1ch 0   }
+  85.71% {background-size: 1ch 100%,1ch 100%,1ch 100%,1ch 100%,1ch 100%,1ch 100%,1ch 0   }
+  100%   {background-size: 1ch 100%,1ch 100%,1ch 100%,1ch 100%,1ch 100%,1ch 100%,1ch 100%}
 }
 
 /* Add styles for preloader */

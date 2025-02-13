@@ -2,9 +2,13 @@
 // Initialize the session
 session_start();
 
-// Check if the user is already logged in; if so, redirect to the home
+// Check if the user is already logged in; if so, redirect to the appropriate page
 if (isset($_SESSION["loggedin"]) && $_SESSION["loggedin"] === true) {
-    header("location: ../views/home.php");
+    if ($_SESSION["role"] === "admin") {
+        header("location: ../views/dashboard.php");
+    } else {
+        header("location: ../views/home.php");
+    }
     exit;
 }
 
@@ -35,58 +39,66 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     // Validate credentials
     if (empty($username_err) && empty($password_err)) {
         // Prepare a select statement
-        $sql = "SELECT id, username, password FROM users WHERE username = ?";
+        $sql = "SELECT id, username, password, role FROM users WHERE username = :username";
 
-        if ($stmt = $mysqli->prepare($sql)) {
+        if ($stmt = $pdo->prepare($sql)) {
             // Bind variables to the prepared statement as parameters
-            $stmt->bind_param("s", $param_username);
-
-            // Set parameters
-            $param_username = $username;
+            $stmt->bindParam(":username", $username, PDO::PARAM_STR);
 
             // Attempt to execute the prepared statement
             if ($stmt->execute()) {
-                // Store result
-                $stmt->store_result();
-
                 // Check if username exists; if yes, verify password
-                if ($stmt->num_rows == 1) {
-                    // Bind result variables
-                    $stmt->bind_result($id, $username, $hashed_password);
-                    if ($stmt->fetch()) {
-                        if (password_verify($password, $hashed_password)) {
-                            // Password is correct; start a new session
-                            session_start();
+                if ($stmt->rowCount() == 1) {
+                    // Fetch result
+                    $row = $stmt->fetch(PDO::FETCH_ASSOC);
+                    $id = $row["id"];
+                    $username = $row["username"];
+                    $hashed_password = $row["password"];
+                    $role = $row["role"]; // Fetch the user's role
 
-                            // Store data in session variables
-                            $_SESSION["loggedin"] = true;
-                            $_SESSION["id"] = $id;
-                            $_SESSION["username"] = $username;
+                    if (password_verify($password, $hashed_password)) {
+                        // Password is correct; start a new session
+                        $_SESSION["loggedin"] = true;
+                        $_SESSION["id"] = $id;
+                        $_SESSION["username"] = $username;
+                        $_SESSION["role"] = $role; // Store role in session
 
-                            // Redirect user to the home
-                            header("location: ../views/home.php");
+                        // Log the successful login
+                        $action = "User logged in";
+                        $details = "User '$username' logged in successfully.";
+                        logActivity($pdo, $id, $action, $details);
+
+                        // Redirect user based on role
+                        if ($role === "admin") {
+                            header("location: ../views/dashboard.php");
                         } else {
-                            // Invalid password
-                            $login_err = "Invalid username or password.";
+                            header("location: ../views/home.php");
                         }
+                        exit;
+                    } else {
+                        $login_err = "Invalid username or password.";
+                        // Log the failed login attempt
+                        $action = "Failed login attempt";
+                        $details = "Invalid password for user '$username'.";
+                        logActivity($pdo, $id, $action, $details);
                     }
                 } else {
                     // Username doesn't exist
                     $login_err = "Invalid username or password.";
+                    // Log the failed login attempt
+                    $action = "Failed login attempt";
+                    $details = "Username '$username' not found.";
+                    logActivity($pdo, null, $action, $details);
                 }
             } else {
                 echo "Oops! Something went wrong. Please try again later.";
             }
-
-            // Close statement
-            $stmt->close();
         }
     }
-
-    // Close connection
-    $mysqli->close();
 }
 ?>
+
+
 
 <!DOCTYPE html>
 <html lang="en">
@@ -112,13 +124,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 </head>
 
 <body>
-    
+
     <div class="loader"></div>
 
     <div class="box">
         <span class="borderLine"></span>
         <form action="<?php echo htmlspecialchars($_SERVER["PHP_SELF"]); ?>" method="post">
-            <h2>Scholarship System - Sign In</h2>
+            <img src="../assets/images/icons/scholarship_seal.png" alt="" class="login-icon">
 
             <!-- Error message box -->
             <div class="error-message" id="errorMessage">
@@ -130,13 +142,15 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             </div>
 
             <div class="inputBox">
-                <input type="text" name="username" <?php echo (!empty($username_err)) ? 'is-invalid' : ''; ?>" value="<?php echo $username; ?>" required>
+                <input type="text" name="username" <?php echo (!empty($username_err)) ? 'is-invalid' : ''; ?>"
+                    value="<?php echo $username; ?>" required>
                 <span>Username</span>
                 <i></i>
                 <span><?php echo $username_err; ?></span>
             </div>
             <div class="inputBox">
-                <input type="password" name="password" <?php echo (!empty($password_err)) ? 'is-invalid' : ''; ?>" required>
+                <input type="password" name="password" <?php echo (!empty($password_err)) ? 'is-invalid' : ''; ?>"
+                    required>
                 <span>Password</span>
                 <i></i>
                 <span><?php echo $password_err; ?></span>
