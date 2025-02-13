@@ -76,8 +76,12 @@ $rejected_applications = $stmt_rejected->fetch(PDO::FETCH_ASSOC)['rejected_appli
                 <li><a href="./faqs.php"><i class="fas fa-solid fa-circle-question"></i><span
                             class="nav-item-2">FAQs</span></a></li>
                 <li><a href="./logs.php"><i class="fas fa-clipboard-list"></i>
+<<<<<<< HEAD
                 <span
                             class="nav-item-2">Logs</span></a></li>
+=======
+                        <span class="nav-item-2">Logs</span></a></li>
+>>>>>>> 5fe40da477c39321fb291661c5bfa63abd4656db
             <?php elseif ($_SESSION["role"] === 'student'): ?>
                 <li><a href="./my_applications.php"><i class="fas fa-solid fa-folder-open"></i><span class="nav-item-2">My
                             Applications</span></a></li>
@@ -104,6 +108,7 @@ $rejected_applications = $stmt_rejected->fetch(PDO::FETCH_ASSOC)['rejected_appli
 
         <!-- Dashboard Cards -->
         <div class="card-container">
+<<<<<<< HEAD
             <div class="card">
                 <i class="fas fa-users"></i>
                 <h3>Total Applicants</h3>
@@ -124,6 +129,35 @@ $rejected_applications = $stmt_rejected->fetch(PDO::FETCH_ASSOC)['rejected_appli
                 <h3>Rejected Applications</h3>
                 <p class="card-value"><?php echo $rejected_applications; ?></p>
             </div>
+=======
+            <!-- Total Applicants -->
+            <a href="./applications.php" class="card">
+                <i class="fas fa-users"></i>
+                <h3>Total Applicants</h3>
+                <p class="card-value"><?php echo $total_applicants; ?></p>
+            </a>
+
+            <!-- Approved Applications -->
+            <a href="../dashboard-links/approved.php" class="card">
+                <i class="fas fa-check-circle"></i>
+                <h3>Approved Applications</h3>
+                <p class="card-value"><?php echo $approved_applications; ?></p>
+            </a>
+
+            <!-- Pending Applications -->
+            <a href="../dashboard-links/pending.php" class="card">
+                <i class="fas fa-hourglass-half"></i>
+                <h3>Pending Applications</h3>
+                <p class="card-value"><?php echo $pending_applications; ?></p>
+            </a>
+
+            <!-- Rejected Applications -->
+            <a href="../dashboard-links/rejected.php" class="card">
+                <i class="fas fa-times-circle"></i>
+                <h3>Rejected Applications</h3>
+                <p class="card-value"><?php echo $rejected_applications; ?></p>
+            </a>
+>>>>>>> 5fe40da477c39321fb291661c5bfa63abd4656db
             <div class="card">
                 <i class="fas fa-calendar-alt"></i>
                 <h3>Upcoming Events</h3>

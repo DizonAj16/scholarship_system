@@ -165,9 +165,15 @@ include '../includes/session.php'
         <p>If you have any questions or need assistance, please reach out to us at:</p>
         <p>Email: scholarships@zppsu.edu</p>
         <p>Phone: (123) 456-7890</p>
+        <p>&copy; <?= date('Y') ?> Scholarship System</p>
     </div>
 
 
+<<<<<<< HEAD
+=======
+
+
+>>>>>>> 5fe40da477c39321fb291661c5bfa63abd4656db
     <script>
         function toggleNav() {
             const sideNav = document.getElementById('sideNav');

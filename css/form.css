@@ -64,7 +64,11 @@ textarea{
     background-color: white;
     border: 2px solid black;
     border-radius: 5px;
+<<<<<<< HEAD
     width: 300px;
+=======
+    width: 700px;
+>>>>>>> 5fe40da477c39321fb291661c5bfa63abd4656db
     height: 500px;
 }
 .form-container h4{

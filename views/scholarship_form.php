@@ -343,7 +343,14 @@ if (isset($_SESSION['error_message'])) {
 
                     <div class="form-row">
                         <label class="label-width">School Year</label>
+<<<<<<< HEAD
                         <input name="sy" type="text" required>
+=======
+                        <select name="sy" required>
+                            <option value="" disabled selected>Select year</option>
+                            <option value="2024-2025">2024-2025</option>
+                        </select>
+>>>>>>> 5fe40da477c39321fb291661c5bfa63abd4656db
                     </div>
                     <div class="form-row">
                         <label class="float-left label-width">Full Name</label>
@@ -381,7 +388,11 @@ if (isset($_SESSION['error_message'])) {
                                 </option>
                                 <option value="BS RACT">BS RACT - BACHELOR OF SCIENCE IN REFRIGERATION AND AIR
                                     CONDITIONING TECHNOLOGY</option>
+<<<<<<< HEAD
                                 <option value="BS ELEXT">BS ELEX - BACHELOR OF SCIENCE IN ELECTRONICS TECHNOLOGY
+=======
+                                <option value="BS ELEXT">BS ELEXT - BACHELOR OF SCIENCE IN ELECTRONICS TECHNOLOGY
+>>>>>>> 5fe40da477c39321fb291661c5bfa63abd4656db
                                 </option>
                                 <option value="BS MECHATRONICS">BS MECHATRONICS - BACHELOR OF SCIENCE IN MECHATRONICS
                                     TECHNOLOGY
@@ -572,7 +583,11 @@ if (isset($_SESSION['error_message'])) {
                             <option value="" disabled selected>Select Religion</option>
                             <option value="roman catholic">Roman Catholic</option>
                             <option value="islam">Islam</option>
+<<<<<<< HEAD
                             <option value="iglesia ni cristo">Iglesia ni Cristo</option>
+=======
+                            <option value="iglesia ni cristo">Iglesia ni Cristo</option>    
+>>>>>>> 5fe40da477c39321fb291661c5bfa63abd4656db
                             <option value="evangelical christian">Evangelical Christian</option>
                             <option value="a biblical church">Aglipayan / Philippine Independent Church</option>
                             <option value="others">Others</option>
@@ -582,6 +597,13 @@ if (isset($_SESSION['error_message'])) {
                         <label class="float-left label-width">Scholarship Grant</label>
                         <select name="scholarship_grant" required>
                             <option value="" disabled selected>Select Scholarship Grant</option>
+<<<<<<< HEAD
+=======
+                            <option value="CHED scholarship">CHED Scholarship</option>
+                            <option value="DOST-SEI scholarship">DOST-SEI Scholarship</option>
+                            <option value="LGU scholarship">LGU Scholarship</option>
+                            <option value="TESDA scholarship">TESDA Scholarship</option>
+>>>>>>> 5fe40da477c39321fb291661c5bfa63abd4656db
                             <option value="academic scholarship">Academic Scholarship</option>
                             <option value="athletic scholarship">Athletic Scholarship</option>
                             <option value="government scholarship">Government Scholarship</option>

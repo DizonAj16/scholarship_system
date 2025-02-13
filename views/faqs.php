@@ -121,33 +121,54 @@ include '../includes/session.php'
         <div class="faq-item">
             <h2 onclick="toggleFAQ(this)">1. What types of scholarships are available? <i
                     class="fas fa-chevron-down"></i></h2>
+<<<<<<< HEAD
             <p>We offer a variety of scholarships based on academic merit, financial need, and specific criteria such as
                 field of study, community service, and more.</p>
+=======
+            <p style="display: none;">We offer a variety of scholarships based on academic merit, financial need, and
+                specific criteria such as field of study, community service, and more.</p>
+>>>>>>> 5fe40da477c39321fb291661c5bfa63abd4656db
         </div>
 
         <div class="faq-item">
             <h2 onclick="toggleFAQ(this)">2. How do I apply for a scholarship? <i class="fas fa-chevron-down"></i></h2>
+<<<<<<< HEAD
             <p>To apply for a scholarship, you must fill out our scholarship application form available on our website.
                 Ensure that you provide all necessary documents and information.</p>
+=======
+            <p style="display: none;">To apply for a scholarship, you must fill out our scholarship application form
+                available on our website. Ensure that you provide all necessary documents and information.</p>
+>>>>>>> 5fe40da477c39321fb291661c5bfa63abd4656db
         </div>
 
         <div class="faq-item">
             <h2 onclick="toggleFAQ(this)">3. When is the scholarship application deadline? <i
                     class="fas fa-chevron-down"></i></h2>
+<<<<<<< HEAD
             <p>Deadlines for scholarship applications vary. Please check the specific scholarship details on our website
                 for the most accurate information.</p>
+=======
+            <p style="display: none;">Deadlines for scholarship applications vary. Please check the specific scholarship
+                details on our website for the most accurate information.</p>
+>>>>>>> 5fe40da477c39321fb291661c5bfa63abd4656db
         </div>
 
         <div class="faq-item">
             <h2 onclick="toggleFAQ(this)">4. Can I apply for multiple scholarships? <i class="fas fa-chevron-down"></i>
             </h2>
+<<<<<<< HEAD
             <p>Yes, you are encouraged to apply for multiple scholarships that you are eligible for. Each scholarship
                 will have its own criteria and requirements.</p>
+=======
+            <p style="display: none;">Yes, you are encouraged to apply for multiple scholarships that you are eligible
+                for. Each scholarship will have its own criteria and requirements.</p>
+>>>>>>> 5fe40da477c39321fb291661c5bfa63abd4656db
         </div>
 
         <div class="faq-item">
             <h2 onclick="toggleFAQ(this)">5. Who can I contact for more information? <i class="fas fa-chevron-down"></i>
             </h2>
+<<<<<<< HEAD
             <p>If you have any further questions, please contact us at scholarships@zppsu.edu or call us at (123)
                 456-7890.</p>
         </div>
@@ -164,7 +185,57 @@ include '../includes/session.php'
                     class="fas fa-chevron-down"></i></h2>
             <p>Selection is based on a comprehensive review of your application, including academic performance,
                 financial need, and adherence to scholarship criteria.</p>
+=======
+            <p style="display: none;">If you have any further questions, please contact us at scholarships@zppsu.edu or
+                call us at (123) 456-7890.</p>
+>>>>>>> 5fe40da477c39321fb291661c5bfa63abd4656db
         </div>
+
+        <div class="faq-item">
+            <h2 onclick="toggleFAQ(this)">6. What documents are needed for the application? <i
+                    class="fas fa-chevron-down"></i></h2>
+            <p style="display: none;">You will need to submit a valid ID, proof of income, academic records, and any
+                other documents as specified in the scholarship guidelines.</p>
+        </div>
+
+        <div class="faq-item">
+            <h2 onclick="toggleFAQ(this)">7. How are the scholarship recipients selected? <i
+                    class="fas fa-chevron-down"></i></h2>
+            <p style="display: none;">Selection is based on a comprehensive review of your application, including
+                academic performance, financial need, and adherence to scholarship criteria.</p>
+        </div>
+
+        <div class="faq-item">
+            <h2 onclick="toggleFAQ(this)">8. What types of scholarships are available in the Philippines? <i
+                    class="fas fa-chevron-down"></i></h2>
+            <p style="display: none;">
+                We offer various types of scholarships, including: <br>
+                <strong>CHED Scholarships:</strong> Scholarships offered by the Commission on Higher Education, such as
+                the Full Merit Scholarship, Half Merit Scholarship, and Tulong Dunong Program.
+                <br>
+                <strong>DOST-SEI Scholarship:</strong> Scholarships for students pursuing science, technology,
+                engineering, and mathematics (STEM) fields provided by the Department of Science and Technology.
+                <br>
+                <strong>LGU Scholarships:</strong> Scholarships provided by local government units for deserving
+                residents of their community.
+                <br>
+                <strong>Academic Scholarships:</strong> Offered by universities for students with outstanding academic
+                achievements.
+                <br>
+                <strong>Private Sector Scholarships:</strong> Scholarships funded by private companies, foundations, or
+                organizations to support specific groups of students.
+                <br>
+                <strong>Athletic Scholarships:</strong> Financial aid given to student-athletes who excel in sports and
+                academics.
+                <br>
+                <strong>TESDA Scholarships:</strong> Vocational and technical education scholarships provided by the
+                Technical Education and Skills Development Authority.
+                <br>
+                <strong>Specialized Scholarships:</strong> Scholarships based on criteria such as leadership, community
+                service, or specific fields of study.
+                <br>
+        </div>
+
     </div>
 
     <script>
@@ -187,8 +258,21 @@ include '../includes/session.php'
         }
 
         function toggleFAQ(element) {
+<<<<<<< HEAD
             const faqItem = element.parentElement;
             faqItem.classList.toggle('active');
+=======
+            const answer = element.nextElementSibling;
+            const icon = element.querySelector('i');
+
+            if (answer.style.display === "none") {
+                answer.style.display = "block";
+                icon.classList.replace('fa-chevron-down', 'fa-chevron-up');
+            } else {
+                answer.style.display = "none";
+                icon.classList.replace('fa-chevron-up', 'fa-chevron-down');
+            }
+>>>>>>> 5fe40da477c39321fb291661c5bfa63abd4656db
         }
     </script>
 </body>

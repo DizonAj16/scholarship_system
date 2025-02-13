@@ -36,9 +36,17 @@
     background-color: #f9f9f9;
     /* Light gray */
     border-radius: 8px;
+<<<<<<< HEAD
     overflow: hidden;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
 }
+=======
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+}
+.content{
+    overflow: auto;
+}
+>>>>>>> 5fe40da477c39321fb291661c5bfa63abd4656db
 
 .log-table th,
 .log-table td {
