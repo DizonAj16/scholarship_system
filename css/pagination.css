@@ -1,0 +1,31 @@
+.pagination {
+    margin: 20px 0;
+    display: flex;
+    justify-content: center;
+    gap: 5px;
+}
+
+.pagination a {
+    padding: 8px 12px;
+    border: 1px solid #ccc;
+    text-decoration: none;
+    color: #333;
+    border-radius: 4px;
+    transition: background-color 0.3s ease;
+}
+
+.pagination a.active {
+    background-color: maroon;
+    color: white;
+    border-color: maroon;
+}
+
+.pagination a:hover {
+    background-color: gold;
+    color: white;
+}
+
+.pagination a.prev,
+.pagination a.next {
+    font-weight: bold;
+}

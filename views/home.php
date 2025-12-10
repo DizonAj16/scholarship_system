@@ -1,5 +1,9 @@
 <?php
 include '../includes/session.php';
+
+// Fetch announcements (latest 10)
+$annQuery = $pdo->query("SELECT * FROM announcements ORDER BY created_at DESC LIMIT 10");
+$announcements = $annQuery->fetchAll(PDO::FETCH_ASSOC);
 ?>
 
 <!DOCTYPE html>
@@ -13,110 +17,25 @@ include '../includes/session.php';
     <script src="../js/fontawesome.js" crossorigin="anonymous"></script>
     <link rel="stylesheet" href="../css/styles.css?v=<?php echo time(); ?>">
     <link rel="stylesheet" href="../css/preloader.css?v=<?php echo time(); ?>">
+    <link rel="stylesheet" href="../css/home.css?v=<?php echo time(); ?>">
     <script src="../js/preloader.js?v=<?php echo time(); ?>"></script>
-    <style>
-        body {
-            margin-bottom: 10px;
-            margin-top: 10px;
-        }
-
-        .content {
-            padding: 20px;
-            max-width: 1000px;
-            /* Adjusts the max width of the content */
-            margin: auto;
-            /* Centers the content */
-            background-color: #f9f9f9;
-            /* Light background color */
-            border-radius: 8px;
-            /* Rounded corners */
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-            /* Subtle shadow for depth */
-        }
-
-        section {
-            border: 1px solid #ddd;
-            /* Light border */
-            border-radius: 8px;
-            /* Rounded corners */
-            padding: 15px;
-            /* Padding inside each section */
-            margin-bottom: 20px;
-            /* Spacing between sections */
-            background-color: white;
-            /* White background for sections */
-        }
-
-        h2 {
-            color: #333;
-            /* Dark color for headings */
-        }
-
-        p,
-        .ul1,
-        .ol1 {
-            color: #555;
-            /* Gray color for text */
-            line-height: 1.6;
-            /* Spacing between lines */
-        }
-
-        .ul1 {
-            list-style-type: none;
-            /* Bullet points for unordered lists */
-            padding-left: 20px;
-            /* Indentation for lists */
-        }
-
-        .ol1 {
-            padding-left: 20px;
-            /* Indentation for ordered lists */
-        }
-
-        .toggle-btn {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            background-color: #800000;
-            /* Maroon */
-            color: #FFD700;
-            /* Gold */
-            border: none;
-            padding: 10px 15px;
-            border-radius: 10px;
-            cursor: pointer;
-            z-index: 1100;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 18px;
-            transition: background-color 0.3s ease, color 0.3s ease;
-        }
-
-        .toggle-btn:hover {
-            background-color: #FFD700;
-            /* Gold */
-            color: #800000;
-            /* Maroon */
-        }
-    </style>
 </head>
 
 <body>
 
-    <div class="preloader">
+    <!-- <div class="preloader">
         <img src="../assets/images/icons/scholarship_seal.png" alt="" style="height: 70px; width: 70px;">
         <div class="lds-facebook">
             <div></div>
             <div></div>
             <div></div>
         </div>
-    </div>
+    </div> -->
 
 
-    <button class="toggle-btn" onclick="toggleNav()">
+    <!-- <button class="toggle-btn" onclick="toggleNav()">
         <i class="fas fa-times" id="toggle-icon"></i>
-    </button>
+    </button> -->
 
     <nav class="stroke" id="sideNav">
         <ul>
@@ -208,6 +127,23 @@ include '../includes/session.php';
 
         <!-- Announcements Section -->
         <section>
+            <h2>Latest Announcements</h2>
+
+            <?php if (count($announcements) === 0): ?>
+                <p>No announcements available at the moment.</p>
+            <?php else: ?>
+                <div class="announcement-cards">
+                    <?php foreach ($announcements as $a): ?>
+                        <div class="announcement-card">
+                            <h3><?= htmlspecialchars($a['title']); ?></h3>
+                            <p><?= nl2br(htmlspecialchars($a['message'])); ?></p>
+                            <span class="announcement-date">Posted: <?= $a['created_at']; ?></span>
+                        </div>
+                    <?php endforeach; ?>
+                </div>
+            <?php endif; ?>
+        </section>
+        <!-- <section>
             <h2>Recent Announcements</h2>
             <ul class="ul1">
                 <li><strong>Deadline for Fall Semester Applications:</strong> October 15, 2024</li>
@@ -216,9 +152,9 @@ include '../includes/session.php';
                 <li><strong>Information Session:</strong> Join our virtual scholarship info session on September 30,
                     2024.</li>
             </ul>
-        </section>
+        </section> -->
 
-        <!-- Scholarship Opportunities Section -->
+        <!-- Scholarship Opportunities Section
         <section>
             <h2>Available Scholarships</h2>
             <ul class="ul1">
@@ -228,7 +164,7 @@ include '../includes/session.php';
                 <li><strong>Community Leadership Scholarship:</strong> Scholarships for students who show leadership in
                     their communities.</li>
             </ul>
-        </section>
+        </section> -->
 
         <!-- Application Information Section -->
         <section>
@@ -243,18 +179,22 @@ include '../includes/session.php';
             </ol>
         </section>
 
-        <!-- Upcoming Events Section -->
+
+
+
+
+        <!-- Upcoming Events Section
         <section>
             <h2>Upcoming Events</h2>
             <ul class="ul1">
                 <li><strong>Scholarship Info Session:</strong> September 30, 2024, via Zoom</li>
                 <li><strong>Scholarship Award Ceremony:</strong> November 15, 2024, ZPPSU Auditorium</li>
             </ul>
-        </section>
+        </section> -->
     </div>
 
     <script>
-            function toggleNav() {
+        function toggleNav() {
             const sideNav = document.getElementById('sideNav');
             const toggleIcon = document.getElementById('toggle-icon');
 

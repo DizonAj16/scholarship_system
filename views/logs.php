@@ -40,7 +40,7 @@ try {
 </head>
 
 <body>
-    <div class="preloader">
+    <!-- <div class="preloader">
         <img src="../assets/images/icons/scholarship_seal.png" alt="Scholarship Seal"
             style="height: 70px; width: 70px;">
         <div class="lds-facebook">
@@ -48,12 +48,12 @@ try {
             <div></div>
             <div></div>
         </div>
-    </div>
+    </div> -->
 
-
+<!-- 
     <button class="toggle-btn" onclick="toggleNav()">
         <i class="fas fa-times" id="toggle-icon"></i>
-    </button>
+    </button> -->
 
     <nav class="stroke" id="sideNav">
         <ul>
@@ -69,14 +69,16 @@ try {
             <?php if ($_SESSION["role"] === 'admin'): ?>
                 <li><a href="./dashboard.php"><i class="fas fa-solid fa-gauge"></i><span
                             class="nav-item-2">Dashboard</span></a></li>
+                <li><a href="./announcement.php"><i class="fas fa-bullhorn"></i>
+                        <span class="nav-item-2">Announcements</span></a>
+                </li>
+
                 <li><a href="./scholarship_form.php"><i class="fas fa-solid fa-file"></i><span
                             class="nav-item-2">Scholarship Form</span></a></li>
+                <li><a href="./manage_dropdowns.php"><i class="fas fa-list"></i><span class="nav-item-2">Manage
+                            Dropdowns</span></a></li>
                 <li><a href="./applications.php"><i class="fas fa-solid fa-folder"></i><span
                             class="nav-item-2">Applications</span></a></li>
-                <li><a href="./about.php"><i class="fas fa-solid fa-circle-info"></i><span
-                            class="nav-item-2">About</span></a></li>
-                <li><a href="./faqs.php"><i class="fas fa-solid fa-circle-question"></i><span
-                            class="nav-item-2">FAQs</span></a></li>
                 <li><a href="./logs.php" class="active"><i class="fas fa-clipboard-list"></i><span
                             class="nav-item-2">Logs</span></a></li>
             <?php elseif ($_SESSION["role"] === 'student'): ?>

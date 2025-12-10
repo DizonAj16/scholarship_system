@@ -26,7 +26,7 @@ function sendApprovalEmail($applicantEmail, $applicantName, $applicationStatus)
         $mail->isHTML(true);
         $mail->Subject = 'Application Status Update';
         $mail->Body = "<h2>Dear $applicantName,</h2>
-        <p>We are pleased to inform you that your scholarship application has been <strong>$applicationStatus</strong>.</p>
+        <p>We are pleased to inform you that your scholarship application has been <strong>approved</strong>.</p>
         <p>Thank you for taking the time to apply for this opportunity. We appreciate your interest and wish you success in your academic journey.</p>
         <p>Should you have any further questions or require assistance, please feel free to contact us.</p>
         <p>Best regards,</p>

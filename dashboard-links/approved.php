@@ -2,15 +2,31 @@
 
 require '../includes/session.php';
 
-// Fetch all approved applications
+// Pagination logic
+$limit = 5; // Records per page
+$page = isset($_GET['page']) && is_numeric($_GET['page']) ? (int) $_GET['page'] : 1; // Current page number
+$offset = ($page - 1) * $limit; // Calculate offset
+
 try {
-    $stmt = $pdo->prepare("SELECT * FROM scholarship_applications WHERE status = 'Approved'");
+    // Fetch total records count
+    $countStmt = $pdo->prepare("SELECT COUNT(*) FROM scholarship_applications WHERE status = 'Approved'");
+    $countStmt->execute();
+    $totalRecords = $countStmt->fetchColumn();
+
+    // Fetch records for the current page
+    $stmt = $pdo->prepare("SELECT * FROM scholarship_applications WHERE status = 'Approved' LIMIT :limit OFFSET :offset");
+    $stmt->bindParam(':limit', $limit, PDO::PARAM_INT);
+    $stmt->bindParam(':offset', $offset, PDO::PARAM_INT);
     $stmt->execute();
     $approvedApplications = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    // Calculate total pages
+    $totalPages = ceil($totalRecords / $limit);
 } catch (Exception $e) {
     die("Error fetching data: " . $e->getMessage());
 }
 ?>
+
 
 <!DOCTYPE html>
 <html lang="en">
@@ -21,15 +37,19 @@ try {
     <script src="../js/fontawesome.js" crossorigin="anonymous"></script>
     <title>Approved Applications</title>
     <link rel="stylesheet" href="../css/approved.css?v=<?php echo time(); ?>">
+    <link rel="stylesheet" href="../css/pagination.css?v=<?php echo time(); ?>">
 </head>
 
 <body>
 
     <header>
-        <button onclick="window.history.back()">
-            <i class="fas fa-arrow-left"></i>
-        </button>
+        <a href="../views/dashboard.php">
+            <button>
+                <i class="fas fa-arrow-left"></i>
+            </button>
+        </a>
         <h1>Approved Applications</h1>
+
     </header>
 
     <main>
@@ -61,14 +81,34 @@ try {
                     <?php endforeach; ?>
                 </tbody>
             </table>
+
+            <!-- Pagination Links -->
+            <div class="pagination">
+                <?php if ($page > 1): ?>
+                    <a href="?page=<?= $page - 1 ?>" class="prev">Previous</a>
+                <?php endif; ?>
+
+                <?php for ($i = 1; $i <= $totalPages; $i++): ?>
+                    <a href="?page=<?= $i ?>" class="<?= $i === $page ? 'active' : '' ?>"><?= $i ?></a>
+                <?php endfor; ?>
+
+                <?php if ($page < $totalPages): ?>
+                    <a href="?page=<?= $page + 1 ?>" class="next">Next</a>
+                <?php endif; ?>
+            </div>
         <?php else: ?>
             <p class="no-data">No approved applications found.</p>
         <?php endif; ?>
+
+        <button onclick="window.print()" class="print-button">
+            <i class="fas fa-print"></i> Print Page
+        </button>
     </main>
 
     <footer>
         <p>&copy; <?= date('Y') ?> Scholarship System</p>
     </footer>
+
 </body>
 
 </html>

@@ -1,48 +1,227 @@
+/* Enhanced Wizard Styles */
 .wizard-flow-chart {
-    border-top: #8B0000 3px solid;
-    display: flex;
-    justify-content: space-between;
-    margin: 45px 0px;
+  display: flex;
+  justify-content: space-between;
+  position: relative;
+  margin: 45px 0px 60px 0px;
+  counter-reset: step;
 }
 
-.wizard-flow-chart span {
-    display: inline-block;
-    padding: 4px 12px;
-    border-radius: 50%;
-    border: #8b0000a9 3px solid;
-    margin-top: -20px;
-    z-index: 100;
-    background: #f69125;
-    color: white;
-    font-weight: bold;
+/* Connecting line with gradient */
+.wizard-flow-chart::before {
+  content: "";
+  position: absolute;
+  top: 35px;
+  left: 8%;
+  right: 8%;
+  height: 4px;
+  background: linear-gradient(90deg, #8b0000 0%, #ff6b6b 100%);
+  z-index: 1;
+  border-radius: 2px;
+  box-shadow: 0 2px 4px rgba(139, 0, 0, 0.2);
 }
 
-.button-row {
-    text-align: right;
-}
-.buttonNav{
-    width: 100px;
-    height: 30px;
-    border-radius: 5px;
-    background-color: #ffc72c;
-    font-weight: bold;
-}
-.buttonNav:hover{
-    background-color: #ffc72cba;
-}
-.submitBtn{
-    background-color: green;
-    color: white;
-    width: 100px;
-    height: 30px;
-    font-weight: bold;
-    border-radius: 5px;
-}
-.submitBtn:hover{
-    background-color: rgba(0, 128, 0, 0.637);
-
+/* Each step */
+.wizard-flow-chart .step {
+  text-align: center;
+  position: relative;
+  z-index: 2;
+  flex: 1;
+  padding: 0 5px;
 }
 
+/* Step numbers */
+.wizard-flow-chart .step span {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 70px;
+  height: 70px;
+  border-radius: 50%;
+  border: 3px solid #8b0000;
+  background: #f69125;
+  color: white;
+  font-weight: bold;
+  font-size: 20px;
+  position: relative;
+  z-index: 2;
+  margin: 0 auto;
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* Completed steps */
 .wizard-flow-chart span.fill {
-    background: #8b0000;
+  background: linear-gradient(135deg, #8b0000, #b22222);
+  border-color: #8b0000;
+  transform: scale(1.05);
+  box-shadow: 0 6px 12px rgba(139, 0, 0, 0.3);
+}
+
+/* Current step */
+.wizard-flow-chart span.current {
+  background: linear-gradient(135deg, #ffc72c, #ff9800);
+  border-color: #ff9800;
+  transform: scale(1.15);
+  box-shadow: 0 8px 16px rgba(255, 152, 0, 0.4);
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(255, 152, 0, 0.7);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(255, 152, 0, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(255, 152, 0, 0);
+  }
+}
+
+/* Step labels */
+.wizard-flow-chart .step-label {
+  margin-top: 15px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #333;
+  transition: all 0.3s ease;
+  line-height: 1.4;
+  min-height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Current step label */
+.wizard-flow-chart .step.current .step-label {
+  color: #ff9800;
+  font-weight: 700;
+  transform: scale(1.1);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+/* Progress indicator */
+.progress-info {
+  text-align: center;
+  margin: 20px 0 40px 0;
+  font-size: 14px;
+  color: #666;
+}
+
+/* Button enhancements */
+.button-row {
+  text-align: center;
+  margin-top: 40px;
+  padding-top: 25px;
+  border-top: 2px solid #e0e0e0;
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.buttonNav,
+.submitBtn {
+  padding: 14px 35px;
+  border-radius: 10px;
+  font-weight: 700;
+  font-size: 16px;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  border: none;
+  min-width: 140px;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  position: relative;
+  overflow: hidden;
+}
+
+.buttonNav {
+  background: linear-gradient(135deg, #ffc72c 0%, #f0b400 100%);
+  color: #333;
+  box-shadow: 0 4px 6px rgba(240, 180, 0, 0.2);
+}
+
+.buttonNav:hover {
+  background: linear-gradient(135deg, #f0b400 0%, #e0a500 100%);
+  transform: translateY(-3px) scale(1.05);
+  box-shadow: 0 6px 12px rgba(240, 180, 0, 0.3);
+}
+
+.buttonNav:active {
+  transform: translateY(-1px) scale(1.02);
+}
+
+.buttonNav::after {
+  content: '→';
+  position: absolute;
+  right: 15px;
+  opacity: 0;
+  transition: all 0.3s ease;
+}
+
+.buttonNav:hover::after {
+  opacity: 1;
+  transform: translateX(5px);
+}
+
+/* Previous button specific */
+.button-row button:first-child.buttonNav::after {
+  content: '←';
+  left: 15px;
+  right: auto;
+}
+
+.button-row button:first-child.buttonNav:hover::after {
+  transform: translateX(-5px);
+}
+
+.submitBtn {
+  background: linear-gradient(135deg, #28a745 0%, #218838 100%);
+  color: white;
+  box-shadow: 0 4px 6px rgba(40, 167, 69, 0.2);
+}
+
+.submitBtn:hover {
+  background: linear-gradient(135deg, #218838 0%, #1e7e34 100%);
+  transform: translateY(-3px) scale(1.05);
+  box-shadow: 0 6px 12px rgba(40, 167, 69, 0.3);
+}
+
+.submitBtn:active {
+  transform: translateY(-1px) scale(1.02);
+}
+
+.submitBtn::before {
+  content: '✓';
+  position: absolute;
+  left: -20px;
+  transition: all 0.3s ease;
+}
+
+.submitBtn:hover::before {
+  left: 15px;
+}
+
+/* Responsive wizard */
+@media (max-width: 768px) {
+  .wizard-flow-chart {
+    flex-wrap: wrap;
+    gap: 30px;
+  }
+  
+  .wizard-flow-chart .step {
+    flex: 0 0 calc(33.333% - 10px);
+    margin-bottom: 20px;
+  }
+  
+  .wizard-flow-chart::before {
+    display: none;
+  }
+  
+  .wizard-flow-chart .step-label {
+    font-size: 12px;
+    min-height: 35px;
+  }
 }

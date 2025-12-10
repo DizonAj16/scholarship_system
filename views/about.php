@@ -19,18 +19,18 @@ include '../includes/session.php'
 
 <body>
 
-    <div class="preloader">
+    <!-- <div class="preloader">
         <img src="../assets/images/icons/scholarship_seal.png" alt="" style="height: 70px; width: 70px;">
         <div class="lds-facebook">
             <div></div>
             <div></div>
             <div></div>
         </div>
-    </div>
+    </div> -->
 
-    <button class="toggle-btn" onclick="toggleNav()">
+    <!-- <button class="toggle-btn" onclick="toggleNav()">
         <i class="fas fa-times" id="toggle-icon"></i>
-    </button>
+    </button> -->
 
     <nav class="stroke" id="sideNav">
         <ul>
@@ -50,12 +50,19 @@ include '../includes/session.php'
                         <span class="nav-item-2">Dashboard</span>
                     </a>
                 </li>
+
+                <li><a href="./announcement.php"><i class="fas fa-bullhorn"></i>
+                        <span class="nav-item-2">Announcements</span></a>
+                </li>
+
                 <li>
                     <a href="./scholarship_form.php">
                         <i class="fas fa-solid fa-file"></i>
                         <span class="nav-item-2">Scholarship Form</span>
                     </a>
                 </li>
+                <li><a href="./manage_dropdowns.php"><i class="fas fa-list"></i><span class="nav-item-2">Manage
+                            Dropdowns</span></a></li>
                 <li>
                     <a href="./applications.php">
                         <i class="fas fa-solid fa-folder"></i>
@@ -155,11 +162,9 @@ include '../includes/session.php'
 
         <h2>Our Goals</h2>
         <p>We aim to:</p>
-        <ul>
-            <li>Provide information on available scholarships.</li>
-            <li>Assist students in completing scholarship applications.</li>
-            <li>Promote scholarship opportunities to enhance educational access.</li>
-        </ul>
+        <p>Provide information on available scholarships.</p>
+        <p>Assist students in completing scholarship applications.</p>
+        <p>Promote scholarship opportunities to enhance educational access.</p>
 
         <h2>Contact Us</h2>
         <p>If you have any questions or need assistance, please reach out to us at:</p>

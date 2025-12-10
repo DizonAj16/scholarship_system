@@ -3,66 +3,66 @@ require '../includes/session.php'; // Ensure session is started and database con
 require '../includes/send_email.php'; // Include the send_email.php file for email functionality
 
 try {
-    // Check if the application ID is provided
+    // Validate and sanitize input
     if (!isset($_GET['id']) || !is_numeric($_GET['id'])) {
         throw new Exception('Invalid application ID.');
     }
 
-    $applicationId = (int) $_GET['id'];  // Sanitize and assign application ID
-    $notify = isset($_GET['notify']) && $_GET['notify'] === 'yes'; // Check if notification is required
+    $applicationId = (int) $_GET['id'];
+    $action = $_GET['action'] ?? null;
 
-    // Prepare the SQL query to update the application status
-    $stmt = $pdo->prepare("
+    // Check if "notify" is part of the action
+    $notify = ($action === 'notify');
+
+    // Fetch the applicant's details
+    $query = $pdo->prepare("SELECT full_name, email, status FROM scholarship_applications WHERE application_id = :id");
+    $query->bindParam(':id', $applicationId, PDO::PARAM_INT);
+    $query->execute();
+
+    $applicant = $query->fetch(PDO::FETCH_ASSOC);
+
+    if (!$applicant) {
+        throw new Exception('Applicant not found.');
+    }
+
+    $applicantEmail = $applicant['email'];
+    $applicantName = $applicant['full_name'];
+
+
+    // Update the application status to "approved"
+    $updateStmt = $pdo->prepare("
         UPDATE scholarship_applications 
-        SET status = 'approved' 
+        SET status = 'approved', notified = :notified 
         WHERE application_id = :id
     ");
-    $stmt->bindValue(':id', $applicationId, PDO::PARAM_INT);
-    $stmt->execute();
+    $updateStmt->bindValue(':notified', $notify ? 'yes' : 'no', PDO::PARAM_STR);
+    $updateStmt->bindParam(':id', $applicationId, PDO::PARAM_INT);
+    $updateStmt->execute();
 
-    // Check if any row was updated
-    if ($stmt->rowCount() > 0) {
-        $_SESSION['success_message'] = "Application ID $applicationId has been approved.";
+    $applicationStatus = $applicant['status'];
 
-        // Fetch the applicant's email and name from the database
-        $query = $pdo->prepare("SELECT full_name, email FROM scholarship_applications WHERE application_id = :id");
-        $query->bindParam(':id', $applicationId, PDO::PARAM_INT);
-        $query->execute();
+    if ($updateStmt->rowCount() === 0) {
+        throw new Exception('Failed to update application status. It may have already been processed.');
+    }
 
-        $applicant = $query->fetch(PDO::FETCH_ASSOC);
+    if ($notify) {
+        // Send notification email
 
-        // If applicant is found, handle notification
-        if ($applicant) {
-            $applicantEmail = $applicant['email'];
-            $applicantName = $applicant['full_name'];
+        $emailStatus = sendApprovalEmail($applicantEmail, $applicantName, $applicationStatus);
 
-            if ($notify) {
-                // Send email notification
-                $emailStatus = sendApprovalEmail($applicantEmail, $applicantName, 'approved');
-                
-                // Log the email notification action
-                $action = "Application approved and email notification sent";
-                $details = "Application ID $applicationId approved and notification sent to $applicantName ($applicantEmail).";
-                logActivity($pdo, $_SESSION['id'], $action, $details);
-
-                // Check if the email was successfully sent
-                if ($emailStatus !== true) {
-                    $_SESSION['error_message'] = "Email could not be sent: $emailStatus";
-                }
-            } else {
-                // Log the approval action without email notification
-                $action = "Application approved without email notification";
-                $details = "Application ID $applicationId approved but no email notification sent to $applicantName ($applicantEmail).";
-                logActivity($pdo, $_SESSION['id'], $action, $details);
-            }
+        if ($emailStatus !== true) {
+            throw new Exception("Email could not be sent: $emailStatus");
         }
+
+        $_SESSION['success_message'] = "Application approved and notification sent to $applicantName ($applicantEmail).";
+        logActivity($pdo, $_SESSION['id'], "Application approved and notified", "ID $applicationId approved and notified.");
     } else {
-        $_SESSION['error_message'] = "No application found with ID $applicationId or it has already been processed.";
+        $_SESSION['success_message'] = "Application approved without notifying the applicant.";
+        logActivity($pdo, $_SESSION['id'], "Application approved", "ID $applicationId approved without notification.");
     }
 } catch (Exception $e) {
     $_SESSION['error_message'] = "Error: " . $e->getMessage();
-    // Log the exception error
-    logActivity($pdo, $_SESSION['id'], "Error during application approval", "Error: " . $e->getMessage());
+    logActivity($pdo, $_SESSION['id'], "Error", $e->getMessage());
 }
 
 // Redirect back to the applications page

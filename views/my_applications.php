@@ -44,13 +44,13 @@ try {
     if (isset($_GET['sort']) && $_GET['sort'] === 'asc') {
         $sortOrder = 'ASC';
     }
-    if (isset($_GET['sort_status']) && in_array($_GET['sort_status'], ['approved', 'pending', 'rejected'])) {
+    if (isset($_GET['sort_status']) && in_array($_GET['sort_status'], ['approved', 'pending', 'not qualified'])) {
         $sortBy = 'status';
     }
 
     // Status filter logic
     $statusFilter = '';
-    if (isset($_GET['sort_status']) && in_array($_GET['sort_status'], ['approved', 'pending', 'rejected'])) {
+    if (isset($_GET['sort_status']) && in_array($_GET['sort_status'], ['approved', 'pending', 'not qualified'])) {
         $statusFilter = "AND status = :status";
     }
 
@@ -122,19 +122,19 @@ if (isset($_SESSION['error_message'])) {
 
 <body>
 
-    <div class="preloader">
+    <!-- <div class="preloader">
         <img src="../assets/images/icons/scholarship_seal.png" alt="" style="height: 70px; width: 70px;">
         <div class="lds-facebook">
             <div></div>
             <div></div>
             <div></div>
         </div>
-    </div>
+    </div> -->
 
-
+<!-- 
     <button class="toggle-btn" onclick="toggleNav()">
         <i class="fas fa-times" id="toggle-icon"></i>
-    </button>
+    </button> -->
 
     <nav class="stroke" id="sideNav">
         <ul>
@@ -250,16 +250,6 @@ if (isset($_SESSION['error_message'])) {
                     <th>Phone</th>
                     <th>Scholarship Grant</th>
                     <th>Application Date</th>
-                    <th>Status
-                        <select id="sortStatusDropdown" onchange="sortApplicationsByStatus()">
-                            <option value="" <?php echo empty($_GET['sort_status']) ? 'selected' : ''; ?>>All</option>
-                            <option value="approved" <?php echo isset($_GET['sort_status']) && $_GET['sort_status'] == 'approved' ? 'selected' : ''; ?>>Approved</option>
-                            <option value="rejected" <?php echo isset($_GET['sort_status']) && $_GET['sort_status'] == 'rejected' ? 'selected' : ''; ?>>Rejected</option>
-                            <option value="pending" <?php echo isset($_GET['sort_status']) && $_GET['sort_status'] == 'pending' ? 'selected' : ''; ?>>Pending</option>
-                        </select>
-
-                    </th>
-
                     <th>Actions</th>
                 </tr>
             </thead>
@@ -279,12 +269,6 @@ if (isset($_SESSION['error_message'])) {
                                 echo htmlspecialchars($formattedDate);
                                 ?>
                             </td>
-                            <td>
-                                <span class="status <?php echo htmlspecialchars($row['status']); ?>">
-                                    <?php echo htmlspecialchars(ucfirst($row['status'])); ?>
-                                </span>
-                            </td>
-
                             <td>
                                 <div class="actions">
                                     <a href="../application_process/view_application.php?id=<?= $row['application_id'] ?>"

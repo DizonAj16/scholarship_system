@@ -1,72 +1,373 @@
-
+/* ===== ENHANCED FORM SECTION STYLES ===== */
 section {
     margin: 0 auto;
-    max-width: 900px;
-    background: #ffffff;
-    border-radius: 12px;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-    padding: 20px 40px;
+    max-width: 950px;
+    background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+    border-radius: 16px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+    padding: 30px 45px;
+    position: relative;
+    overflow: hidden;
+    border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+section::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 5px;
+    background: linear-gradient(90deg, #8b0000, #ffc72c);
 }
 
 /* Section Title */
 section h2 {
-    font-size: 24px;
-    font-weight: bold;
-    color: #333333;
+    font-size: 28px;
+    font-weight: 700;
+    color: #2c3e50;
     text-align: center;
-    margin-bottom: 30px;
-    border-bottom: 2px solid #e0e0e0;
-    padding-bottom: 10px;
+    margin-bottom: 35px;
+    padding-bottom: 15px;
+    position: relative;
+}
+
+section h2::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 80px;
+    height: 4px;
+    background: linear-gradient(90deg, #007bff, #00bcd4);
+    border-radius: 2px;
 }
 
 /* Form Layout */
 .form-container {
     display: flex;
     flex-direction: column;
-    gap: 20px;
+    gap: 25px;
 }
 
 /* Form Rows */
 .form-row {
     display: flex;
     align-items: center;
-    gap: 20px;
+    gap: 25px;
+    position: relative;
+    transition: all 0.3s ease;
+}
+
+
+.form-row:hover .label-width {
+    color: #007bff;
 }
 
 /* Labels */
 .label-width {
-    width: 160px;
-    font-size: 14px;
-    font-weight: bold;
-    color: #444444;
+    width: 180px;
+    font-size: 15px;
+    font-weight: 600;
+    color: #495057;
     text-align: right;
+    transition: color 0.3s ease;
+    flex-shrink: 0;
+}
+
+.required-field::after {
+    content: " *";
+    color: #dc3545;
+    font-weight: bold;
 }
 
 /* Input and Select Fields */
 input, select {
     flex: 1;
-    padding: 10px;
-    font-size: 14px;
-    border: 1px solid #cccccc;
-    border-radius: 8px;
-    background-color: #f7f7f7;
-    transition: all 0.3s ease;
+    padding: 12px 16px;
+    font-size: 15px;
+    border: 2px solid #e0e0e0;
+    border-radius: 10px;
+    background: white;
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    font-family: inherit;
 }
 
 input:focus, select:focus {
     border-color: #007bff;
-    background-color: #ffffff;
-    box-shadow: 0 0 5px rgba(0, 123, 255, 0.2);
+    background: #ffffff;
+    box-shadow: 0 0 0 4px rgba(0, 123, 255, 0.15);
+    outline: none;
+    transform: translateY(-2px);
+}
+
+input::placeholder, select::placeholder {
+    color: #adb5bd;
+    opacity: 0.7;
+}
+
+/* Phone Input Specific */
+.phone-input {
+    font-family: 'Courier New', monospace;
+    letter-spacing: 1.5px;
+    font-weight: 500;
+}
+
+/* Textarea Enhancement */
+textarea {
+    width: 100% !important;
+    min-height: 200px;
+    padding: 20px;
+    font-size: 15px;
+    border: 2px solid #e0e0e0;
+    border-radius: 12px;
+    background: white;
+    resize: vertical;
+    transition: all 0.3s ease;
+    font-family: inherit;
+    line-height: 1.6;
+}
+
+textarea:focus {
+    border-color: #007bff;
+    box-shadow: 0 0 0 4px rgba(0, 123, 255, 0.15);
     outline: none;
 }
 
-textarea{
-    background-color: white;
-    border: 2px solid black;
-    border-radius: 5px;
-    width: 700px;
-    height: 500px;
+textarea::placeholder {
+    color: #adb5bd;
+    font-style: italic;
 }
-.form-container h4{
-    margin-top: 10px;
+
+/* Subsection Headers */
+.form-container h3,
+.form-container h4 {
+    margin: 30px 0 20px 0;
+    color: #2c3e50;
+    font-size: 20px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #e9ecef;
+    position: relative;
+}
+
+.form-container h3::before,
+.form-container h4::before {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 0;
+    width: 60px;
+    height: 2px;
+    background: linear-gradient(90deg, #007bff, #00bcd4);
+}
+
+/* Specify Field Enhancement */
+.specify-field {
+    margin-top: 15px;
+    display: none;
+    padding: 15px;
+    background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+    border-radius: 10px;
+    border-left: 5px solid #007bff;
+    animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.specify-field label {
+    font-size: 14px;
+    color: #495057;
+    font-weight: 600;
+    margin-bottom: 8px;
+    display: block;
+}
+
+.specify-field input {
+    width: 100%;
+    padding: 12px;
+    border: 2px solid #dee2e6;
+    border-radius: 8px;
+    background: white;
+    transition: all 0.3s ease;
+}
+
+.specify-field input:focus {
+    border-color: #007bff;
+    box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+}
+
+/* Error States Enhancement */
+.form-row.error {
+    animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both;
+}
+
+@keyframes shake {
+    10%, 90% { transform: translateX(-1px); }
+    20%, 80% { transform: translateX(2px); }
+    30%, 50%, 70% { transform: translateX(-3px); }
+    40%, 60% { transform: translateX(3px); }
+}
+
+.form-row.error input,
+.form-row.error select,
+.form-row.error textarea {
+    border-color: #dc3545;
+    background: linear-gradient(135deg, #fff5f5, #ffe6e6);
+}
+
+.form-row.error .error-message {
+    display: block;
+    animation: slideUp 0.3s ease-out;
+}
+
+.error-message {
+    color: #dc3545;
+    font-size: 13px;
+    margin-top: 8px;
+    display: none;
+    padding: 12px 15px;
+    background: linear-gradient(135deg, #f8d7da, #f5c6cb);
+    border-radius: 8px;
+    border-left: 5px solid #dc3545;
+    animation: slideUp 0.3s ease-out;
+}
+
+/* Section Error */
+.section-error {
+    background: linear-gradient(135deg, #f8d7da, #f5c6cb);
+    border: none;
+    border-radius: 10px;
+    padding: 20px;
+    margin-bottom: 25px;
+    color: #721c24;
+    display: none;
+    animation: slideDown 0.3s ease-out;
+    box-shadow: 0 4px 6px rgba(220, 53, 69, 0.1);
+}
+
+.section-error strong {
+    display: block;
+    margin-bottom: 10px;
+    font-size: 16px;
+}
+
+.section-error ul {
+    margin: 10px 0 0 20px;
+    padding: 0;
+}
+
+.section-error li {
+    margin-bottom: 5px;
+    position: relative;
+}
+
+.section-error li::before {
+    content: '⚠️';
+    position: absolute;
+    left: -20px;
+}
+
+/* Validation Summary Enhancement */
+.validation-summary {
+    background: linear-gradient(135deg, #f8d7da, #f5c6cb);
+    border: none;
+    border-radius: 12px;
+    padding: 25px;
+    margin-bottom: 30px;
+    display: none;
+    animation: slideDown 0.5s ease-out;
+    box-shadow: 0 6px 12px rgba(220, 53, 69, 0.15);
+    border-left: 5px solid #dc3545;
+}
+
+.validation-summary h3 {
+    color: #721c24;
+    margin-top: 0;
+    margin-bottom: 15px;
+    font-size: 18px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.validation-summary h3::before {
+    content: '❌';
+    font-size: 20px;
+}
+
+.validation-summary ul {
+    margin: 15px 0 0 25px;
+    color: #721c24;
+    padding: 0;
+}
+
+.validation-summary li {
+    margin-bottom: 8px;
+    position: relative;
+    padding-left: 10px;
+}
+
+.validation-summary li::before {
+    content: '•';
+    position: absolute;
+    left: -15px;
+    font-weight: bold;
+    color: #dc3545;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    section {
+        padding: 20px;
+        margin: 10px;
+    }
+    
+    .form-row {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+    
+    .label-width {
+        width: 100%;
+        text-align: left;
+        margin-bottom: 5px;
+    }
+    
+    input, select, textarea {
+        width: 100%;
+    }
+    
+    section h2 {
+        font-size: 24px;
+    }
+    
+    .address-checkbox {
+        margin: 15px 0;
+    }
+}
+
+@media (max-width: 480px) {
+    section {
+        padding: 15px;
+    }
+    
+    .form-container h3,
+    .form-container h4 {
+        font-size: 18px;
+    }
+    
+    .specify-field {
+        padding: 12px;
+    }
 }

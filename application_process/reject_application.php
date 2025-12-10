@@ -12,7 +12,7 @@ try {
     // Prepare the SQL query to update the application status to 'rejected'
     $stmt = $pdo->prepare("
         UPDATE scholarship_applications 
-        SET status = 'rejected' 
+        SET status = 'not qualified' 
         WHERE application_id = :id
     ");
     $stmt->bindValue(':id', $applicationId, PDO::PARAM_INT);
