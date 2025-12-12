@@ -114,3 +114,13 @@ h2 {
 .delete-btn:hover {
     background: #bfa400; /* Darker gold */
 }
+.count-badge {
+    display: inline-block;
+    background: var(--gold);
+    color: var(--maroon);
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 0.9rem;
+    margin-left: 10px;
+    vertical-align: middle;
+}

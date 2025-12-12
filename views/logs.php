@@ -76,7 +76,7 @@ try {
                 <li><a href="./scholarship_form.php"><i class="fas fa-solid fa-file"></i><span
                             class="nav-item-2">Scholarship Form</span></a></li>
                 <li><a href="./manage_dropdowns.php"><i class="fas fa-list"></i><span class="nav-item-2">Manage
-                            Dropdowns</span></a></li>
+                            Scholarships</span></a></li>
                 <li><a href="./applications.php"><i class="fas fa-solid fa-folder"></i><span
                             class="nav-item-2">Applications</span></a></li>
                 <li><a href="./logs.php" class="active"><i class="fas fa-clipboard-list"></i><span

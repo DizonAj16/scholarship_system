@@ -114,7 +114,7 @@ if (isset($_GET['deleted']))
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Manage Dropdowns</title>
+    <title>Manage Scholarships</title>
     <link rel="stylesheet" href="../css/styles.css?v=<?php echo time(); ?>">
     <link rel="stylesheet" href="../css/dashboard.css?v=<?php echo time(); ?>">
     <link rel="stylesheet" href="../css/manage_dropdowns.css?v=<?php echo time(); ?>">
@@ -272,7 +272,7 @@ if (isset($_GET['deleted']))
                 <li><a href="./scholarship_form.php"><i class="fas fa-solid fa-file"></i><span
                             class="nav-item-2">Scholarship Form</span></a></li>
                 <li><a href="./manage_dropdowns.php" class="active"><i class="fas fa-list"></i><span
-                            class="nav-item-2">Manage Dropdowns</span></a></li>
+                            class="nav-item-2">Manage Scholarships</span></a></li>
                 <li><a href="./applications.php"><i class="fas fa-solid fa-folder"></i><span
                             class="nav-item-2">Applications</span></a></li>
                 <li><a href="./logs.php"><i class="fas fa-clipboard-list"></i><span class="nav-item-2">Logs</span></a></li>

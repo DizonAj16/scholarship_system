@@ -644,7 +644,7 @@ if (isset($_SESSION['error_message'])) {
                     </a>
                 </li>
                 <li><a href="./manage_dropdowns.php"><i class="fas fa-list"></i><span class="nav-item-2">Manage
-                            Dropdowns</span></a></li>
+                            Scholarships</span></a></li>
                 <li>
                     <a href="./applications.php">
                         <i class="fas fa-solid fa-folder"></i>
@@ -800,7 +800,7 @@ if (isset($_SESSION['error_message'])) {
                         <label class="float-left label-width required-field">Cellphone #</label>
                         <input name="cellNo" type="text" class="phone-input" required
                             oninput="this.value = this.value.replace(/[^0-9]/g, '')" maxlength="11"
-                            placeholder="e.g., 09171234567">
+                            >
                         <div class="error-message">Please enter a valid 11-digit cellphone number</div>
                     </div>
 

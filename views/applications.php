@@ -242,7 +242,7 @@ if (isset($_SESSION['error_message'])) {
         
         .clear-filters {
             margin-left: 10px;
-            color: #dc3545;
+            color: #dc3545!important;
             text-decoration: none;
         }
         
@@ -297,7 +297,7 @@ if (isset($_SESSION['error_message'])) {
                     </a>
                 </li>
                 <li><a href="./manage_dropdowns.php"><i class="fas fa-list"></i><span class="nav-item-2">Manage
-                            Dropdowns</span></a></li>
+                            Scholarships</span></a></li>
                 <li>
                     <a href="./applications.php" class="active">
                         <i class="fas fa-solid fa-folder"></i>

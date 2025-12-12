@@ -35,9 +35,11 @@
   height: 100%;
   background-color: #ffffff;
   z-index: 9999;
-  display: flex;
+    display: none !important;
   justify-content: center;
   align-items: center;
+      pointer-events: none !important;
+
 }
 
 .lds-facebook {
