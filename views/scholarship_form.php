@@ -839,7 +839,7 @@ if (isset($_SESSION['error_message'])) {
                             <option value="" disabled selected>Select Sex</option>
                             <option value="male">Male</option>
                             <option value="female">Female</option>
-                            <option value="others">Others</option>
+                            <!-- <option value="others">Others</option> -->
                         </select>
                         <div class="specify-field" id="sex_other_field">
                             <label for="sex_other">Please specify:</label>
