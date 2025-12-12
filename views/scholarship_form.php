@@ -755,7 +755,7 @@ if (isset($_SESSION['error_message'])) {
 
                     <!-- SEMESTER / SCHOOL YEAR -->
                     <div class="form-row">
-                        <label class="required-field">Semester / School Year</label>
+                        <label class="label-width required-field">Semester / School Year</label>
                         <select name="semester_sy" required>
                             <option value="" disabled selected>Select Semester / School Year</option>
                             <?php foreach ($sem_sy_list as $s): ?>
@@ -777,7 +777,7 @@ if (isset($_SESSION['error_message'])) {
 
                     <!-- COURSE / MAJOR -->
                     <div class="form-row">
-                        <label class="required-field">Course / Major</label>
+                        <label class="label-width required-field">Course / Major</label>
                         <select name="course_major" required>
                             <option value="" disabled selected>Select Course / Major</option>
                             <?php foreach ($course_major_list as $c): ?>
@@ -798,7 +798,7 @@ if (isset($_SESSION['error_message'])) {
 
                     <div class="form-row">
                         <label class="float-left label-width required-field">Cellphone #</label>
-                        <input name="cellNo" type="text" class="phone-input" required
+                        <input name="cellNo" type="text" required
                             oninput="this.value = this.value.replace(/[^0-9]/g, '')" maxlength="11"
                             >
                         <div class="error-message">Please enter a valid 11-digit cellphone number</div>
@@ -1056,7 +1056,7 @@ if (isset($_SESSION['error_message'])) {
                     <div class="form-row">
                         <label for="father_cellphone" class="float-left label-width required-field">Cellphone
                             Number:</label>
-                        <input id="father_cellphone" name="father_cellphone" type="text" class="phone-input" required
+                        <input id="father_cellphone" name="father_cellphone" type="text" class="" required
                             oninput="this.value = this.value.replace(/[^0-9]/g, '')" maxlength="11"
                             placeholder="e.g., 09171234567">
                         <div class="error-message">Please enter a valid 11-digit cellphone number</div>
@@ -1129,7 +1129,7 @@ if (isset($_SESSION['error_message'])) {
                     <div class="form-row">
                         <label for="mother_cellphone" class="float-left label-width required-field">Cellphone
                             Number:</label>
-                        <input id="mother_cellphone" name="mother_cellphone" type="text" class="phone-input" required
+                        <input id="mother_cellphone" name="mother_cellphone" type="text" class="" required
                             oninput="this.value = this.value.replace(/[^0-9]/g, '')" maxlength="11"
                             placeholder="e.g., 09171234567">
                         <div class="error-message">Please enter a valid 11-digit cellphone number</div>
