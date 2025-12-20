@@ -18,6 +18,7 @@ $announcements = $annQuery->fetchAll(PDO::FETCH_ASSOC);
     <link rel="stylesheet" href="../css/styles.css?v=<?php echo time(); ?>">
     <link rel="stylesheet" href="../css/preloader.css?v=<?php echo time(); ?>">
     <link rel="stylesheet" href="../css/home.css?v=<?php echo time(); ?>">
+    <script src="../js/toggle_nav.js?v=<?php echo time(); ?>"></script>
     <script src="../js/preloader.js?v=<?php echo time(); ?>"></script>
 </head>
 
@@ -49,7 +50,7 @@ $announcements = $annQuery->fetchAll(PDO::FETCH_ASSOC);
                 </a>
             </li>
             <li>
-                <a href="../index.php" class="active">
+                <a href="../index.php" class="activea">
                     <i class="fas fa-solid fa-house"></i>
                     <span class="nav-item-2">Home</span>
                 </a>
@@ -118,6 +119,10 @@ $announcements = $annQuery->fetchAll(PDO::FETCH_ASSOC);
                 </a>
             </li>
         </ul>
+        <button class="toggle-btn" onclick="toggleNav()">
+            <i class="fas fa-bars" id="toggle-icon"></i>
+        </button>
+
     </nav>
 
     <div class="content">
@@ -192,26 +197,6 @@ $announcements = $annQuery->fetchAll(PDO::FETCH_ASSOC);
             </ul>
         </section> -->
     </div>
-
-    <script>
-        function toggleNav() {
-            const sideNav = document.getElementById('sideNav');
-            const toggleIcon = document.getElementById('toggle-icon');
-
-            // Check if the navigation is currently open (visible)
-            if (sideNav.style.transform === 'translateX(0px)' || sideNav.style.transform === '') {
-                // Close the navigation
-                sideNav.style.transform = 'translateX(-250px)';
-                toggleIcon.classList.remove('fa-times');
-                toggleIcon.classList.add('fa-bars');
-            } else {
-                // Open the navigation
-                sideNav.style.transform = 'translateX(0px)';
-                toggleIcon.classList.remove('fa-bars');
-                toggleIcon.classList.add('fa-times');
-            }
-        }
-    </script>
 
 </body>
 

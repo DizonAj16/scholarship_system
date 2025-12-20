@@ -12,9 +12,11 @@
 
 body {
   background: #f4f4f4;
+  overflow-x: hidden; /* Prevent horizontal scroll */
 }
 
 .logo {
+  margin-top: 70px;
   text-align: start;
   display: flex;
   flex-direction: column;
@@ -42,8 +44,9 @@ body {
   font-size: 15px !important;
 }
 
+/* Default sidebar style */
 nav {
-  position: absolute;
+  position: fixed;
   top: 0;
   bottom: 0;
   left: 0;
@@ -51,14 +54,25 @@ nav {
   background: linear-gradient(to bottom right, #800000, #ffd700);
   width: 80px;
   overflow: hidden;
-  transition: width 0.2s linear;
+  transition: width 0.3s ease, left 0.3s ease;
   box-shadow: 0 20px 35px rgba(0, 0, 0, 0.1);
-  position: fixed;
   z-index: 99999;
   border-top-right-radius: 20px;
   border-bottom-right-radius: 20px;
   border: 2px solid black;
 }
+
+/* When nav has 'expanded' class, show full width */
+nav.expanded {
+  width: 220px;
+}
+
+/* Hover effect for desktop only
+@media (hover: hover) and (pointer: fine) {
+  nav:hover {
+    width: 220px;
+  }
+} */
 
 a {
   position: relative;
@@ -96,16 +110,12 @@ nav ul li a i {
   position: relative;
   top: 12px;
 }
-nav:hover {
-  width: 220px;
-  transition: all 0.5s ease;
-}
 
 .logout {
   position: absolute;
   bottom: 0;
 }
-.active {
+.activea {
   color: #ffd700 !important;
   font-weight: bold;
 }
@@ -113,6 +123,12 @@ nav:hover {
   margin-left: 90px;
   padding: 20px;
   color: #333;
+  transition: margin-left 0.3s ease;
+}
+
+/* When nav is expanded, adjust content margin */
+nav.expanded ~ .content {
+  margin-left: 240px;
 }
 
 .content h1 {
@@ -132,7 +148,8 @@ nav:hover {
   color: #ffd700 !important;
   background: none !important;
 }
-/* Toggle Button Enhancement */
+
+/* Fixed Toggle Button */
 .toggle-btn {
   position: fixed;
   top: 25px;
@@ -141,6 +158,8 @@ nav:hover {
   color: white;
   border: none;
   padding: 14px;
+  width: 50px; /* Fixed width */
+  height: 50px; /* Fixed height */
   border-radius: 50%;
   cursor: pointer;
   z-index: 1100;
@@ -150,9 +169,102 @@ nav:hover {
   justify-content: center;
   box-shadow: 0 6px 12px rgba(0, 0, 0, 0.25);
   transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  overflow: hidden; /* Prevent content overflow */
 }
 
-.toggle-btn:hover {
+/* .toggle-btn:hover {
   transform: scale(1.15) rotate(180deg);
   box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+} */
+
+/* Ensure toggle button stays within bounds */
+.toggle-btn i {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+}
+
+/* For mobile screens */
+@media (max-width: 768px) {
+  /* Hide sidebar by default on mobile */
+  nav {
+    width: 220px; /* Full width when visible */
+    left: -220px; /* Hide off-screen */
+    transition: left 0.3s ease;
+  }
+  
+  /* Show sidebar when expanded */
+  nav.expanded {
+    left: 0;
+  }
+  
+  /* Adjust toggle button position */
+  .toggle-btn {
+    top: 15px;
+    left: 15px;
+    width: 45px;
+    height: 45px;
+    padding: 12px;
+    font-size: 20px;
+  }
+  
+  /* Adjust content margin */
+  .content {
+    margin-left: 20px;
+    padding: 15px;
+    transition: margin-left 0.3s ease;
+  }
+  
+  /* When sidebar is expanded, add overlay to content */
+  nav.expanded ~ .content {
+    margin-left: 20px;
+    position: relative;
+  }
+  
+  /* Add overlay when sidebar is open */
+  nav.expanded ~ .content::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 99998;
+    pointer-events: none;
+  }
+  
+  /* Logo adjustment for mobile */
+  .logo {
+    margin-top: 70px;
+  }
+}
+
+/* For very small screens */
+@media (max-width: 480px) {
+  nav {
+    width: 100%; /* Full width on very small screens */
+    left: -100%; /* Hide off-screen */
+    border-radius: 0;
+  }
+  
+  nav.expanded {
+    left: 0;
+  }
+  
+  .toggle-btn {
+    top: 10px;
+    left: 10px;
+    width: 40px;
+    height: 40px;
+    padding: 10px;
+    font-size: 18px;
+  }
+  
+  .content {
+    margin-left: 15px;
+    padding: 10px;
+  }
 }

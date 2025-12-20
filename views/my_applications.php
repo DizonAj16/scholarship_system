@@ -117,6 +117,8 @@ if (isset($_SESSION['error_message'])) {
     <link rel="stylesheet" href="../css/applications.css?v=<?php echo time(); ?>">
     <script src="../js/preloader.js?v=<?php echo time(); ?>"></script>
     <script src="../js/applications.js?v=<?php echo time(); ?>"></script>
+    <script src="../js/toggle_nav.js?v=<?php echo time(); ?>"></script>
+
     <title>Application Management</title>
 </head>
 
@@ -131,7 +133,7 @@ if (isset($_SESSION['error_message'])) {
         </div>
     </div> -->
 
-<!-- 
+    <!-- 
     <button class="toggle-btn" onclick="toggleNav()">
         <i class="fas fa-times" id="toggle-icon"></i>
     </button> -->
@@ -186,7 +188,7 @@ if (isset($_SESSION['error_message'])) {
                 </li>
             <?php elseif ($_SESSION["role"] === 'student'): ?>
                 <li>
-                    <a href="./my_applications.php" class="active">
+                    <a href="./my_applications.php" class="activea">
                         <i class="fas fa-solid fa-folder-open"></i>
                         <span class="nav-item-2">My Applications</span>
                     </a>
@@ -217,198 +219,187 @@ if (isset($_SESSION['error_message'])) {
                 </a>
             </li>
         </ul>
+        <button class="toggle-btn" onclick="toggleNav()">
+            <i class="fas fa-bars" id="toggle-icon"></i>
+        </button>
     </nav>
 
-    <div class="container">
-        <h1>My Applications</h1>
-        <div class="table-container">
-            <div class="search-container">
-                <form action="" method="GET">
-                    <input type="text" name="search" id="searchInput" placeholder="Search by Application ID or Name"
-                        value="<?php echo isset($_GET['search']) ? htmlspecialchars($_GET['search']) : ''; ?>">
-                    <button type="submit" class="btn-search"><i class="fas fa-search"></i> Search</button>
-                    <button type="button" class="btn-reset" id="resetButton" onclick="resetSearch()">
-                        <i class="fas fa-redo"></i> Reset
-                    </button>
-                </form>
+    <div class="content">
+        <div class="container">
+            <h1>My Applications</h1>
+            <div class="table-container">
+                <div class="search-container">
+                    <form action="" method="GET">
+                        <input type="text" name="search" id="searchInput" placeholder="Search by Application ID or Name"
+                            value="<?php echo isset($_GET['search']) ? htmlspecialchars($_GET['search']) : ''; ?>">
+                        <button type="submit" class="btn-search"><i class="fas fa-search"></i> Search</button>
+                        <button type="button" class="btn-reset" id="resetButton" onclick="resetSearch()">
+                            <i class="fas fa-redo"></i> Reset
+                        </button>
+                    </form>
+                </div>
             </div>
-        </div>
 
 
-        <table>
-            <thead>
-                <tr>
-                    <th>Application ID
-                        <select id="sortDropdown" onchange="sortApplications()">
-                            <option value="desc" <?php echo isset($_GET['sort']) && $_GET['sort'] == 'desc' ? 'selected' : ''; ?>>Newest to Oldest</option>
-                            <option value="asc" <?php echo isset($_GET['sort']) && $_GET['sort'] == 'asc' ? 'selected' : ''; ?>>Oldest to Newest</option>
-                        </select>
-                    </th>
-                    <th>Full Name</th>
-                    <th>Course</th>
-                    <th>Year & Section</th>
-                    <th>Phone</th>
-                    <th>Scholarship Grant</th>
-                    <th>Application Date</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                <?php if (count($rows) > 0): ?>
-                    <?php foreach ($rows as $row): ?>
-                        <tr>
-                            <td><?= htmlspecialchars($row['application_id']) ?></td>
-                            <td><?= htmlspecialchars($row['full_name']) ?></td>
-                            <td><?= htmlspecialchars($row['course']) ?></td>
-                            <td><?= htmlspecialchars($row['yr_sec']) ?></td>
-                            <td><?= htmlspecialchars($row['cell_no']) ?></td>
-                            <td><?= htmlspecialchars($row['scholarship_grant']) ?></td>
-                            <td>
-                                <?php
-                                $formattedDate = date('F j, Y, g:ia', strtotime($row['date']));
-                                echo htmlspecialchars($formattedDate);
-                                ?>
-                            </td>
-                            <td>
-                                <div class="actions">
-                                    <a href="../application_process/view_application.php?id=<?= $row['application_id'] ?>"
-                                        class="btn-view" data-tooltip="View Application">
-                                        <i class="fas fa-solid fa-eye"></i>
-                                    </a>
-                                    <a href="../application_process/delete_application.php?id=<?= $row['application_id'] ?>"
-                                        class="btn-delete"
-                                        onclick="return confirm('This action cannot be undone. Proceed with deletion?');"
-                                        data-tooltip="Delete Application">
-                                        <i class="fas fa-solid fa-trash"></i>
-                                    </a>
-                                </div>
-                            </td>
-
-
-                        </tr>
-                    <?php endforeach; ?>
-                <?php else: ?>
+            <table>
+                <thead>
                     <tr>
-                        <td colspan="9" style="text-align: center; padding: 20px;">No data available</td>
+                        <th>Application ID
+                            <select id="sortDropdown" onchange="sortApplications()">
+                                <option value="desc" <?php echo isset($_GET['sort']) && $_GET['sort'] == 'desc' ? 'selected' : ''; ?>>Newest to Oldest</option>
+                                <option value="asc" <?php echo isset($_GET['sort']) && $_GET['sort'] == 'asc' ? 'selected' : ''; ?>>Oldest to Newest</option>
+                            </select>
+                        </th>
+                        <th>Full Name</th>
+                        <th>Course</th>
+                        <th>Year & Section</th>
+                        <th>Phone</th>
+                        <th>Scholarship Grant</th>
+                        <th>Application Date</th>
+                        <th>Actions</th>
                     </tr>
+                </thead>
+                <tbody>
+                    <?php if (count($rows) > 0): ?>
+                        <?php foreach ($rows as $row): ?>
+                            <tr>
+                                <td><?= htmlspecialchars($row['application_id']) ?></td>
+                                <td><?= htmlspecialchars($row['full_name']) ?></td>
+                                <td><?= htmlspecialchars($row['course']) ?></td>
+                                <td><?= htmlspecialchars($row['yr_sec']) ?></td>
+                                <td><?= htmlspecialchars($row['cell_no']) ?></td>
+                                <td><?= htmlspecialchars($row['scholarship_grant']) ?></td>
+                                <td>
+                                    <?php
+                                    $formattedDate = date('F j, Y, g:ia', strtotime($row['date']));
+                                    echo htmlspecialchars($formattedDate);
+                                    ?>
+                                </td>
+                                <td>
+                                    <div class="actions">
+                                        <a href="../application_process/view_application.php?id=<?= $row['application_id'] ?>"
+                                            class="btn-view" data-tooltip="View Application">
+                                            <i class="fas fa-solid fa-eye"></i>
+                                        </a>
+                                        <a href="../application_process/delete_application.php?id=<?= $row['application_id'] ?>"
+                                            class="btn-delete"
+                                            onclick="return confirm('This action cannot be undone. Proceed with deletion?');"
+                                            data-tooltip="Delete Application">
+                                            <i class="fas fa-solid fa-trash"></i>
+                                        </a>
+                                    </div>
+                                </td>
+
+
+                            </tr>
+                        <?php endforeach; ?>
+                    <?php else: ?>
+                        <tr>
+                            <td colspan="9" style="text-align: center; padding: 20px;">No data available</td>
+                        </tr>
+                    <?php endif; ?>
+                </tbody>
+            </table>
+
+
+
+            <ul class="pagination">
+                <?php if ($page > 1): ?>
+                    <li><a href="?page=1&search=<?php echo htmlspecialchars($_GET['search'] ?? '', ENT_QUOTES); ?>&sort_status=<?php echo htmlspecialchars($_GET['sort_status'] ?? '', ENT_QUOTES); ?>&sort=<?php echo htmlspecialchars($_GET['sort'] ?? '', ENT_QUOTES); ?>"
+                            class="prev-next">
+                            &laquo; First</a>
+                    </li>
+                    <li><a href="?page=<?php echo $page - 1; ?>&search=<?php echo htmlspecialchars($_GET['search'] ?? '', ENT_QUOTES); ?>&sort_status=<?php echo htmlspecialchars($_GET['sort_status'] ?? '', ENT_QUOTES); ?>&sort=<?php echo htmlspecialchars($_GET['sort'] ?? '', ENT_QUOTES); ?>"
+                            class="prev-next">
+                            &laquo; Prev</a>
+                    </li>
                 <?php endif; ?>
-            </tbody>
-        </table>
 
+                <?php for ($i = 1; $i <= $totalPages; $i++): ?>
+                    <li><a href="?page=<?php echo $i; ?>&search=<?php echo htmlspecialchars($_GET['search'] ?? '', ENT_QUOTES); ?>&sort_status=<?php echo htmlspecialchars($_GET['sort_status'] ?? '', ENT_QUOTES); ?>&sort=<?php echo htmlspecialchars($_GET['sort'] ?? '', ENT_QUOTES); ?>"
+                            class="<?php echo $i == $page ? 'active' : ''; ?>">
+                            <?php echo $i; ?>
+                        </a></li>
+                <?php endfor; ?>
 
-
-        <ul class="pagination">
-            <?php if ($page > 1): ?>
-                <li><a href="?page=1&search=<?php echo htmlspecialchars($_GET['search'] ?? '', ENT_QUOTES); ?>&sort_status=<?php echo htmlspecialchars($_GET['sort_status'] ?? '', ENT_QUOTES); ?>&sort=<?php echo htmlspecialchars($_GET['sort'] ?? '', ENT_QUOTES); ?>"
-                        class="prev-next">
-                        &laquo; First</a>
-                </li>
-                <li><a href="?page=<?php echo $page - 1; ?>&search=<?php echo htmlspecialchars($_GET['search'] ?? '', ENT_QUOTES); ?>&sort_status=<?php echo htmlspecialchars($_GET['sort_status'] ?? '', ENT_QUOTES); ?>&sort=<?php echo htmlspecialchars($_GET['sort'] ?? '', ENT_QUOTES); ?>"
-                        class="prev-next">
-                        &laquo; Prev</a>
-                </li>
-            <?php endif; ?>
-
-            <?php for ($i = 1; $i <= $totalPages; $i++): ?>
-                <li><a href="?page=<?php echo $i; ?>&search=<?php echo htmlspecialchars($_GET['search'] ?? '', ENT_QUOTES); ?>&sort_status=<?php echo htmlspecialchars($_GET['sort_status'] ?? '', ENT_QUOTES); ?>&sort=<?php echo htmlspecialchars($_GET['sort'] ?? '', ENT_QUOTES); ?>"
-                        class="<?php echo $i == $page ? 'active' : ''; ?>">
-                        <?php echo $i; ?>
-                    </a></li>
-            <?php endfor; ?>
-
-            <?php if ($page < $totalPages): ?>
-                <li><a href="?page=<?php echo $page + 1; ?>&search=<?php echo htmlspecialchars($_GET['search'] ?? '', ENT_QUOTES); ?>&sort_status=<?php echo htmlspecialchars($_GET['sort_status'] ?? '', ENT_QUOTES); ?>&sort=<?php echo htmlspecialchars($_GET['sort'] ?? '', ENT_QUOTES); ?>"
-                        class="prev-next">
-                        Next &raquo;</a>
-                </li>
-                <li><a href="?page=<?php echo $totalPages; ?>&search=<?php echo htmlspecialchars($_GET['search'] ?? '', ENT_QUOTES); ?>&sort_status=<?php echo htmlspecialchars($_GET['sort_status'] ?? '', ENT_QUOTES); ?>&sort=<?php echo htmlspecialchars($_GET['sort'] ?? '', ENT_QUOTES); ?>"
-                        class="prev-next">
-                        Last &raquo;</a>
-                </li>
-            <?php endif; ?>
-        </ul>
+                <?php if ($page < $totalPages): ?>
+                    <li><a href="?page=<?php echo $page + 1; ?>&search=<?php echo htmlspecialchars($_GET['search'] ?? '', ENT_QUOTES); ?>&sort_status=<?php echo htmlspecialchars($_GET['sort_status'] ?? '', ENT_QUOTES); ?>&sort=<?php echo htmlspecialchars($_GET['sort'] ?? '', ENT_QUOTES); ?>"
+                            class="prev-next">
+                            Next &raquo;</a>
+                    </li>
+                    <li><a href="?page=<?php echo $totalPages; ?>&search=<?php echo htmlspecialchars($_GET['search'] ?? '', ENT_QUOTES); ?>&sort_status=<?php echo htmlspecialchars($_GET['sort_status'] ?? '', ENT_QUOTES); ?>&sort=<?php echo htmlspecialchars($_GET['sort'] ?? '', ENT_QUOTES); ?>"
+                            class="prev-next">
+                            Last &raquo;</a>
+                    </li>
+                <?php endif; ?>
+            </ul>
 
 
 
 
 
 
-        <script>
-            // Display the success or error message
-            var successMessage = document.getElementById("successMessage");
-            if (successMessage) {
-                successMessage.style.display = "inline-block";
-                setTimeout(function () {
-                    successMessage.style.display = "none";
-                }, 5000);
-            }
-
-            var errorMessage = document.getElementById("errorMessage");
-            if (errorMessage) {
-                errorMessage.style.display = "inline-block";
-                setTimeout(function () {
-                    errorMessage.style.display = "none";
-                }, 5000);
-            }
-            function resetSearch() {
-                // Clear the search input field
-                document.getElementById("searchInput").value = "";
-
-                // Redirect to the page with default parameters (page 1, no search or sort)
-                var url = new URL(window.location.href);
-
-                // Remove search, sort, and page parameters
-                url.searchParams.delete('search');
-                url.searchParams.delete('sort');
-                url.searchParams.delete('sort_status');
-                url.searchParams.delete('page'); // Optionally, reset to page 1 if you want to go back to the first page
-
-                // Reload the page with default parameters
-                window.location.href = url.toString();
-            }
-
-            function sortApplications() {
-                var sortValue = document.getElementById("sortDropdown").value;
-                var url = new URL(window.location.href);
-                url.searchParams.set('sort', sortValue); // Set the sort parameter
-                window.location.href = url.toString(); // Reload the page with the new sort parameter
-            }
-
-
-            function sortApplicationsByStatus() {
-                const sortStatusDropdown = document.getElementById('sortStatusDropdown');
-                const selectedStatus = sortStatusDropdown.value;
-                const url = new URL(window.location.href);
-                if (selectedStatus) {
-                    url.searchParams.set('sort_status', selectedStatus); // Set the selected status
-                } else {
-                    url.searchParams.delete('sort_status'); // Remove the status filter if 'All' is selected
+            <script>
+                // Display the success or error message
+                var successMessage = document.getElementById("successMessage");
+                if (successMessage) {
+                    successMessage.style.display = "inline-block";
+                    setTimeout(function () {
+                        successMessage.style.display = "none";
+                    }, 5000);
                 }
-                url.searchParams.set('page', 1); // Reset to the first page
-                window.location.href = url.toString(); // Reload the page with the new parameters
-            }
 
-            function toggleNav() {
-            const sideNav = document.getElementById('sideNav');
-            const toggleIcon = document.getElementById('toggle-icon');
+                var errorMessage = document.getElementById("errorMessage");
+                if (errorMessage) {
+                    errorMessage.style.display = "inline-block";
+                    setTimeout(function () {
+                        errorMessage.style.display = "none";
+                    }, 5000);
+                }
+                function resetSearch() {
+                    // Clear the search input field
+                    document.getElementById("searchInput").value = "";
 
-            // Check if the navigation is currently open (visible)
-            if (sideNav.style.transform === 'translateX(0px)' || sideNav.style.transform === '') {
-                // Close the navigation
-                sideNav.style.transform = 'translateX(-250px)';
-                toggleIcon.classList.remove('fa-times');
-                toggleIcon.classList.add('fa-bars');
-            } else {
-                // Open the navigation
-                sideNav.style.transform = 'translateX(0px)';
-                toggleIcon.classList.remove('fa-bars');
-                toggleIcon.classList.add('fa-times');
-            }
-        }
+                    // Redirect to the page with default parameters (page 1, no search or sort)
+                    var url = new URL(window.location.href);
+
+                    // Remove search, sort, and page parameters
+                    url.searchParams.delete('search');
+                    url.searchParams.delete('sort');
+                    url.searchParams.delete('sort_status');
+                    url.searchParams.delete('page'); // Optionally, reset to page 1 if you want to go back to the first page
+
+                    // Reload the page with default parameters
+                    window.location.href = url.toString();
+                }
+
+                function sortApplications() {
+                    var sortValue = document.getElementById("sortDropdown").value;
+                    var url = new URL(window.location.href);
+                    url.searchParams.set('sort', sortValue); // Set the sort parameter
+                    window.location.href = url.toString(); // Reload the page with the new sort parameter
+                }
+
+
+                function sortApplicationsByStatus() {
+                    const sortStatusDropdown = document.getElementById('sortStatusDropdown');
+                    const selectedStatus = sortStatusDropdown.value;
+                    const url = new URL(window.location.href);
+                    if (selectedStatus) {
+                        url.searchParams.set('sort_status', selectedStatus); // Set the selected status
+                    } else {
+                        url.searchParams.delete('sort_status'); // Remove the status filter if 'All' is selected
+                    }
+                    url.searchParams.set('page', 1); // Reset to the first page
+                    window.location.href = url.toString(); // Reload the page with the new parameters
+                }
 
 
 
-        </script>
+
+            </script>
+        </div>
+    </div>
 </body>
 
 </html>

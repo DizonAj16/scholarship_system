@@ -14,6 +14,8 @@ include '../includes/session.php'
     <link rel="stylesheet" href="../css/styles.css?v=<?php echo time(); ?>">
     <link rel="stylesheet" href="../css/preloader.css?v=<?php echo time(); ?>">
     <script src="../js/preloader.js?v=<?php echo time(); ?>"></script>
+    <script src="../js/toggle_nav.js?v=<?php echo time(); ?>"></script>
+
     <link rel="stylesheet" href="../css/about.css?v=<?php echo time(); ?>">
 </head>
 
@@ -61,8 +63,7 @@ include '../includes/session.php'
                         <span class="nav-item-2">Scholarship Form</span>
                     </a>
                 </li>
-                <li><a href="./manage_dropdowns.php"><i class="fas fa-list"></i><span class="nav-item-2">Manage
-                            Dropdowns</span></a></li>
+                <li><a href="./manage_dropdowns.php"><i class="fas fa-list"></i><span class="nav-item-2">Scholarship Settings</span></a></li>
                 <li>
                     <a href="./applications.php">
                         <i class="fas fa-solid fa-folder"></i>
@@ -70,7 +71,7 @@ include '../includes/session.php'
                     </a>
                 </li>
                 <li>
-                    <a href="./about.php" class="active">
+                    <a href="./about.php" class="activea">
                         <i class="fas fa-solid fa-circle-info"></i>
                         <span class="nav-item-2">About</span>
                     </a>
@@ -103,7 +104,7 @@ include '../includes/session.php'
                     </a>
                 </li>
                 <li>
-                    <a href="./about.php" class="active">
+                    <a href="./about.php" class="activea">
                         <i class="fas fa-solid fa-circle-info"></i>
                         <span class="nav-item-2">About</span>
                     </a>
@@ -122,6 +123,10 @@ include '../includes/session.php'
                 </a>
             </li>
         </ul>
+        <button class="toggle-btn" onclick="toggleNav()">
+            <i class="fas fa-bars" id="toggle-icon"></i>
+        </button>
+
     </nav>
 
     <div class="content">
@@ -176,24 +181,6 @@ include '../includes/session.php'
 
 
 
-    <script>
-        function toggleNav() {
-            const sideNav = document.getElementById('sideNav');
-            const toggleIcon = document.getElementById('toggle-icon');
-
-            // Check if the navigation is currently open (visible)
-            if (sideNav.style.transform === 'translateX(0px)' || sideNav.style.transform === '') {
-                // Close the navigation
-                sideNav.style.transform = 'translateX(-250px)';
-                toggleIcon.classList.remove('fa-times');
-                toggleIcon.classList.add('fa-bars');
-            } else {
-                // Open the navigation
-                sideNav.style.transform = 'translateX(0px)';
-                toggleIcon.classList.remove('fa-bars');
-                toggleIcon.classList.add('fa-times');
-            }
-        }
 
     </script>
 </body>

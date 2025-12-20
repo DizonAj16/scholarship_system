@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Dec 12, 2025 at 11:41 AM
+-- Generation Time: Dec 15, 2025 at 04:02 AM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 7.4.33
 
@@ -33,6 +33,13 @@ CREATE TABLE `announcements` (
   `message` text NOT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `announcements`
+--
+
+INSERT INTO `announcements` (`id`, `title`, `message`, `created_at`) VALUES
+(10, 'test', 'test', '2025-12-14 05:45:32');
 
 -- --------------------------------------------------------
 
@@ -86,16 +93,17 @@ INSERT INTO `dropdown_scholarship_grant` (`id`, `grant_name`) VALUES
 CREATE TABLE `dropdown_sem_sy` (
   `id` int(11) NOT NULL,
   `semester` enum('1st sem','2nd sem','Summer') NOT NULL,
-  `school_year` varchar(9) NOT NULL
+  `school_year` varchar(9) NOT NULL,
+  `is_default` tinyint(1) DEFAULT 0
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `dropdown_sem_sy`
 --
 
-INSERT INTO `dropdown_sem_sy` (`id`, `semester`, `school_year`) VALUES
-(3, '1st sem', '2025-2026'),
-(5, '2nd sem', '2025-2026');
+INSERT INTO `dropdown_sem_sy` (`id`, `semester`, `school_year`, `is_default`) VALUES
+(3, '1st sem', '2025-2026', 1),
+(5, '2nd sem', '2025-2026', 0);
 
 -- --------------------------------------------------------
 
@@ -117,9 +125,9 @@ CREATE TABLE `grant_requirements` (
 --
 
 INSERT INTO `grant_requirements` (`id`, `grant_name`, `requirement_name`, `requirement_type`, `display_order`, `created_at`) VALUES
-(1, 'CHED TDP (TULONG DULONG PROGRAM)', '2x2 Picture', NULL, 1, '2025-12-10 16:56:43'),
+(1, 'CHED TDP (TULONG DULONG PROGRAM)', '2x2 Picture', NULL, 2, '2025-12-10 16:56:43'),
 (2, 'CHED-FULL MERIT', '2x2 Picture', NULL, 1, '2025-12-10 17:49:51'),
-(3, 'CHED TDP (TULONG DULONG PROGRAM)', 'CERTIFICATE OF INDIGENCY', NULL, 2, '2025-12-10 18:02:11');
+(3, 'CHED TDP (TULONG DULONG PROGRAM)', 'CERTIFICATE OF INDIGENCY', NULL, 1, '2025-12-10 18:02:11');
 
 -- --------------------------------------------------------
 
@@ -149,7 +157,12 @@ INSERT INTO `house_info` (`id`, `application_id`, `house_status`) VALUES
 (91, '20251210173707266', 'Owned'),
 (92, '20251210180040545', 'Living with relatives'),
 (93, '20251210184716506', 'Owned'),
-(94, '20251211231624619', 'Owned');
+(94, '20251211231624619', 'Owned'),
+(95, '20251214054304530', 'Owned'),
+(96, '20251214100648858', 'Owned'),
+(97, '20251214105201010', 'Owned'),
+(98, '20251214110322580', 'Owned'),
+(99, '20251214110552298', 'Owned');
 
 -- --------------------------------------------------------
 
@@ -437,7 +450,39 @@ INSERT INTO `logs` (`id`, `user_id`, `action`, `details`, `timestamp`) VALUES
 (273, 1, 'User logged in', 'User \'admin\' logged in successfully.', '2025-12-11 12:38:20'),
 (274, 1, 'User logged in', 'User \'admin\' logged in successfully.', '2025-12-11 23:12:17'),
 (275, 1, 'Scholarship application submitted', 'Application ID 20251211231624619 submitted by admin.', '2025-12-11 23:16:24'),
-(276, 1, 'User logged in', 'User \'admin\' logged in successfully.', '2025-12-12 11:01:03');
+(276, 1, 'User logged in', 'User \'admin\' logged in successfully.', '2025-12-12 11:01:03'),
+(277, 1, 'User logged out', 'User \'admin\' logged out successfully.', '2025-12-12 12:29:07'),
+(278, 11, 'User logged in', 'User \'finn22\' logged in successfully.', '2025-12-12 12:29:18'),
+(279, 11, 'User logged out', 'User \'finn22\' logged out successfully.', '2025-12-12 13:00:03'),
+(280, 1, 'User logged in', 'User \'admin\' logged in successfully.', '2025-12-12 13:00:08'),
+(281, 1, 'Application approved and notified', 'ID 20251211231624619 approved and notified.', '2025-12-12 13:00:55'),
+(282, 1, 'User logged in', 'User \'admin\' logged in successfully.', '2025-12-14 05:13:35'),
+(283, 1, 'User logged out', 'User \'admin\' logged out successfully.', '2025-12-14 05:38:28'),
+(284, 11, 'User logged in', 'User \'finn22\' logged in successfully.', '2025-12-14 05:38:42'),
+(285, 11, 'Scholarship application submitted', 'Application ID 20251214054304530 submitted by finn22.', '2025-12-14 05:43:04'),
+(286, 11, 'User logged out', 'User \'finn22\' logged out successfully.', '2025-12-14 05:44:06'),
+(287, 1, 'User logged in', 'User \'admin\' logged in successfully.', '2025-12-14 05:44:13'),
+(288, 1, 'User logged out', 'User \'admin\' logged out successfully.', '2025-12-14 05:45:45'),
+(289, 11, 'User logged in', 'User \'finn22\' logged in successfully.', '2025-12-14 05:45:51'),
+(290, 11, 'User logged out', 'User \'finn22\' logged out successfully.', '2025-12-14 06:37:36'),
+(291, 1, 'User logged in', 'User \'admin\' logged in successfully.', '2025-12-14 06:37:43'),
+(292, 1, 'User logged out', 'User \'admin\' logged out successfully.', '2025-12-14 09:23:15'),
+(293, 11, 'Failed login attempt', 'Invalid password for user \'finn22\'.', '2025-12-14 09:23:53'),
+(294, 1, 'Failed login attempt', 'Invalid password for user \'admin\'.', '2025-12-14 09:25:52'),
+(295, 1, 'User logged in', 'User \'admin\' logged in successfully.', '2025-12-14 09:25:59'),
+(296, 1, 'User logged out', 'User \'admin\' logged out successfully.', '2025-12-14 09:55:52'),
+(297, 12, 'User logged in', 'User \'finn23\' logged in successfully.', '2025-12-14 09:55:59'),
+(298, 12, 'User logged out', 'User \'finn23\' logged out successfully.', '2025-12-14 10:01:01'),
+(299, 1, 'User logged in', 'User \'admin\' logged in successfully.', '2025-12-14 10:01:07'),
+(300, 1, 'Scholarship application submitted', 'Application ID 20251214100648858 submitted by admin.', '2025-12-14 10:06:48'),
+(301, 1, 'Scholarship application submitted', 'Application ID 20251214105201010 submitted by admin. Files uploaded to: Al-khazri_Sali_Alim_20251214105201010', '2025-12-14 10:52:01'),
+(302, 1, 'Scholarship application submitted', 'Application ID 20251214110322580 submitted by admin. Files uploaded to: Arjec_Jose_Dizon_20251214110322580', '2025-12-14 11:03:22'),
+(303, 1, 'Scholarship application submitted', 'Application ID 20251214110552298 submitted by admin. Files uploaded to: Nurjan_Idjad_20251214110552298', '2025-12-14 11:05:52'),
+(304, 1, 'User logged out', 'User \'admin\' logged out successfully.', '2025-12-14 11:14:55'),
+(305, 11, 'User logged in', 'User \'finn22\' logged in successfully.', '2025-12-14 11:15:01'),
+(306, 11, 'User logged out', 'User \'finn22\' logged out successfully.', '2025-12-14 11:18:08'),
+(307, 1, 'User logged in', 'User \'admin\' logged in successfully.', '2025-12-14 11:18:13'),
+(308, 1, 'User logged in', 'User \'admin\' logged in successfully.', '2025-12-15 00:58:11');
 
 -- --------------------------------------------------------
 
@@ -480,7 +525,12 @@ INSERT INTO `parents_info` (`id`, `application_id`, `father_lastname`, `father_g
 (91, '20251210173707266', 'A DIZON', 'JESSICA', 'Arjec Jose', '09356455565', 'No Formal Education', 'Government', 200000.00, 'Argonsola', 'givenname', 'Atilano', '09552335871', 'No Formal Education', 'Government', 300000.00),
 (92, '20251210180040545', 'A DIZON', 'JESSICA', 'Arjec Jose', '09356455565', 'No Formal Education', 'Government', 10000.00, 'Argonsola', 'givenname', 'Atilano', '09451542654', 'No Formal Education', 'Government', 10000.00),
 (93, '20251210184716506', 'Dizon', 'Arman', 'Godoy', '09356455565', 'High School Graduate', 'Private Sector', 15000.00, 'Argonsola', 'givenname', 'Atilano', '09451542654', 'College Undergraduate', 'Government', 20000.00),
-(94, '20251211231624619', 'A DIZON', 'JESSICA', 'Arjec Jose', '09356455565', 'Postgraduate', 'Intern', 20000.00, 'Argonsola', 'givenname', '', '09451542654', 'No Formal Education', 'Casual', 20000.00);
+(94, '20251211231624619', 'A DIZON', 'JESSICA', 'Arjec Jose', '09356455565', 'Postgraduate', 'Intern', 20000.00, 'Argonsola', 'givenname', '', '09451542654', 'No Formal Education', 'Casual', 20000.00),
+(95, '20251214054304530', 'A DIZON', 'JESSICA', 'Arjec Jose', '09356455565', 'Elementary Undergraduate', 'Intern', 20000.00, 'Argonsola', 'givenname', 'Atilano', '09451542654', 'College Graduate', 'Contractual', 20000.00),
+(96, '20251214100648858', 'A DIZON', 'JESSICA', 'Arjec Jose', '09356455565', 'College Graduate', 'Intern', 2132135.00, 'Argonsola', '1', 'Atilano', '09552335871', 'Vocational Course', 'Intern', 6341654.00),
+(97, '20251214105201010', 'A DIZON', 'JESSICA', 'Arjec Jose', '09356455565', 'College Undergraduate', 'NGO/Non-Profit', 20000.00, 'Argonsola', 'givenname', 'Atilano', '09451542654', 'College Undergraduate', 'Freelancer', 20000.00),
+(98, '20251214110322580', 'A DIZON', 'JESSICA', 'Arjec Jose', '09356455565', 'Postgraduate', 'Intern', 50000.00, 'Argonsola', 'givenname', 'Atilano', '09451542654', 'Postgraduate', 'Intern', 20000.00),
+(99, '20251214110552298', 'A DIZON', 'JESSICA', 'Arjec Jose', '09154542324', 'Postgraduate', 'Intern', 10000.00, 'Argonsola', 'givenname', 'Atilano', '09451542654', 'No Formal Education', 'Government', 20000.00);
 
 -- --------------------------------------------------------
 
@@ -534,7 +584,12 @@ INSERT INTO `scholarship_applications` (`application_id`, `date`, `semester`, `s
 ('20251210173707266', '2025-12-11 01:34:41', '1st sem', '2025-2026', 'Al-khazri Sali Alim', 'BS CE', '4G', 'ENGLISH', '09154785417', 'daisy road', 7000, 'daisy road', 'dizon.arjecjose@gmail.com', 'male', '2004-07-08', 21, 'Zamboanga City', 'single', 'roman catholic', 'CHED TDP (TULONG DULONG PROGRAM)', 'N/A', 'igorot', 'eqweqweqweqweqeqqweqeq', 1, 'pending', 0, ''),
 ('20251210180040545', '2025-12-11 01:56:47', '1st sem', '2025-2026', 'JESSICA A DIZON', 'BS CE', '4A', 'ENGLISH', '09154785417', 'daisy road', 7000, 'daisy road', 'admin@admin.com', 'male', '2001-01-01', 24, 'Zamboanga City', 'single', 'roman catholic', 'CHED TDP (TULONG DULONG PROGRAM)', 'None', 'N/A', 'qweqw', 1, 'pending', 0, ''),
 ('20251210184716506', '2025-12-11 02:43:36', '1st sem', '2025-2026', 'Marco Jean Pagotasidro', 'BS CE', '4A', 'ENGLISH', '09486409573', 'daisy road', 7000, 'daisy road', 'dizon.arjecjose@gmail.com', 'male', '2009-06-10', 16, 'Zamboanga City', 'single', 'roman catholic', 'CHED TDP (TULONG DULONG PROGRAM)', 'N/A', 'N/A', 'qqqqqqqqqqqqqqqqqqqqqqqqqq', 1, 'pending', 0, ''),
-('20251211231624619', '2025-12-12 07:12:32', '1st sem', '2025-2026', 'Arjec Jose Dizon', 'BS INFOTECH', '4A', 'PROGRAMMING', '09466456566', 'daisy road', 7000, 'daisy road', 'arjecdizon99@gmail.com', 'male', '1994-06-21', 31, 'Zamboanga City', 'single', 'roman catholic', 'CHED TDP (TULONG DULONG PROGRAM)', 'N/A', 'N/A', 'qweqweqwe', 1, 'pending', 0, '');
+('20251211231624619', '2025-12-12 07:12:32', '1st sem', '2025-2026', 'Arjec Jose Dizon', 'BS INFOTECH', '4A', 'PROGRAMMING', '09466456566', 'daisy road', 7000, 'daisy road', 'arjecdizon99@gmail.com', 'male', '1994-06-21', 31, 'Zamboanga City', 'single', 'roman catholic', 'CHED TDP (TULONG DULONG PROGRAM)', 'N/A', 'N/A', 'qweqweqwe', 1, 'approved', 0, ''),
+('20251214054304530', '2025-12-14 13:38:46', '2nd sem', '2025-2026', 'Dizon Arjec Jose A.', 'BS INFOSYS', '3A', 'PROGRAMMING', '09158423449', 'daisy road', 7000, 'daisy road', 'dizon.arjecjose@gmail.com', 'male', '2006-03-08', 19, 'Zamboanga City', 'single', 'roman catholic', 'CHED-HALF MERIT', 'N/A', 'N/A', '123123\r\n', 11, 'pending', 0, ''),
+('20251214100648858', '2025-12-14 18:03:49', '1st sem', '2025-2026', 'JESSICA A DIZON', 'BS CE', '4G', 'ENGLISH', '09158423449', 'daisy road', 7000, 'daisy road', 'arjecdizon99@gmail.com', 'male', '1979-10-17', 46, 'Zamboanga City', 'single', 'roman catholic', 'CHED TDP (TULONG DULONG PROGRAM)', 'N/A', 'N/A', 'uygufufiufigiugig8', 1, 'pending', 0, ''),
+('20251214105201010', '2025-12-14 18:50:01', '1st sem', '2025-2026', 'Al-khazri Sali Alim', 'BS INFOSYS', '4A', 'PROGRAMMING', '09548712364', 'daisy road', 7000, 'daisy road', 'arjecdizon99@gmail.com', 'male', '1997-06-17', 28, 'Zamboanga City', 'single', 'roman catholic', 'CHED TDP (TULONG DULONG PROGRAM)', 'N/A', 'N/A', 'qweqeqweqweqweqweqweqweqweqweqweqwe', 1, 'pending', 0, ''),
+('20251214110322580', '2025-12-14 18:59:31', '1st sem', '2025-2026', 'Arjec Jose Dizon', 'BS CE', '4G', 'ENGLISH', '09158423449', 'daisy road', 7000, 'daisy road', 'dizon.arjecjose@gmail.com', 'male', '1997-06-17', 28, 'Zamboanga City', 'single', 'a biblical church', 'CHED-FULL MERIT', 'N/A', 'N/A', 'qweqwe', 1, 'pending', 0, ''),
+('20251214110552298', '2025-12-14 19:04:07', '1st sem', '2025-2026', 'Nurjan Idjad', 'BS CE', '2A', 'ENGLISH', '09154785417', 'daisy road', 7000, 'daisy road', 'dizon.arjecjose@gmail.com', 'male', '1991-06-18', 34, 'Zamboanga City', 'single', 'roman catholic', 'CHED TDP (TULONG DULONG PROGRAM)', 'N/A', 'N/A', 'tfdytdytdu6yt', 1, 'pending', 0, '');
 
 -- --------------------------------------------------------
 
@@ -545,49 +600,55 @@ INSERT INTO `scholarship_applications` (`application_id`, `date`, `semester`, `s
 CREATE TABLE `scholarship_files` (
   `id` int(11) NOT NULL,
   `application_id` varchar(20) NOT NULL,
-  `files` text NOT NULL
+  `files` text NOT NULL,
+  `upload_folder` varchar(255) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `scholarship_files`
 --
 
-INSERT INTO `scholarship_files` (`id`, `application_id`, `files`) VALUES
-(1, '20251116182413313', '[\"1763317453_691a16cd4dc07.png\",\"1763317453_691a16cd4de86.png\",\"1763317453_691a16cd4df85.png\",\"1763317453_691a16cd4e14d.png\",\"1763317453_691a16cd4e244.png\"]'),
-(2, '20251118014737885', '[\"1763430457_691bd039d9ee2.pdf\",\"1763430457_691bd039da69f.png\",\"1763430457_691bd039daa21.png\"]'),
-(3, '20251120005243756', '[\"1763599963_691e665bb9aa3.jpg\",\"1763599963_691e665bb9ed4.pdf\"]'),
-(4, '20251120032139792', '[\"1763608899_691e8943c2ee6.pdf\"]'),
-(5, '20251121010616855', '[\"1763687176_691fbb08d34af.pdf\",\"1763687176_691fbb08d38d1.pdf\"]'),
-(6, '20251121012446449', '[\"1763688286_691fbf5e6e487.pdf\",\"1763688286_691fbf5e6e862.pdf\"]'),
-(7, '20251121062359913', '[\"1763706239_6920057fe03f8.pdf\"]'),
-(8, '20251121095848774', '[\"1763719128_692037d8bef76.pdf\",\"1763719128_692037d8bf176.pdf\",\"1763719128_692037d8bf385.png\"]'),
-(9, '20251121101153923', '[\"1763719913_69203ae9e22dc.pdf\",\"1763719913_69203ae9e24ca.png\"]'),
-(10, '20251121103141752', '[\"1763721101_69203f8db86f9.pdf\"]'),
-(11, '20251121131725238', '[\"1763731045_692066653a8a0.png\"]'),
-(12, '20251121134052201', '[\"1763732452_69206be4317a5.jpg\",\"1763732452_69206be431df1.pdf\"]'),
-(13, '20251121135639274', '[\"1763733399_69206f97454b7.png\",\"1763733399_69206f974573f.png\"]'),
-(14, '20251122124444832', '[\"1763815484_6921b03ccbacc.pdf\",\"1763815484_6921b03ccbf18.jpg\"]'),
-(15, '20251203162603263', '[\"1764779163_6930649b43c8d.png\",\"1764779163_6930649b4414a.png\"]'),
-(16, '20251203170106386', '[\"1764781266_69306cd25ea9b.png\",\"1764781266_69306cd25ed18.pdf\"]'),
-(17, '20251203170704141', '[\"1764781624_69306e38271d3.pdf\"]'),
-(18, '20251204002525338', '[\"1764807925_6930d4f553005.pdf\",\"1764807925_6930d4f5531d5.pdf\"]'),
-(19, '20251204012052556', '[\"1764811252_6930e1f48ad56.pdf\"]'),
-(20, '20251204013339301', '[\"1764812019_6930e4f34a145.pdf\"]'),
-(21, '20251204014736619', '[\"1764812856_6930e8389a88a.pdf\"]'),
-(22, '20251204024139706', '[\"1764816099_6930f4e3af3ea.pdf\"]'),
-(23, '20251204030605781', '[\"1764817565_6930fa9dc16a7.pdf\"]'),
-(24, '20251204031307888', '[\"1764817987_6930fc43da33e.pdf\",\"1764817987_6930fc43da5b7.pdf\"]'),
-(25, '20251204033311414', '[\"1764819191_693100f76887f.png\",\"1764819191_693100f768ae5.png\"]'),
-(26, '20251204054601248', '[\"1764827161_693120193d72e.png\",\"1764827161_693120193d941.png\",\"1764827161_693120193db44.png\"]'),
-(27, '20251204055643624', '[\"1764827803_6931229b98af6.pdf\"]'),
-(28, '20251204061649665', '[\"1764829009_69312751a3c20.pdf\"]'),
-(29, '20251207161201798', '[\"1765123921_6935a751c3c6f.pdf\"]'),
-(30, '20251207161919239', '[\"1765124359_6935a9073bdb5.pdf\"]'),
-(31, '20251210171214576', '[]'),
-(32, '20251210173707266', '[\"1765388227_6939afc343802.jpg\"]'),
-(33, '20251210180040545', '[\"1765389640_6939b54885c91.jpg\"]'),
-(34, '20251210184716506', '[\"1765392436_6939c0347c0e3.pdf\"]'),
-(35, '20251211231624619', '[\"1765494984_693b50c8980d5.pdf\",\"1765494984_693b50c89850b.jpg\"]');
+INSERT INTO `scholarship_files` (`id`, `application_id`, `files`, `upload_folder`) VALUES
+(1, '20251116182413313', '[\"1763317453_691a16cd4dc07.png\",\"1763317453_691a16cd4de86.png\",\"1763317453_691a16cd4df85.png\",\"1763317453_691a16cd4e14d.png\",\"1763317453_691a16cd4e244.png\"]', NULL),
+(2, '20251118014737885', '[\"1763430457_691bd039d9ee2.pdf\",\"1763430457_691bd039da69f.png\",\"1763430457_691bd039daa21.png\"]', NULL),
+(3, '20251120005243756', '[\"1763599963_691e665bb9aa3.jpg\",\"1763599963_691e665bb9ed4.pdf\"]', NULL),
+(4, '20251120032139792', '[\"1763608899_691e8943c2ee6.pdf\"]', NULL),
+(5, '20251121010616855', '[\"1763687176_691fbb08d34af.pdf\",\"1763687176_691fbb08d38d1.pdf\"]', NULL),
+(6, '20251121012446449', '[\"1763688286_691fbf5e6e487.pdf\",\"1763688286_691fbf5e6e862.pdf\"]', NULL),
+(7, '20251121062359913', '[\"1763706239_6920057fe03f8.pdf\"]', NULL),
+(8, '20251121095848774', '[\"1763719128_692037d8bef76.pdf\",\"1763719128_692037d8bf176.pdf\",\"1763719128_692037d8bf385.png\"]', NULL),
+(9, '20251121101153923', '[\"1763719913_69203ae9e22dc.pdf\",\"1763719913_69203ae9e24ca.png\"]', NULL),
+(10, '20251121103141752', '[\"1763721101_69203f8db86f9.pdf\"]', NULL),
+(11, '20251121131725238', '[\"1763731045_692066653a8a0.png\"]', NULL),
+(12, '20251121134052201', '[\"1763732452_69206be4317a5.jpg\",\"1763732452_69206be431df1.pdf\"]', NULL),
+(13, '20251121135639274', '[\"1763733399_69206f97454b7.png\",\"1763733399_69206f974573f.png\"]', NULL),
+(14, '20251122124444832', '[\"1763815484_6921b03ccbacc.pdf\",\"1763815484_6921b03ccbf18.jpg\"]', NULL),
+(15, '20251203162603263', '[\"1764779163_6930649b43c8d.png\",\"1764779163_6930649b4414a.png\"]', NULL),
+(16, '20251203170106386', '[\"1764781266_69306cd25ea9b.png\",\"1764781266_69306cd25ed18.pdf\"]', NULL),
+(17, '20251203170704141', '[\"1764781624_69306e38271d3.pdf\"]', NULL),
+(18, '20251204002525338', '[\"1764807925_6930d4f553005.pdf\",\"1764807925_6930d4f5531d5.pdf\"]', NULL),
+(19, '20251204012052556', '[\"1764811252_6930e1f48ad56.pdf\"]', NULL),
+(20, '20251204013339301', '[\"1764812019_6930e4f34a145.pdf\"]', NULL),
+(21, '20251204014736619', '[\"1764812856_6930e8389a88a.pdf\"]', NULL),
+(22, '20251204024139706', '[\"1764816099_6930f4e3af3ea.pdf\"]', NULL),
+(23, '20251204030605781', '[\"1764817565_6930fa9dc16a7.pdf\"]', NULL),
+(24, '20251204031307888', '[\"1764817987_6930fc43da33e.pdf\",\"1764817987_6930fc43da5b7.pdf\"]', NULL),
+(25, '20251204033311414', '[\"1764819191_693100f76887f.png\",\"1764819191_693100f768ae5.png\"]', NULL),
+(26, '20251204054601248', '[\"1764827161_693120193d72e.png\",\"1764827161_693120193d941.png\",\"1764827161_693120193db44.png\"]', NULL),
+(27, '20251204055643624', '[\"1764827803_6931229b98af6.pdf\"]', NULL),
+(28, '20251204061649665', '[\"1764829009_69312751a3c20.pdf\"]', NULL),
+(29, '20251207161201798', '[\"1765123921_6935a751c3c6f.pdf\"]', NULL),
+(30, '20251207161919239', '[\"1765124359_6935a9073bdb5.pdf\"]', NULL),
+(31, '20251210171214576', '[]', NULL),
+(32, '20251210173707266', '[\"1765388227_6939afc343802.jpg\"]', NULL),
+(33, '20251210180040545', '[\"1765389640_6939b54885c91.jpg\"]', NULL),
+(34, '20251210184716506', '[\"1765392436_6939c0347c0e3.pdf\"]', NULL),
+(35, '20251211231624619', '[\"1765494984_693b50c8980d5.pdf\",\"1765494984_693b50c89850b.jpg\"]', NULL),
+(36, '20251214054304530', '[\"1765690984_693e4e6882ae6.pdf\"]', NULL),
+(37, '20251214100648858', '[\"1765706808_693e8c38d22a5.pdf\"]', NULL),
+(38, '20251214105201010', '[\"Al-khazri_Sali_Alim_20251214105201010\\/1765709521_693e96d103208_JAI.pdf\",\"Al-khazri_Sali_Alim_20251214105201010\\/1765709521_693e96d1033b2_neo.pdf\"]', 'Al-khazri_Sali_Alim_20251214105201010'),
+(39, '20251214110322580', '[\"Arjec_Jose_Dizon_20251214110322580\\/1765710202_693e997a8ff6d_zppsu_logo1.png\",\"Arjec_Jose_Dizon_20251214110322580\\/1765710202_693e997a90107_1000046143.png\",\"Arjec_Jose_Dizon_20251214110322580\\/1765710202_693e997a902f4_reading_owl.jpg\"]', 'Arjec_Jose_Dizon_20251214110322580'),
+(40, '20251214110552298', '[\"Nurjan_Idjad_20251214110552298\\/1765710352_693e9a1049412_activity-1-randg.pdf\",\"Nurjan_Idjad_20251214110552298\\/1765710352_693e9a10495d3_552977020_830361506389888_1907920262288961300_n.jpg\",\"Nurjan_Idjad_20251214110552298\\/1765710352_693e9a104980e_1000046143.png\"]', 'Nurjan_Idjad_20251214110552298');
 
 -- --------------------------------------------------------
 
@@ -625,7 +686,12 @@ INSERT INTO `schools_attended` (`id`, `application_id`, `elementary`, `elementar
 (93, '20251210173707266', 'ZCS', '2019', 'none', 'ZNHS-WEST', '2024', 'none', 'ZPPSU', '0000', ''),
 (94, '20251210180040545', 'ZCS', '2016', 'None', 'ZNHS-WEST', '2022', 'none', 'ZPPSU', '0000', ''),
 (95, '20251210184716506', 'ZCS', '2016', '1', 'ZNHS-WEST', '2016', '1', 'ZPPSU', '2000', ''),
-(96, '20251211231624619', 'ZCS', '2016', 'none', 'ZNHS-WEST', '2022', 'none', 'ZPPSU', '0000', '');
+(96, '20251211231624619', 'ZCS', '2016', 'none', 'ZNHS-WEST', '2022', 'none', 'ZPPSU', '0000', ''),
+(97, '20251214054304530', 'ZCS', '2020', 'None', 'ZNHS-WEST', '2020', 'none', 'ZPPSU', '0000', ''),
+(98, '20251214100648858', 'ZCS', '2020', 'None', 'New York University', '2013', 'none', 'ZPPSU', '0000', ''),
+(99, '20251214105201010', 'ZCS', '2020', '1', 'MCLLNHS', '2020', 'none', 'ZPPSU', '0000', ''),
+(100, '20251214110322580', 'ZCS', '2016', '1', 'ZNHS-WEST', '2020', '1', 'ZPPSU', '0000', ''),
+(101, '20251214110552298', 'ZCS', '2016', 'none', 'ZNHS-WEST', '2022', 'none', 'ZPPSU', '0000', '');
 
 -- --------------------------------------------------------
 
@@ -746,7 +812,7 @@ ALTER TABLE `users`
 -- AUTO_INCREMENT for table `announcements`
 --
 ALTER TABLE `announcements`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
 
 --
 -- AUTO_INCREMENT for table `dropdown_course_major`
@@ -776,31 +842,31 @@ ALTER TABLE `grant_requirements`
 -- AUTO_INCREMENT for table `house_info`
 --
 ALTER TABLE `house_info`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=95;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=100;
 
 --
 -- AUTO_INCREMENT for table `logs`
 --
 ALTER TABLE `logs`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=277;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=309;
 
 --
 -- AUTO_INCREMENT for table `parents_info`
 --
 ALTER TABLE `parents_info`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=95;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=100;
 
 --
 -- AUTO_INCREMENT for table `scholarship_files`
 --
 ALTER TABLE `scholarship_files`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=36;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=41;
 
 --
 -- AUTO_INCREMENT for table `schools_attended`
 --
 ALTER TABLE `schools_attended`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=97;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=102;
 
 --
 -- AUTO_INCREMENT for table `users`

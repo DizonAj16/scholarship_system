@@ -312,7 +312,10 @@ error_log("Dashboard Data - Total: $total_applicants, Approved: $approved_applic
     <link rel="stylesheet" href="../css/preloader.css?v=<?php echo time(); ?>">
     <link rel="stylesheet" href="../css/dashboard.css?v=<?php echo time(); ?>">
     <script src="../js/preloader.js?v=<?php echo time(); ?>"></script>
+    <script src="../js/toggle_nav.js?v=<?php echo time(); ?>"></script>
+
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
     <style>
         .chart-container {
             display: grid;
@@ -527,7 +530,7 @@ error_log("Dashboard Data - Total: $total_applicants, Approved: $approved_applic
         </div>
     </div> -->
 
-    <nav class="stroke">
+    <nav class="stroke" id="sideNav">
         <ul>
             <li>
                 <a href="#" class="logo">
@@ -539,14 +542,13 @@ error_log("Dashboard Data - Total: $total_applicants, Approved: $approved_applic
                 </a>
             </li>
             <?php if ($_SESSION["role"] === 'admin'): ?>
-                <li><a href="./dashboard.php" class="active"><i class="fas fa-solid fa-gauge"></i><span
+                <li><a href="./dashboard.php" class="activea"><i class="fas fa-solid fa-gauge"></i><span
                             class="nav-item-2">Dashboard</span></a></li>
                 <li><a href="./announcement.php"><i class="fas fa-bullhorn"></i><span
                             class="nav-item-2">Announcements</span></a></li>
                 <li><a href="./scholarship_form.php"><i class="fas fa-solid fa-file"></i><span
                             class="nav-item-2">Scholarship Form</span></a></li>
-                <li><a href="./manage_dropdowns.php"><i class="fas fa-list"></i><span class="nav-item-2">Manage
-                            Scholarships</span></a></li>
+                <li><a href="./manage_dropdowns.php"><i class="fas fa-list"></i><span class="nav-item-2">Scholarship Settings</span></a></li>
 
                 <li><a href="./applications.php"><i class="fas fa-solid fa-folder"></i><span
                             class="nav-item-2">Applications</span></a></li>
@@ -568,6 +570,10 @@ error_log("Dashboard Data - Total: $total_applicants, Approved: $approved_applic
             <li><a href="../auth/logout.php" class="logout"><i class="fas fa-solid fa-right-from-bracket"></i><span
                         class="nav-item-2">Logout</span></a></li>
         </ul>
+        <button class="toggle-btn" onclick="toggleNav()">
+            <i class="fas fa-bars" id="toggle-icon"></i>
+        </button>
+
     </nav>
 
     <div class="content">

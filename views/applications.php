@@ -189,6 +189,8 @@ if (isset($_SESSION['error_message'])) {
     <link rel="stylesheet" href="../css/applications.css?v=<?php echo time(); ?>">
     <script src="../js/preloader.js?v=<?php echo time(); ?>"></script>
     <script src="../js/applications.js?v=<?php echo time(); ?>"></script>
+        <script src="../js/toggle_nav.js?v=<?php echo time(); ?>"></script>
+
     <title>Application Management</title>
     <style>
         /* Additional CSS for table header filters */
@@ -249,6 +251,31 @@ if (isset($_SESSION['error_message'])) {
         .clear-filters:hover {
             text-decoration: underline;
         }
+        
+        /* Export button container */
+        .export-button-container {
+            margin: 20px 0;
+            text-align: right;
+        }
+        
+        .btn-export {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background-color: #28a745;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 4px;
+            text-decoration: none;
+            font-weight: 500;
+            transition: background-color 0.3s;
+        }
+        
+        .btn-export:hover {
+            background-color: #218838;
+            text-decoration: none;
+            color: white;
+        }
     </style>
 </head>
 
@@ -296,10 +323,9 @@ if (isset($_SESSION['error_message'])) {
                         <span class="nav-item-2">Scholarship Form</span>
                     </a>
                 </li>
-                <li><a href="./manage_dropdowns.php"><i class="fas fa-list"></i><span class="nav-item-2">Manage
-                            Scholarships</span></a></li>
+                <li><a href="./manage_dropdowns.php"><i class="fas fa-list"></i><span class="nav-item-2">Scholarship Settings</span></a></li>
                 <li>
-                    <a href="./applications.php" class="active">
+                    <a href="./applications.php" class="activea">
                         <i class="fas fa-solid fa-folder"></i>
                         <span class="nav-item-2">Applications</span>
                     </a>
@@ -351,8 +377,10 @@ if (isset($_SESSION['error_message'])) {
                 </a>
             </li>
         </ul>
+                <button class="toggle-btn" onclick="toggleNav()">
+            <i class="fas fa-bars" id="toggle-icon"></i>
     </nav>
-
+<div class="content">
     <div class="container">
         <h1>Applications Management</h1>
         <div class="table-container">
@@ -590,7 +618,7 @@ if (isset($_SESSION['error_message'])) {
         </table>
 
         <div class="export-button-container">
-            <a href="../application_process/export_application.php" class="btn-export">
+            <a href="../application_process/export_application.php?<?php echo htmlspecialchars(buildQueryString()); ?>" class="btn-export">
                 <i class="fas fa-solid fa-download"></i> Export to CSV
             </a>
         </div>
@@ -691,23 +719,7 @@ if (isset($_SESSION['error_message'])) {
                 window.location.href = url.toString();
             }
 
-            function toggleNav() {
-                const sideNav = document.getElementById('sideNav');
-                const toggleIcon = document.getElementById('toggle-icon');
 
-                // Check if the navigation is currently open (visible)
-                if (sideNav.style.transform === 'translateX(0px)' || sideNav.style.transform === '') {
-                    // Close the navigation
-                    sideNav.style.transform = 'translateX(-250px)';
-                    toggleIcon.classList.remove('fa-times');
-                    toggleIcon.classList.add('fa-bars');
-                } else {
-                    // Open the navigation
-                    sideNav.style.transform = 'translateX(0px)';
-                    toggleIcon.classList.remove('fa-bars');
-                    toggleIcon.classList.add('fa-times');
-                }
-            }
             
             // Add visual feedback for active filters
             document.addEventListener('DOMContentLoaded', function() {
@@ -720,6 +732,9 @@ if (isset($_SESSION['error_message'])) {
                 });
             });
         </script>
+    </div>
+</div>
+
 </body>
 
 </html>
@@ -740,4 +755,4 @@ function buildQueryString($newParams = []) {
     }
     
     return http_build_query($params);
-}
+}   

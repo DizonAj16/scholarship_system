@@ -69,7 +69,22 @@ try {
 
     $uploadedFiles = [];
     if ($fileData && !empty($fileData['files'])) {
-        $uploadedFiles = json_decode($fileData['files'], true);
+        $filesArray = json_decode($fileData['files'], true);
+        
+        // Check if this is the new format (array of objects) or old format (array of strings)
+        if (isset($filesArray[0]) && is_array($filesArray[0]) && isset($filesArray[0]['requirement_name'])) {
+            // New format: array of objects with 'requirement_name' and 'file_path'
+            $uploadedFiles = $filesArray;
+        } else {
+            // Old format: array of file paths
+            // Convert to new format for consistency
+            foreach ($filesArray as $filePath) {
+                $uploadedFiles[] = [
+                    'requirement_name' => 'Document',
+                    'file_path' => $filePath
+                ];
+            }
+        }
     }
 
 } catch (PDOException $e) {
@@ -204,6 +219,12 @@ try {
             border-radius: 8px;
             max-width: 300px;
             background: #f9f9f9;
+            transition: transform 0.3s ease;
+        }
+
+        .file-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
         }
 
         .file-card embed,
@@ -212,6 +233,25 @@ try {
             margin-bottom: 10px;
             border: 1px solid #ccc;
             border-radius: 5px;
+            max-width: 100%;
+            height: 200px;
+            object-fit: contain;
+        }
+
+        .file-info {
+            margin-top: 10px;
+        }
+
+        .requirement-name {
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .file-name {
+            font-size: 12px;
+            color: #666;
+            word-break: break-all;
         }
 
         .btn-back {
@@ -222,6 +262,7 @@ try {
             text-decoration: none;
             border-radius: 5px;
             margin-top: 20px;
+            transition: background 0.3s ease;
         }
 
         .btn-back:hover {
@@ -252,6 +293,28 @@ try {
             color: white;
         }
 
+        .status-under-review {
+            background: #17a2b8;
+            color: white;
+        }
+
+        .status-cancelled {
+            background: #6c757d;
+            color: white;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+
+        .empty-state i {
+            font-size: 48px;
+            margin-bottom: 15px;
+            color: #ddd;
+        }
+
         @media print {
             .top-buttons,
             .btn-back {
@@ -261,6 +324,10 @@ try {
             .section {
                 box-shadow: none;
                 border: 1px solid #ddd;
+                page-break-inside: avoid;
+            }
+            
+            .file-card {
                 page-break-inside: avoid;
             }
         }
@@ -283,6 +350,13 @@ try {
             <button onclick="window.print()" class="action-button print-button">
                 <i class="fas fa-print"></i> Print Page
             </button>
+            
+            <?php if ($application['status'] === 'pending' || $application['status'] === 'under review'): ?>
+            <button onclick="location.href='application_tracking.php?id=<?= $application_id ?>'"
+                class="action-button track-button">
+                <i class="fas fa-truck"></i> Track Application Status
+            </button>
+            <?php endif; ?>
         </div>
 
         <h1>Scholarship Application Details</h1>
@@ -339,17 +413,20 @@ try {
         <div class="section">
             <h2>Educational Background</h2>
             <div class="details">
-                <p><i class="fas fa-school"></i><strong>Elementary School:</strong> <?= htmlspecialchars($application['elementary']) ?></p>
-                <p><i class="fas fa-calendar"></i><strong>Elementary Year Graduated:</strong> <?= htmlspecialchars($application['elementary_year_grad']) ?></p>
-                <p><i class="fas fa-award"></i><strong>Elementary Honors:</strong> <?= htmlspecialchars($application['elementary_honors']) ?></p>
+                <h3 style="color: #666; margin-top: 10px; margin-bottom: 10px;">Elementary School</h3>
+                <p><i class="fas fa-school"></i><strong>School Name:</strong> <?= htmlspecialchars($application['elementary']) ?></p>
+                <p><i class="fas fa-calendar"></i><strong>Year Graduated:</strong> <?= htmlspecialchars($application['elementary_year_grad']) ?></p>
+                <p><i class="fas fa-award"></i><strong>Honors Received:</strong> <?= htmlspecialchars($application['elementary_honors']) ?></p>
                 
-                <p><i class="fas fa-school"></i><strong>Secondary School:</strong> <?= htmlspecialchars($application['secondary']) ?></p>
-                <p><i class="fas fa-calendar"></i><strong>Secondary Year Graduated:</strong> <?= htmlspecialchars($application['secondary_year_grad']) ?></p>
-                <p><i class="fas fa-award"></i><strong>Secondary Honors:</strong> <?= htmlspecialchars($application['secondary_honors']) ?></p>
+                <h3 style="color: #666; margin-top: 15px; margin-bottom: 10px;">Secondary School</h3>
+                <p><i class="fas fa-school"></i><strong>School Name:</strong> <?= htmlspecialchars($application['secondary']) ?></p>
+                <p><i class="fas fa-calendar"></i><strong>Year Graduated:</strong> <?= htmlspecialchars($application['secondary_year_grad']) ?></p>
+                <p><i class="fas fa-award"></i><strong>Honors Received:</strong> <?= htmlspecialchars($application['secondary_honors']) ?></p>
                 
-                <p><i class="fas fa-university"></i><strong>College:</strong> <?= htmlspecialchars($application['college']) ?></p>
-                <p><i class="fas fa-calendar"></i><strong>College Year Graduated:</strong> <?= htmlspecialchars($application['college_year_grad']) ?></p>
-                <p><i class="fas fa-award"></i><strong>College Honors:</strong> <?= htmlspecialchars($application['college_honors']) ?></p>
+                <h3 style="color: #666; margin-top: 15px; margin-bottom: 10px;">College/University</h3>
+                <p><i class="fas fa-university"></i><strong>School Name:</strong> <?= htmlspecialchars($application['college'] ?: 'Not Applicable') ?></p>
+                <p><i class="fas fa-calendar"></i><strong>Year Graduated:</strong> <?= htmlspecialchars($application['college_year_grad'] ?: 'Not Applicable') ?></p>
+                <p><i class="fas fa-award"></i><strong>Honors Received:</strong> <?= htmlspecialchars($application['college_honors'] ?: 'Not Applicable') ?></p>
             </div>
         </div>
 
@@ -357,23 +434,23 @@ try {
         <div class="section">
             <h2>Family Information</h2>
             <div class="details">
-                <h3 style="color: #666; margin-top: 15px; margin-bottom: 10px;">Father's Information</h3>
+                <h3 style="color: #666; margin-top: 10px; margin-bottom: 10px;">Father's Information</h3>
                 <p><i class="fas fa-male"></i><strong>Full Name:</strong> 
-                    <?= htmlspecialchars($application['father_givenname'] . ' ' . $application['father_middlename'] . ' ' . $application['father_lastname']) ?>
+                    <?= htmlspecialchars(trim($application['father_givenname'] . ' ' . ($application['father_middlename'] ? $application['father_middlename'] . ' ' : '') . $application['father_lastname'])) ?>
                 </p>
                 <p><i class="fas fa-phone"></i><strong>Phone:</strong> <?= htmlspecialchars($application['father_cellphone']) ?></p>
                 <p><i class="fas fa-graduation-cap"></i><strong>Education:</strong> <?= htmlspecialchars($application['father_education']) ?></p>
                 <p><i class="fas fa-briefcase"></i><strong>Occupation:</strong> <?= htmlspecialchars($application['father_occupation']) ?></p>
-                <p><i class="fas fa-money-bill-wave"></i><strong>Monthly Income:</strong> ₱<?= number_format($application['father_income'], 2) ?></p>
+                <p><i class="fas fa-money-bill-wave"></i><strong>Monthly Income:</strong> ₱<?= number_format(floatval($application['father_income']), 2) ?></p>
                 
                 <h3 style="color: #666; margin-top: 15px; margin-bottom: 10px;">Mother's Information</h3>
                 <p><i class="fas fa-female"></i><strong>Full Name:</strong> 
-                    <?= htmlspecialchars($application['mother_givenname'] . ' ' . $application['mother_middlename'] . ' ' . $application['mother_lastname']) ?>
+                    <?= htmlspecialchars(trim($application['mother_givenname'] . ' ' . ($application['mother_middlename'] ? $application['mother_middlename'] . ' ' : '') . $application['mother_lastname'])) ?>
                 </p>
                 <p><i class="fas fa-phone"></i><strong>Phone:</strong> <?= htmlspecialchars($application['mother_cellphone']) ?></p>
                 <p><i class="fas fa-graduation-cap"></i><strong>Education:</strong> <?= htmlspecialchars($application['mother_education']) ?></p>
                 <p><i class="fas fa-briefcase"></i><strong>Occupation:</strong> <?= htmlspecialchars($application['mother_occupation']) ?></p>
-                <p><i class="fas fa-money-bill-wave"></i><strong>Monthly Income:</strong> ₱<?= number_format($application['mother_income'], 2) ?></p>
+                <p><i class="fas fa-money-bill-wave"></i><strong>Monthly Income:</strong> ₱<?= number_format(floatval($application['mother_income']), 2) ?></p>
             </div>
         </div>
 
@@ -381,7 +458,7 @@ try {
         <div class="section">
             <h2>Housing Information</h2>
             <div class="details">
-                <p><i class="fas fa-home"></i><strong>House Status:</strong> <?= htmlspecialchars($application['house_status']) ?></p>
+                <p><i class="fas fa-home"></i><strong>House Status:</strong> <?= htmlspecialchars(ucfirst($application['house_status'])) ?></p>
             </div>
         </div>
 
@@ -391,31 +468,55 @@ try {
             <?php if (!empty($uploadedFiles)): ?>
                 <div class="attachments">
                     <?php foreach ($uploadedFiles as $file):
-                        $filePath = "../uploads/" . $file;
-                        $ext = strtolower(pathinfo($file, PATHINFO_EXTENSION));
+                        // Handle both new and old formats
+                        if (is_array($file) && isset($file['file_path'])) {
+                            $filePath = $file['file_path'];
+                            $requirementName = isset($file['requirement_name']) ? $file['requirement_name'] : 'Document';
+                            $displayFileName = basename($filePath);
+                        } else {
+                            // Handle old format (string)
+                            $filePath = $file;
+                            $requirementName = 'Document';
+                            $displayFileName = basename($file);
+                        }
+                        
+                        $fullFilePath = "../uploads/" . $filePath;
+                        
+                        // Check if file exists
+                        if (!file_exists($fullFilePath)) {
+                            continue;
+                        }
+                        
+                        $ext = strtolower(pathinfo($displayFileName, PATHINFO_EXTENSION));
                         ?>
                         <div class="file-card">
+                            <div class="file-info">
+                                <div class="requirement-name"><?= htmlspecialchars($requirementName) ?></div>
+                            </div>
                             <?php if ($ext === "pdf"): ?>
-                                <embed src="<?= $filePath ?>" type="application/pdf" width="250" height="200" />
+                                <embed src="<?= htmlspecialchars($fullFilePath) ?>" type="application/pdf" width="250" height="200" />
                             <?php elseif (in_array($ext, ['jpg', 'jpeg', 'png', 'gif'])): ?>
-                                <img src="<?= $filePath ?>" width="250" height="200" alt="Document" 
-                                     style="border:1px solid #ccc; border-radius:5px; object-fit: cover;">
+                                <img src="<?= htmlspecialchars($fullFilePath) ?>" width="250" height="200" alt="<?= htmlspecialchars($requirementName) ?>" 
+                                     style="border:1px solid #ccc; border-radius:5px; object-fit: contain;">
                             <?php else: ?>
                                 <div style="width: 250px; height: 200px; background: #f0f0f0; display: flex; align-items: center; justify-content: center; border-radius: 5px;">
                                     <i class="fas fa-file" style="font-size: 48px; color: #666;"></i>
                                 </div>
                             <?php endif; ?>
                             <p style="text-align: center; margin-top: 10px;">
-                                <a href="<?= $filePath ?>" download style="text-decoration: none; color: #2196F3;">
+                                <a href="<?= htmlspecialchars($fullFilePath) ?>" download style="text-decoration: none; color: #2196F3;">
                                     <i class="fas fa-download"></i> Download
                                 </a><br>
-                                <small><?= htmlspecialchars($file) ?></small>
+                                <small class="file-name"><?= htmlspecialchars($displayFileName) ?></small>
                             </p>
                         </div>
                     <?php endforeach; ?>
                 </div>
             <?php else: ?>
-                <p><i class="fas fa-info-circle"></i> No files attached to this application.</p>
+                <div class="empty-state">
+                    <i class="fas fa-file"></i>
+                    <p>No files attached to this application.</p>
+                </div>
             <?php endif; ?>
         </div>
 
@@ -430,6 +531,28 @@ try {
             setTimeout(function() {
                 document.querySelector('.preloader').style.display = 'none';
             }, 1000);
+        });
+        
+        // Handle PDF embed errors
+        document.addEventListener('DOMContentLoaded', function() {
+            const embeds = document.querySelectorAll('embed[type="application/pdf"]');
+            embeds.forEach(embed => {
+                embed.addEventListener('error', function() {
+                    const parent = this.parentElement;
+                    if (parent) {
+                        parent.innerHTML = `
+                            <div class="file-info">
+                                <div class="requirement-name">${parent.querySelector('.requirement-name')?.textContent || 'Document'}</div>
+                            </div>
+                            <div style="width: 250px; height: 200px; background: #f0f0f0; display: flex; align-items: center; justify-content: center; flex-direction: column; border-radius: 5px;">
+                                <i class="fas fa-file-pdf" style="font-size: 48px; color: #d32f2f;"></i>
+                                <p style="margin-top: 10px; font-size: 12px; color: #666;">PDF cannot be displayed</p>
+                            </div>
+                            ${parent.querySelector('p') ? parent.querySelector('p').outerHTML : ''}
+                        `;
+                    }
+                });
+            });
         });
     </script>
 </body>

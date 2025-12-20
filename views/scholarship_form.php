@@ -1,8 +1,8 @@
 <?php
 include '../includes/session.php';
 
-// Fetch Semester + School Year
-$sem_sy_list = $pdo->query("SELECT * FROM dropdown_sem_sy ORDER BY school_year DESC, semester ASC")->fetchAll(PDO::FETCH_ASSOC);
+// Fetch DEFAULT Semester + School Year only
+$sem_sy_list = $pdo->query("SELECT * FROM dropdown_sem_sy WHERE is_default = 1 ORDER BY school_year DESC, semester ASC")->fetchAll(PDO::FETCH_ASSOC);
 
 // Fetch Course + Major
 $course_major_list = $pdo->query("SELECT * FROM dropdown_course_major ORDER BY course ASC, major ASC")->fetchAll(PDO::FETCH_ASSOC);
@@ -10,11 +10,12 @@ $course_major_list = $pdo->query("SELECT * FROM dropdown_course_major ORDER BY c
 // Fetch Scholarship Grants
 $scholarship_grant_list = $pdo->query("SELECT * FROM dropdown_scholarship_grant ORDER BY grant_name ASC")->fetchAll(PDO::FETCH_ASSOC);
 
-$current_sem = $application['semester'] ?? '';
-$current_sy = $application['school_year'] ?? '';
-$current_course = $application['course'] ?? '';
-$current_major = $application['major'] ?? '';
-$current_scholarship_grant = $application['scholarship_grant'] ?? '';
+// Initialize variables
+$current_sem = '';
+$current_sy = '';
+$current_course = '';
+$current_major = '';
+$current_scholarship_grant = '';
 
 // Check if user already has an application for the selected grant (for non-admin users)
 $user_id = $_SESSION['id'];
@@ -28,7 +29,37 @@ if ($user_role !== 'admin') {
     $existing_applications = $stmt->fetchAll(PDO::FETCH_COLUMN, 0);
 }
 
-// process_form.php - Processing form submission
+// ============================================
+// PRE-FILL USER PROFILE DATA FOR STUDENTS
+// ============================================
+$user_profile_data = [];
+$user_schools_data = [];
+$user_parents_data = [];
+$user_house_data = [];
+
+if ($user_role === 'student') {
+    // Fetch user profile data
+    $stmt = $pdo->prepare("SELECT * FROM user_profile WHERE user_id = :user_id");
+    $stmt->execute([':user_id' => $user_id]);
+    $user_profile_data = $stmt->fetch(PDO::FETCH_ASSOC);
+
+    // Fetch user schools attended data
+    $stmt = $pdo->prepare("SELECT * FROM user_schools_attended WHERE user_id = :user_id");
+    $stmt->execute([':user_id' => $user_id]);
+    $user_schools_data = $stmt->fetch(PDO::FETCH_ASSOC);
+
+    // Fetch user parents info data
+    $stmt = $pdo->prepare("SELECT * FROM user_parents_info WHERE user_id = :user_id");
+    $stmt->execute([':user_id' => $user_id]);
+    $user_parents_data = $stmt->fetch(PDO::FETCH_ASSOC);
+
+    // Fetch user house info data
+    $stmt = $pdo->prepare("SELECT * FROM user_house_info WHERE user_id = :user_id");
+    $stmt->execute([':user_id' => $user_id]);
+    $user_house_data = $stmt->fetch(PDO::FETCH_ASSOC);
+}
+
+// Process form submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $semester_sy = explode('|', $_POST['semester_sy']);
     $course_major = explode('|', $_POST['course_major']);
@@ -105,6 +136,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $data['indigenous_group'] = $_POST['indigenous_group_other'];
     }
 
+    // Handle college year graduation - set to NULL if empty
+    if (empty($data['college_year_grad'])) {
+        $data['college_year_grad'] = null;
+    }
+
     $user_id = $_SESSION['id'];
     $username = $_SESSION['username']; // Retrieve username from session
 
@@ -115,6 +151,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $application_id = date("YmdHis"); // Format: YYYYMMDDHHMMSS
         // Optionally add milliseconds
         $application_id .= substr((string) microtime(), 2, 3); // Adds 3-digit milliseconds
+
+        // Sanitize full name for folder creation
+        $sanitized_full_name = preg_replace('/[^a-zA-Z0-9\s\-]/', '', $data['full_name']);
+        $sanitized_full_name = str_replace(' ', '_', $sanitized_full_name);
+        $sanitized_full_name = substr($sanitized_full_name, 0, 50); // Limit length
+
+        // Create folder path: uploads/(full_name - application_id)/
+        $upload_folder_name = $sanitized_full_name . '_' . $application_id;
+        $uploadDir = "../uploads/" . $upload_folder_name . "/";
+
+        // Create the directory if it doesn't exist
+        if (!is_dir($uploadDir)) {
+            mkdir($uploadDir, 0777, true);
+        }
 
         // Insert into scholarship_applications table
         $stmt = $pdo->prepare("INSERT INTO scholarship_applications (application_id, user_id, date, semester, school_year, full_name, course, yr_sec, major, cell_no, permanent_address, zip_code, present_address, email, sex, date_of_birth, age, place_of_birth, civil_status, religion, scholarship_grant, disability, indigenous_group, reason_scholarship) VALUES (:application_id, :user_id, :date, :semester, :school_year, :full_name, :course, :yr_sec, :major, :cell_no, :permanent_address, :zip_code, :present_address, :email, :sex, :date_of_birth, :age, :place_of_birth, :civil_status, :religion, :scholarship_grant, :disability, :indigenous_group, :reason_scholarship)");
@@ -147,20 +197,38 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         ]);
 
         // Insert into schools_attended table
-        $stmt = $pdo->prepare("INSERT INTO schools_attended (application_id, elementary, elementary_year_grad, elementary_honors, secondary, secondary_year_grad, secondary_honors, college, college_year_grad, college_honors) VALUES (:application_id, :elementary, :elementary_year_grad, :elementary_honors, :secondary, :secondary_year_grad, :secondary_honors, :college, :college_year_grad, :college_honors)");
-
-        $stmt->execute([
-            ':application_id' => $application_id,
-            ':elementary' => $data['elementary'],
-            ':elementary_year_grad' => $data['elementary_year_grad'],
-            ':elementary_honors' => $data['elementary_honors'],
-            ':secondary' => $data['secondary'],
-            ':secondary_year_grad' => $data['secondary_year_grad'],
-            ':secondary_honors' => $data['secondary_honors'],
-            ':college' => $data['college'],
-            ':college_year_grad' => $data['college_year_grad'],
-            ':college_honors' => $data['college_honors'],
-        ]);
+        $schools_sql = "INSERT INTO schools_attended (
+            application_id, elementary, elementary_year_grad, elementary_honors,
+            secondary, secondary_year_grad, secondary_honors,
+            college, college_year_grad, college_honors
+        ) VALUES (
+            :application_id, :elementary, :elementary_year_grad, :elementary_honors,
+            :secondary, :secondary_year_grad, :secondary_honors,
+            :college, :college_year_grad, :college_honors
+        )";
+        
+        $schools_stmt = $pdo->prepare($schools_sql);
+        $schools_stmt->bindParam(':application_id', $application_id);
+        $schools_stmt->bindParam(':elementary', $data['elementary']);
+        $schools_stmt->bindParam(':elementary_year_grad', $data['elementary_year_grad']);
+        $schools_stmt->bindParam(':elementary_honors', $data['elementary_honors']);
+        $schools_stmt->bindParam(':secondary', $data['secondary']);
+        $schools_stmt->bindParam(':secondary_year_grad', $data['secondary_year_grad']);
+        $schools_stmt->bindParam(':secondary_honors', $data['secondary_honors']);
+        $schools_stmt->bindParam(':college', $data['college']);
+        $schools_stmt->bindParam(':college_year_grad', $data['college_year_grad']);
+        $schools_stmt->bindParam(':college_honors', $data['college_honors']);
+        
+        // Handle NULL value for college_year_grad
+        if ($data['college_year_grad'] === null) {
+            $schools_stmt->bindValue(':college_year_grad', null, PDO::PARAM_NULL);
+        } else {
+            $schools_stmt->bindParam(':college_year_grad', $data['college_year_grad']);
+        }
+        
+        if (!$schools_stmt->execute()) {
+            throw new Exception("Failed to save schools attended information.");
+        }
 
         // Insert into parents_info table
         $stmt = $pdo->prepare("INSERT INTO parents_info (application_id, father_lastname, father_givenname, father_middlename, father_cellphone, father_education, father_occupation, father_income, mother_lastname, mother_givenname, mother_middlename, mother_cellphone, mother_education, mother_occupation, mother_income) VALUES (:application_id, :father_lastname, :father_givenname, :father_middlename, :father_cellphone, :father_education, :father_occupation, :father_income, :mother_lastname, :mother_givenname, :mother_middlename, :mother_cellphone, :mother_education, :mother_occupation, :mother_income)");
@@ -192,14 +260,57 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         ]);
 
         $uploadedFiles = [];
-        $uploadDir = "../uploads/"; // create this folder if not exists
-        if (!is_dir($uploadDir))
-            mkdir($uploadDir, 0777, true);
 
+        // Handle file uploads to the organized folder
+        // Process individual requirement uploads
+        if (isset($_POST['requirement_names']) && is_array($_POST['requirement_names'])) {
+            foreach ($_POST['requirement_names'] as $index => $requirementName) {
+                $fileInputName = 'requirement_' . $index;
+
+                if (isset($_FILES[$fileInputName]) && $_FILES[$fileInputName]['error'] === UPLOAD_ERR_OK) {
+                    $fileName = $_FILES[$fileInputName]['name'];
+                    $fileTmp = $_FILES[$fileInputName]['tmp_name'];
+                    $fileSize = $_FILES[$fileInputName]['size'];
+                    $ext = strtolower(pathinfo($fileName, PATHINFO_EXTENSION));
+                    $allowed = ['pdf', 'jpg', 'jpeg', 'png'];
+
+                    if (!in_array($ext, $allowed)) {
+                        continue;
+                    }
+                    if ($fileSize > 5 * 1024 * 1024) {
+                        continue;
+                    }
+
+                    // Sanitize requirement name for filename
+                    $sanitizedReqName = preg_replace('/[^a-zA-Z0-9\s\-]/', '', $requirementName);
+                    $sanitizedReqName = str_replace(' ', '_', $sanitizedReqName);
+                    $sanitizedReqName = substr($sanitizedReqName, 0, 30);
+
+                    // Generate unique filename with requirement name
+                    $uniqueName = time() . "_" . $sanitizedReqName . "_" . uniqid() . "." . $ext;
+                    $uploadPath = $uploadDir . $uniqueName;
+
+                    if (move_uploaded_file($fileTmp, $uploadPath)) {
+                        // Store relative path in database with requirement name
+                        $relativePath = $upload_folder_name . "/" . $uniqueName;
+                        $uploadedFiles[] = [
+                            'requirement_name' => $requirementName,
+                            'file_path' => $relativePath
+                        ];
+                    }
+                }
+            }
+        }
+
+        // Also handle additional files from the general upload area
         if (!empty($_FILES['attachments']['name'][0])) {
             $allowed = ['pdf', 'jpg', 'jpeg', 'png'];
 
             for ($i = 0; $i < count($_FILES['attachments']['name']); $i++) {
+                if ($_FILES['attachments']['error'][$i] !== UPLOAD_ERR_OK) {
+                    continue;
+                }
+                
                 $fileName = $_FILES['attachments']['name'][$i];
                 $fileTmp = $_FILES['attachments']['tmp_name'][$i];
                 $fileSize = $_FILES['attachments']['size'][$i];
@@ -210,22 +321,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 if ($fileSize > 5 * 1024 * 1024)
                     continue;
 
-                $uniqueName = time() . "_" . uniqid() . "." . $ext;
+                // Generate unique filename with timestamp and original name
+                $uniqueName = time() . "_" . uniqid() . "_" . preg_replace('/[^a-zA-Z0-9._-]/', '_', $fileName);
                 $uploadPath = $uploadDir . $uniqueName;
 
                 if (move_uploaded_file($fileTmp, $uploadPath)) {
-                    $uploadedFiles[] = $uniqueName;
+                    // Store relative path in database
+                    $relativePath = $upload_folder_name . "/" . $uniqueName;
+                    $uploadedFiles[] = [
+                        'requirement_name' => 'Additional Document',
+                        'file_path' => $relativePath
+                    ];
                 }
             }
         }
 
-        // Save file names in database as JSON
+        // Save file paths in database as JSON
         $fileListJSON = json_encode($uploadedFiles);
 
-        $stmt = $pdo->prepare("INSERT INTO scholarship_files (application_id, files) VALUES (:application_id, :files)");
+        $stmt = $pdo->prepare("INSERT INTO scholarship_files (application_id, files, upload_folder) VALUES (:application_id, :files, :upload_folder)");
         $stmt->execute([
             ':application_id' => $application_id,
-            ':files' => $fileListJSON
+            ':files' => $fileListJSON,
+            ':upload_folder' => $upload_folder_name
         ]);
 
         // Commit transaction
@@ -236,7 +354,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         // Log the activity
         $action = "Scholarship application submitted";
-        $details = "Application ID $application_id submitted by $username.";
+        $details = "Application ID $application_id submitted by $username. Files uploaded to: $upload_folder_name";
         logActivity($pdo, $user_id, $action, $details);
 
         $_SESSION['success_message'] = 'Your scholarship application has been successfully submitted.';
@@ -250,7 +368,33 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $_SESSION['error_message'] = 'There was an error processing your application. Please try again.';
         // For debugging: echo "Error: " . $e->getMessage();
         error_log("Scholarship Form Error: " . $e->getMessage());
+    } catch (Exception $e) {
+        // Rollback transaction on error
+        if ($pdo->inTransaction()) {
+            $pdo->rollBack();
+        }
+        $_SESSION['error_message'] = 'There was an error processing your application: ' . $e->getMessage();
+        error_log("Scholarship Form Exception: " . $e->getMessage());
     }
+}
+
+// Check if there's a default semester/school year set
+if (empty($sem_sy_list)) {
+    // If no default is set, show an error message
+    $error_message = '<div class="alert alert-danger" style="margin: 20px auto; max-width: 800px;">
+            <h4><i class="fas fa-exclamation-triangle"></i> No Active Semester/School Year</h4>
+            <p>There is currently no active semester/school year set for applications. Please contact the administrator to set a default semester and school year.</p>';
+
+    // If user is admin, show additional message
+    if ($user_role === 'admin') {
+        $error_message .= '<p><strong>Admin Note:</strong> You can set a default semester/school year in the <a href="./manage_dropdowns.php">Scholarship Settings</a> page.</p>';
+    }
+    $error_message .= '</div>';
+
+    echo $error_message;
+
+    // Don't show the form if there's no default semester
+    die();
 }
 
 if (isset($_SESSION['success_message'])) {
@@ -280,6 +424,8 @@ if (isset($_SESSION['error_message'])) {
     <link rel="stylesheet" type="text/css" href="../css/style.css?v=<?php echo time(); ?>" />
     <link rel="stylesheet" type="text/css" href="../css/form.css?v=<?php echo time(); ?>" />
     <link rel="stylesheet" type="text/css" href="../css/wizard.css?v=<?php echo time(); ?>" />
+    <script src="../js/toggle_nav.js?v=<?php echo time(); ?>"></script>
+
     <style>
         /* Enhanced Page Styles */
         body {
@@ -317,6 +463,79 @@ if (isset($_SESSION['error_message'])) {
             transform: translateY(-50%);
             font-size: 40px;
             opacity: 0.2;
+        }
+
+        /* Semester Display Styles */
+        .semester-display {
+            background: linear-gradient(135deg, #e8f5e9, #c8e6c9);
+            border: 2px solid #28a745;
+            border-radius: 10px;
+            padding: 15px 20px;
+            margin: 20px 0;
+            text-align: center;
+            box-shadow: 0 4px 6px rgba(40, 167, 69, 0.1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .semester-display::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 5px;
+            height: 100%;
+            background: #28a745;
+        }
+
+        .semester-display h4 {
+            color: #155724;
+            margin: 0 0 10px 0;
+            font-size: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .semester-display h4 i {
+            font-size: 20px;
+        }
+
+        .semester-value {
+            font-size: 22px;
+            font-weight: 700;
+            color: #28a745;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .semester-note {
+            font-size: 14px;
+            color: #666;
+            margin-top: 10px;
+            font-style: italic;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+        }
+
+        /* Pre-filled Data Indicator */
+        .prefilled-indicator {
+            background: #e8f5e9;
+            border: 1px solid #c8e6c9;
+            border-radius: 5px;
+            padding: 10px;
+            margin: 10px 0;
+            font-size: 14px;
+            color: #2e7d32;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .prefilled-indicator i {
+            color: #28a745;
         }
 
         /* File Upload Section Enhancement */
@@ -379,12 +598,22 @@ if (isset($_SESSION['error_message'])) {
             border-radius: 12px;
             margin-bottom: 12px;
             transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 15px;
         }
 
         .file-item:hover {
             border-color: #007bff;
             transform: translateX(5px);
             box-shadow: 0 6px 12px rgba(0, 123, 255, 0.1);
+        }
+
+        .file-info {
+            display: flex;
+            align-items: center;
+            flex: 1;
         }
 
         .file-icon {
@@ -396,6 +625,7 @@ if (isset($_SESSION['error_message'])) {
             justify-content: center;
             border-radius: 10px;
             background: linear-gradient(135deg, #e3f2fd, #bbdefb);
+            margin-right: 15px;
         }
 
         .file-icon i.fa-file-pdf {
@@ -408,6 +638,43 @@ if (isset($_SESSION['error_message'])) {
 
         .file-icon i.fa-file {
             color: #f57c00;
+        }
+
+        .file-details {
+            flex: 1;
+        }
+
+        .file-name {
+            font-weight: 600;
+            color: #2c3e50;
+            display: block;
+            margin-bottom: 5px;
+            word-break: break-word;
+        }
+
+        .file-meta {
+            display: flex;
+            gap: 15px;
+            font-size: 13px;
+            color: #666;
+        }
+
+        .remove-file {
+            background: #dc3545;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            width: 36px;
+            height: 36px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.3s;
+        }
+
+        .remove-file:hover {
+            background: #c82333;
         }
 
         /* Success/Error Messages Animation */
@@ -489,14 +756,26 @@ if (isset($_SESSION['error_message'])) {
                 padding: 20px;
             }
 
-            .wizard-flow-chart {
-                margin: 30px 0;
-            }
+
 
             .buttonNav,
             .submitBtn {
                 min-width: 120px;
                 padding: 12px 25px;
+            }
+
+            .semester-display {
+                padding: 12px 15px;
+                margin: 15px 0;
+            }
+
+            .semester-value {
+                font-size: 18px;
+            }
+
+            .file-meta {
+                flex-direction: column;
+                gap: 5px;
             }
         }
 
@@ -521,6 +800,12 @@ if (isset($_SESSION['error_message'])) {
             section {
                 box-shadow: none !important;
                 border: 1px solid #ccc !important;
+            }
+
+            .semester-display {
+                border: 1px solid #000 !important;
+                background: none !important;
+                box-shadow: none !important;
             }
         }
 
@@ -604,6 +889,296 @@ if (isset($_SESSION['error_message'])) {
             color: #666;
             font-weight: 600;
         }
+
+        /* Upload folder info */
+        .folder-info {
+            background: #e8f5e9;
+            border: 1px solid #c8e6c9;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 15px 0;
+            font-size: 14px;
+        }
+
+        .folder-info strong {
+            color: #2e7d32;
+        }
+
+        /* Profile Info Section */
+        .profile-info-section {
+            background: #f8f9fa;
+            border-left: 4px solid #28a745;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+        }
+
+        .profile-info-section h3 {
+            color: #155724;
+            margin-top: 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .profile-info-section h3 i {
+            color: #28a745;
+        }
+
+        .profile-info-section p {
+            margin: 5px 0;
+            color: #666;
+        }
+
+        .profile-info-section strong {
+            color: #333;
+        }
+
+        /* Individual Requirement Upload Styles */
+        .requirement-upload-container {
+            background: white;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .requirement-upload-container:hover {
+            border-color: #007bff;
+            box-shadow: 0 4px 8px rgba(0, 123, 255, 0.1);
+        }
+
+        .requirement-upload-container.completed {
+            border-color: #28a745;
+            background-color: #f8fff8;
+        }
+
+        .requirement-upload-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .requirement-number {
+            background: linear-gradient(135deg, #007bff, #00bcd4);
+            color: white;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            margin-right: 15px;
+            font-size: 18px;
+        }
+
+        .requirement-details {
+            flex: 1;
+        }
+
+        .requirement-title {
+            font-weight: 600;
+            color: #2c3e50;
+            font-size: 16px;
+            margin-bottom: 5px;
+        }
+
+        .requirement-description {
+            font-size: 14px;
+            color: #666;
+        }
+
+        .requirement-upload-area {
+            border: 2px dashed #ddd;
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-bottom: 10px;
+        }
+
+        .requirement-upload-area:hover {
+            border-color: #007bff;
+            background-color: #f8f9fa;
+        }
+
+        .requirement-upload-area.highlight {
+            border-color: #28a745;
+            background-color: #e8f5e9;
+        }
+
+        .requirement-upload-preview {
+            margin-top: 15px;
+        }
+
+        .requirement-file-info {
+            display: flex;
+            align-items: center;
+            background: #f8f9fa;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 10px;
+        }
+
+        .requirement-file-icon {
+            font-size: 24px;
+            color: #007bff;
+            margin-right: 15px;
+        }
+
+        .requirement-file-details {
+            flex: 1;
+        }
+
+        .requirement-file-name {
+            font-weight: 500;
+            color: #2c3e50;
+            word-break: break-word;
+        }
+
+        .requirement-file-remove {
+            color: #dc3545;
+            cursor: pointer;
+            padding: 5px;
+        }
+
+        .requirement-file-remove:hover {
+            color: #c82333;
+        }
+
+        .requirement-status {
+            display: flex;
+            align-items: center;
+            margin-top: 10px;
+            font-size: 14px;
+        }
+
+        .requirement-status.completed {
+            color: #28a745;
+        }
+
+        .requirement-status.pending {
+            color: #ff9800;
+        }
+
+        /* Additional Files Section */
+        .additional-files-section {
+            background: #f8f9fa;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 30px;
+        }
+
+        .additional-files-section h5 {
+            color: #2c3e50;
+            margin-bottom: 15px;
+            font-size: 16px;
+        }
+
+        .additional-files-note {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 15px;
+        }
+
+        /* Validation styles */
+        .requirement-upload-container.error {
+            border-color: #dc3545;
+            animation: shake 0.5s;
+        }
+
+        @keyframes shake {
+
+            0%,
+            100% {
+                transform: translateX(0);
+            }
+
+            10%,
+            30%,
+            50%,
+            70%,
+            90% {
+                transform: translateX(-5px);
+            }
+
+            20%,
+            40%,
+            60%,
+            80% {
+                transform: translateX(5px);
+            }
+        }
+
+        .requirement-error {
+            color: #dc3545;
+            font-size: 14px;
+            margin-top: 5px;
+            display: none;
+        }
+        
+        /* Validation Summary Styles */
+        .validation-summary {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            display: none;
+            border-left: 4px solid #dc3545;
+        }
+        
+        .validation-summary h3 {
+            margin-top: 0;
+            font-size: 18px;
+            color: #721c24;
+        }
+        
+        .validation-summary ul {
+            margin: 10px 0 0 20px;
+            padding: 0;
+        }
+        
+        .validation-summary li {
+            margin-bottom: 5px;
+        }
+        
+        /* Error message styles */
+        .section-error {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            display: none;
+            border-left: 4px solid #dc3545;
+        }
+        
+        .error-message {
+            color: #dc3545;
+            font-size: 14px;
+            margin-top: 5px;
+            display: none;
+        }
+        
+        .form-row.error .error-message {
+            display: block;
+        }
+        
+        .form-row.error input,
+        .form-row.error select,
+        .form-row.error textarea {
+            border-color: #dc3545 !important;
+        }
+        
+        .form-row.error .requirement-upload-area {
+            border-color: #dc3545 !important;
+        }
     </style>
 </head>
 
@@ -611,10 +1186,6 @@ if (isset($_SESSION['error_message'])) {
 
 
     <nav class="stroke" id="sideNav">
-        <!-- <button class="toggle-btn" onclick="toggleNav()">
-            <i class="fas fa-times" id="toggle-icon"></i>
-        </button> -->
-
         <ul>
             <li>
                 <a href="#" class="logo">
@@ -638,13 +1209,12 @@ if (isset($_SESSION['error_message'])) {
                 </li>
 
                 <li>
-                    <a href="./scholarship_form.php" class="active">
+                    <a href="./scholarship_form.php" class="activea">
                         <i class="fas fa-solid fa-file"></i>
                         <span class="nav-item-2">Scholarship Form</span>
                     </a>
                 </li>
-                <li><a href="./manage_dropdowns.php"><i class="fas fa-list"></i><span class="nav-item-2">Manage
-                            Scholarships</span></a></li>
+                <li><a href="./manage_dropdowns.php"><i class="fas fa-list"></i><span class="nav-item-2">Scholarship Settings</span></a></li>
                 <li>
                     <a href="./applications.php">
                         <i class="fas fa-solid fa-folder"></i>
@@ -668,7 +1238,7 @@ if (isset($_SESSION['error_message'])) {
                     </a>
                 </li>
                 <li>
-                    <a href="./scholarship_form.php" class="active">
+                    <a href="./scholarship_form.php" class="activea">
                         <i class="fas fa-solid fa-file"></i>
                         <span class="nav-item-2">Scholarship Form</span>
                     </a>
@@ -693,13 +1263,41 @@ if (isset($_SESSION['error_message'])) {
                 </a>
             </li>
         </ul>
+        <button class="toggle-btn" onclick="toggleNav()">
+            <i class="fas fa-bars" id="toggle-icon"></i>
+        </button>
     </nav>
 
     <div class="phppot-container">
         <h1 class="text-center">Scholarship Application Form</h1>
 
+        <?php if (!empty($sem_sy_list)): ?>
+            <!-- Display Current Semester/School Year -->
+            <div class="semester-display">
+                <h4><i class="fas fa-calendar-check"></i> Current Application Period</h4>
+                <div class="semester-value">
+                    <?= htmlspecialchars($sem_sy_list[0]['semester']) ?> /
+                    <?= htmlspecialchars($sem_sy_list[0]['school_year']) ?>
+                </div>
+                <div class="semester-note">
+                    <i class="fas fa-info-circle"></i> This is the active semester/school year for applications
+                </div>
+            </div>
+        <?php endif; ?>
+
+        <?php if ($user_role === 'student' && !empty($user_profile_data)): ?>
+            <!-- Profile Info Section (Only for students with profile data) -->
+            <div class="profile-info-section">
+                <h3><i class="fas fa-user-check"></i> Profile Information Loaded</h3>
+                <p><strong>Note:</strong> Your personal information has been pre-filled from your profile.
+                    You can review and update the information as needed for this specific scholarship application.</p>
+                <p><i class="fas fa-info-circle"></i> Required fields marked with * must be completed for this application.
+                </p>
+            </div>
+        <?php endif; ?>
+
         <div id="validationSummary" class="validation-summary">
-            <h3>Please fix the following errors:</h3>
+            <h3>Please fill up the following required fields:</h3>
             <ul id="errorList"></ul>
         </div>
 
@@ -753,25 +1351,28 @@ if (isset($_SESSION['error_message'])) {
                 <div class="form-container">
                     <input type="hidden" name="date" id="autoDateTime">
 
-                    <!-- SEMESTER / SCHOOL YEAR -->
+                    <!-- SEMESTER / SCHOOL YEAR (Hidden since we're using the default) -->
+                    <input type="hidden" name="semester_sy"
+                        value="<?= htmlspecialchars($sem_sy_list[0]['semester']) ?>|<?= htmlspecialchars($sem_sy_list[0]['school_year']) ?>">
+
+                    <!-- Display instead of select for semester/school year -->
                     <div class="form-row">
                         <label class="label-width required-field">Semester / School Year</label>
-                        <select name="semester_sy" required>
-                            <option value="" disabled selected>Select Semester / School Year</option>
-                            <?php foreach ($sem_sy_list as $s): ?>
-                                <option
-                                    value="<?= htmlspecialchars($s['semester']) ?>|<?= htmlspecialchars($s['school_year']) ?>"
-                                    <?= ($s['semester'] === $current_sem && $s['school_year'] === $current_sy) ? 'selected' : '' ?>>
-                                    <?= htmlspecialchars($s['semester']) ?> / <?= htmlspecialchars($s['school_year']) ?>
-                                </option>
-                            <?php endforeach; ?>
-                        </select>
-                        <div class="error-message">Please select semester and school year</div>
+                        <div
+                            style="background: #f8f9fa; border: 1px solid #ddd; padding: 10px 15px; border-radius: 4px; font-weight: 600; color: #28a745;">
+                            <i class="fas fa-calendar-alt" style="margin-right: 8px;"></i>
+                            <?= htmlspecialchars($sem_sy_list[0]['semester']) ?> /
+                            <?= htmlspecialchars($sem_sy_list[0]['school_year']) ?>
+                            <span style="font-size: 12px; color: #666; margin-left: 10px;">
+                                <i class="fas fa-check-circle"></i> Active Period
+                            </span>
+                        </div>
                     </div>
 
                     <div class="form-row">
                         <label class="float-left label-width required-field">Full Name</label>
-                        <input name="fullName" type="text" required>
+                        <input name="fullName" type="text" required id="fullNameField"
+                            value="<?= $user_role === 'student' && !empty($user_profile_data['full_name']) ? htmlspecialchars($user_profile_data['full_name']) : '' ?>">
                         <div class="error-message">Please enter your full name</div>
                     </div>
 
@@ -780,9 +1381,14 @@ if (isset($_SESSION['error_message'])) {
                         <label class="label-width required-field">Course / Major</label>
                         <select name="course_major" required>
                             <option value="" disabled selected>Select Course / Major</option>
-                            <?php foreach ($course_major_list as $c): ?>
+                            <?php foreach ($course_major_list as $c):
+                                $isSelected = false;
+                                if ($user_role === 'student' && !empty($user_profile_data)) {
+                                    $isSelected = ($c['course'] === $user_profile_data['course'] && $c['major'] === $user_profile_data['major']);
+                                }
+                                ?>
                                 <option value="<?= htmlspecialchars($c['course']) ?>|<?= htmlspecialchars($c['major']) ?>"
-                                    <?= ($c['course'] === $current_course && $c['major'] === $current_major) ? 'selected' : '' ?>>
+                                    <?= $isSelected ? 'selected' : '' ?>>
                                     <?= htmlspecialchars($c['course']) ?> / <?= htmlspecialchars($c['major']) ?>
                                 </option>
                             <?php endforeach; ?>
@@ -792,7 +1398,8 @@ if (isset($_SESSION['error_message'])) {
 
                     <div class="form-row">
                         <label class="float-left label-width required-field">Year/Section</label>
-                        <input name="yr_sec" type="text" required>
+                        <input name="yr_sec" type="text" required
+                            value="<?= $user_role === 'student' && !empty($user_profile_data['yr_sec']) ? htmlspecialchars($user_profile_data['yr_sec']) : '' ?>">
                         <div class="error-message">Please enter year/section</div>
                     </div>
 
@@ -800,19 +1407,21 @@ if (isset($_SESSION['error_message'])) {
                         <label class="float-left label-width required-field">Cellphone #</label>
                         <input name="cellNo" type="text" required
                             oninput="this.value = this.value.replace(/[^0-9]/g, '')" maxlength="11"
-                            >
+                            value="<?= $user_role === 'student' && !empty($user_profile_data['cell_no']) ? htmlspecialchars($user_profile_data['cell_no']) : '' ?>">
                         <div class="error-message">Please enter a valid 11-digit cellphone number</div>
                     </div>
 
                     <div class="form-row">
                         <label class="float-left label-width required-field">Complete Present Address</label>
-                        <input name="pres_address" id="pres_address" type="text" required>
+                        <input name="pres_address" id="pres_address" type="text" required
+                            value="<?= $user_role === 'student' && !empty($user_profile_data['present_address']) ? htmlspecialchars($user_profile_data['present_address']) : '' ?>">
                         <div class="error-message">Please enter complete present address</div>
                     </div>
 
                     <div class="form-row">
                         <label class="float-left label-width required-field">Complete Permanent Address</label>
-                        <input name="perma_address" id="perma_address" type="text" required>
+                        <input name="perma_address" id="perma_address" type="text" required
+                            value="<?= $user_role === 'student' && !empty($user_profile_data['permanent_address']) ? htmlspecialchars($user_profile_data['permanent_address']) : '' ?>">
                         <div class="error-message">Please enter complete permanent address</div>
                     </div>
 
@@ -823,13 +1432,15 @@ if (isset($_SESSION['error_message'])) {
 
                     <div class="form-row">
                         <label class="float-left label-width required-field">ZIP code</label>
-                        <input name="zip_code" type="number" required>
+                        <input name="zip_code" type="number" required
+                            value="<?= $user_role === 'student' && !empty($user_profile_data['zip_code']) ? htmlspecialchars($user_profile_data['zip_code']) : '' ?>">
                         <div class="error-message">Please enter ZIP code</div>
                     </div>
 
                     <div class="form-row">
                         <label class="float-left label-width required-field">Email Address</label>
-                        <input name="email" type="email" required>
+                        <input name="email" type="email" required
+                            value="<?= $user_role === 'student' && !empty($user_profile_data['email']) ? htmlspecialchars($user_profile_data['email']) : '' ?>">
                         <div class="error-message">Please enter a valid email address</div>
                     </div>
 
@@ -837,31 +1448,39 @@ if (isset($_SESSION['error_message'])) {
                         <label class="float-left label-width required-field">Sex</label>
                         <select name="sex" id="sex" required onchange="toggleOtherField(this, 'sex_other')">
                             <option value="" disabled selected>Select Sex</option>
-                            <option value="male">Male</option>
-                            <option value="female">Female</option>
-                            <!-- <option value="others">Others</option> -->
+                            <?php
+                            $user_sex = $user_role === 'student' && !empty($user_profile_data['sex']) ? $user_profile_data['sex'] : '';
+                            $isSexOther = !in_array($user_sex, ['male', 'female']) && !empty($user_sex);
+                            ?>
+                            <option value="male" <?= ($user_sex === 'male') ? 'selected' : '' ?>>Male</option>
+                            <option value="female" <?= ($user_sex === 'female') ? 'selected' : '' ?>>Female</option>
                         </select>
-                        <div class="specify-field" id="sex_other_field">
+                        <div class="specify-field" id="sex_other_field"
+                            style="display: <?= $isSexOther ? 'block' : 'none' ?>;">
                             <label for="sex_other">Please specify:</label>
-                            <input type="text" name="sex_other" id="sex_other" placeholder="Please specify your gender">
+                            <input type="text" name="sex_other" id="sex_other" placeholder="Please specify your gender"
+                                value="<?= $isSexOther ? htmlspecialchars($user_sex) : '' ?>">
                         </div>
                         <div class="error-message">Please select your sex</div>
                     </div>
 
                     <div class="form-row">
                         <label class="float-left label-width required-field">Date of Birth</label>
-                        <input name="date_of_birth" id="date_of_birth" type="date" onchange="calculateAge()" required>
+                        <input name="date_of_birth" id="date_of_birth" type="date" onchange="calculateAge()" required
+                            value="<?= $user_role === 'student' && !empty($user_profile_data['date_of_birth']) ? htmlspecialchars($user_profile_data['date_of_birth']) : '' ?>">
                         <div class="error-message">Please enter your date of birth</div>
                     </div>
 
                     <div class="form-row">
                         <label class="float-left label-width required-field">Age</label>
-                        <input name="age" id="age" type="number" readonly>
+                        <input name="age" id="age" type="number" readonly
+                            value="<?= $user_role === 'student' && !empty($user_profile_data['age']) ? htmlspecialchars($user_profile_data['age']) : '' ?>">
                     </div>
 
                     <div class="form-row">
                         <label class="float-left label-width required-field">Place of Birth</label>
-                        <input name="place_of_birth" type="text" required>
+                        <input name="place_of_birth" type="text" required
+                            value="<?= $user_role === 'student' && !empty($user_profile_data['place_of_birth']) ? htmlspecialchars($user_profile_data['place_of_birth']) : '' ?>">
                         <div class="error-message">Please enter your place of birth</div>
                     </div>
 
@@ -869,11 +1488,19 @@ if (isset($_SESSION['error_message'])) {
                         <label class="float-left label-width required-field">Civil Status</label>
                         <select name="civil_status" required>
                             <option value="" disabled selected>Select Civil Status</option>
-                            <option value="single">Single</option>
-                            <option value="married">Married</option>
-                            <option value="widowed">Widowed</option>
-                            <option value="divorced">Divorced</option>
-                            <option value="separated">Separated</option>
+                            <?php
+                            $user_civil_status = $user_role === 'student' && !empty($user_profile_data['civil_status']) ? $user_profile_data['civil_status'] : '';
+                            ?>
+                            <option value="single" <?= ($user_civil_status === 'single') ? 'selected' : '' ?>>Single
+                            </option>
+                            <option value="married" <?= ($user_civil_status === 'married') ? 'selected' : '' ?>>Married
+                            </option>
+                            <option value="widowed" <?= ($user_civil_status === 'widowed') ? 'selected' : '' ?>>Widowed
+                            </option>
+                            <option value="divorced" <?= ($user_civil_status === 'divorced') ? 'selected' : '' ?>>Divorced
+                            </option>
+                            <option value="separated" <?= ($user_civil_status === 'separated') ? 'selected' : '' ?>>
+                                Separated</option>
                         </select>
                         <div class="error-message">Please select your civil status</div>
                     </div>
@@ -883,17 +1510,24 @@ if (isset($_SESSION['error_message'])) {
                         <select name="religion" id="religion" required
                             onchange="toggleOtherField(this, 'religion_other')">
                             <option value="" disabled selected>Select Religion</option>
-                            <option value="roman catholic">Roman Catholic</option>
-                            <option value="islam">Islam</option>
-                            <option value="iglesia ni cristo">Iglesia ni Cristo</option>
-                            <option value="evangelical christian">Evangelical Christian</option>
-                            <option value="a biblical church">Aglipayan / Philippine Independent Church</option>
-                            <option value="others">Others</option>
+                            <?php
+                            $user_religion = $user_role === 'student' && !empty($user_profile_data['religion']) ? $user_profile_data['religion'] : '';
+                            $isReligionOther = !in_array($user_religion, ['roman catholic', 'islam', 'iglesia ni cristo', 'evangelical christian', 'a biblical church']) && !empty($user_religion);
+                            ?>
+                            <option value="roman catholic" <?= ($user_religion === 'roman catholic') ? 'selected' : '' ?>>
+                                Roman Catholic</option>
+                            <option value="islam" <?= ($user_religion === 'islam') ? 'selected' : '' ?>>Islam</option>
+                            <option value="iglesia ni cristo" <?= ($user_religion === 'iglesia ni cristo') ? 'selected' : '' ?>>Iglesia ni Cristo</option>
+                            <option value="evangelical christian" <?= ($user_religion === 'evangelical christian') ? 'selected' : '' ?>>Evangelical Christian</option>
+                            <option value="a biblical church" <?= ($user_religion === 'a biblical church') ? 'selected' : '' ?>>Aglipayan / Philippine Independent Church</option>
+                            <option value="others" <?= $isReligionOther ? 'selected' : '' ?>>Others</option>
                         </select>
-                        <div class="specify-field" id="religion_other_field">
+                        <div class="specify-field" id="religion_other_field"
+                            style="display: <?= $isReligionOther ? 'block' : 'none' ?>;">
                             <label for="religion_other">Please specify:</label>
                             <input type="text" name="religion_other" id="religion_other"
-                                placeholder="Please specify your religion">
+                                placeholder="Please specify your religion"
+                                value="<?= $isReligionOther ? htmlspecialchars($user_religion) : '' ?>">
                         </div>
                         <div class="error-message">Please select your religion</div>
                     </div>
@@ -903,8 +1537,7 @@ if (isset($_SESSION['error_message'])) {
                         <select name="scholarship_grant" id="scholarship_grant" required>
                             <option value="" disabled selected>Select Scholarship Grant</option>
                             <?php foreach ($scholarship_grant_list as $grant): ?>
-                                <option value="<?= htmlspecialchars($grant['grant_name']) ?>"
-                                    <?= ($grant['grant_name'] === $current_scholarship_grant) ? 'selected' : '' ?>>
+                                <option value="<?= htmlspecialchars($grant['grant_name']) ?>">
                                     <?= htmlspecialchars($grant['grant_name']) ?>
                                 </option>
                             <?php endforeach; ?>
@@ -914,7 +1547,8 @@ if (isset($_SESSION['error_message'])) {
 
                     <div class="form-row">
                         <label class="float-left label-width required-field">Type of Disability</label>
-                        <input name="disability" type="text" required placeholder="Enter 'None' if not applicable">
+                        <input name="disability" type="text" required placeholder="Enter 'None' if not applicable"
+                            value="<?= $user_role === 'student' && !empty($user_profile_data['disability']) ? htmlspecialchars($user_profile_data['disability']) : '' ?>">
                         <div class="error-message">Please enter type of disability</div>
                     </div>
 
@@ -923,18 +1557,25 @@ if (isset($_SESSION['error_message'])) {
                         <select name="indigenous_group" id="indigenous_group" required
                             onchange="toggleOtherField(this, 'indigenous_group_other')">
                             <option value="" disabled selected>Select Indigenous People Group</option>
-                            <option value="igorot">Igorot</option>
-                            <option value="lumad">Lumad</option>
-                            <option value="moro">Moro</option>
-                            <option value="aeta">Aeta</option>
-                            <option value="badjao">Badjao</option>
-                            <option value="others">Others</option>
-                            <option value="N/A">Not Applicable</option>
+                            <?php
+                            $user_indigenous = $user_role === 'student' && !empty($user_profile_data['indigenous_group']) ? $user_profile_data['indigenous_group'] : '';
+                            $isIndigenousOther = !in_array($user_indigenous, ['igorot', 'lumad', 'moro', 'aeta', 'badjao', 'N/A']) && !empty($user_indigenous);
+                            ?>
+                            <option value="igorot" <?= ($user_indigenous === 'igorot') ? 'selected' : '' ?>>Igorot</option>
+                            <option value="lumad" <?= ($user_indigenous === 'lumad') ? 'selected' : '' ?>>Lumad</option>
+                            <option value="moro" <?= ($user_indigenous === 'moro') ? 'selected' : '' ?>>Moro</option>
+                            <option value="aeta" <?= ($user_indigenous === 'aeta') ? 'selected' : '' ?>>Aeta</option>
+                            <option value="badjao" <?= ($user_indigenous === 'badjao') ? 'selected' : '' ?>>Badjao</option>
+                            <option value="others" <?= $isIndigenousOther ? 'selected' : '' ?>>Others</option>
+                            <option value="N/A" <?= ($user_indigenous === 'N/A') ? 'selected' : '' ?>>Not Applicable
+                            </option>
                         </select>
-                        <div class="specify-field" id="indigenous_group_other_field">
+                        <div class="specify-field" id="indigenous_group_other_field"
+                            style="display: <?= $isIndigenousOther ? 'block' : 'none' ?>;">
                             <label for="indigenous_group_other">Please specify:</label>
                             <input type="text" name="indigenous_group_other" id="indigenous_group_other"
-                                placeholder="Please specify your indigenous group">
+                                placeholder="Please specify your indigenous group"
+                                value="<?= $isIndigenousOther ? htmlspecialchars($user_indigenous) : '' ?>">
                         </div>
                         <div class="error-message">Please select indigenous group</div>
                     </div>
@@ -953,57 +1594,66 @@ if (isset($_SESSION['error_message'])) {
                     <h3>Elementary School</h3>
                     <div class="form-row">
                         <label class="float-left label-width required-field">Elementary</label>
-                        <input type="text" name="elementary" required>
+                        <input type="text" name="elementary" required
+                            value="<?= $user_role === 'student' && !empty($user_schools_data['elementary']) ? htmlspecialchars($user_schools_data['elementary']) : '' ?>">
                         <div class="error-message">Please enter elementary school name</div>
                     </div>
 
                     <div class="form-row">
                         <label class="float-left label-width required-field">Year Graduated</label>
                         <input type="number" name="elementary_yr_grad" required min="1900"
-                            max="<?php echo date('Y'); ?>">
+                            max="<?php echo date('Y'); ?>"
+                            value="<?= $user_role === 'student' && !empty($user_schools_data['elementary_year_grad']) ? htmlspecialchars($user_schools_data['elementary_year_grad']) : '' ?>">
                         <div class="error-message">Please enter a valid graduation year</div>
                     </div>
 
                     <div class="form-row">
                         <label class="float-left label-width">Honors Received</label>
-                        <input type="text" name="elementary_honors_rec" placeholder="Enter 'None' if not applicable">
+                        <input type="text" name="elementary_honors_rec" placeholder="Enter 'None' if not applicable"
+                            value="<?= $user_role === 'student' && !empty($user_schools_data['elementary_honors']) ? htmlspecialchars($user_schools_data['elementary_honors']) : '' ?>">
                     </div>
 
                     <br>
                     <h3>Secondary School</h3>
                     <div class="form-row">
                         <label class="float-left label-width required-field">Secondary</label>
-                        <input type="text" name="secondary" required>
+                        <input type="text" name="secondary" required
+                            value="<?= $user_role === 'student' && !empty($user_schools_data['secondary']) ? htmlspecialchars($user_schools_data['secondary']) : '' ?>">
                         <div class="error-message">Please enter secondary school name</div>
                     </div>
 
                     <div class="form-row">
                         <label class="float-left label-width required-field">Year Graduated</label>
-                        <input type="number" name="secondary_yr_grad" required min="1900"
-                            max="<?php echo date('Y'); ?>">
+                        <input type="number" name="secondary_yr_grad" required min="1900" max="<?php echo date('Y'); ?>"
+                            value="<?= $user_role === 'student' && !empty($user_schools_data['secondary_year_grad']) ? htmlspecialchars($user_schools_data['secondary_year_grad']) : '' ?>">
                         <div class="error-message">Please enter a valid graduation year</div>
                     </div>
 
                     <div class="form-row">
                         <label class="float-left label-width">Honors Received</label>
-                        <input type="text" name="secondary_honors_rec" placeholder="Enter 'None' if not applicable">
+                        <input type="text" name="secondary_honors_rec" placeholder="Enter 'None' if not applicable"
+                            value="<?= $user_role === 'student' && !empty($user_schools_data['secondary_honors']) ? htmlspecialchars($user_schools_data['secondary_honors']) : '' ?>">
                     </div>
 
                     <br>
                     <h3>College/University (If applicable)</h3>
                     <div class="form-row">
                         <label class="float-left label-width">College</label>
-                        <input type="text" name="college" placeholder="Leave blank if not applicable">
+                        <input type="text" name="college" placeholder="Leave blank if not applicable"
+                            value="<?= $user_role === 'student' && !empty($user_schools_data['college']) ? htmlspecialchars($user_schools_data['college']) : '' ?>">
                     </div>
 
                     <div class="form-row">
                         <label class="float-left label-width">Year Graduated</label>
-                        <input type="number" name="college_yr_grad" min="1900" max="<?php echo date('Y'); ?>">
+                        <input type="number" name="college_yr_grad" min="1900" max="<?php echo date('Y'); ?>" 
+                               placeholder="Leave blank if not applicable"
+                               value="<?= $user_role === 'student' && !empty($user_schools_data['college_year_grad']) ? htmlspecialchars($user_schools_data['college_year_grad']) : '' ?>">
                     </div>
 
                     <div class="form-row">
                         <label class="float-left label-width">Honors Received</label>
-                        <input type="text" name="college_honors_rec" placeholder="Enter 'None' if not applicable">
+                        <input type="text" name="college_honors_rec" placeholder="Enter 'None' if not applicable"
+                            value="<?= $user_role === 'student' && !empty($user_schools_data['college_honors']) ? htmlspecialchars($user_schools_data['college_honors']) : '' ?>">
                     </div>
 
                     <div class="row button-row">
@@ -1017,10 +1667,19 @@ if (isset($_SESSION['error_message'])) {
             <section id="scholarship-reason" class="form-section">
                 <h2 class="text-center" style="margin-bottom: 20px;">Why do you need a Scholarship?</h2>
                 <div class="section-error" id="scholarship-reason-error"></div>
-                <div class="row">
-                    <textarea name="reason_scholarship" id="reason_scholarship" required
-                        placeholder="Please explain why you need a scholarship (minimum 50 characters)"></textarea>
-                    <div class="error-message">Please explain why you need a scholarship (minimum 50 characters)</div>
+                <div class="form-container">
+                    <div class="form-row">
+                        <label class="float-left label-width required-field">Reason for Scholarship</label>
+                        <textarea name="reason_scholarship" id="reason_scholarship" required
+                            placeholder="Please explain why you need a scholarship (minimum 50 characters)"
+                            oninput="validateReasonTextarea()" rows="6"></textarea>
+                        <div class="error-message">Please explain why you need a scholarship (minimum 50 characters)
+                        </div>
+                        <div class="character-counter"
+                            style="font-size: 12px; color: #666; margin-top: 5px; text-align: right;">
+                            Character count: <span id="charCount">0</span> / <span id="minChars">50</span>
+                        </div>
+                    </div>
                 </div>
                 <div class="row button-row">
                     <button type="button" class="buttonNav" onClick="prevStep()">Previous</button>
@@ -1038,19 +1697,22 @@ if (isset($_SESSION['error_message'])) {
                     <h4>Father's Information</h4>
                     <div class="form-row">
                         <label for="father_lastname" class="float-left label-width required-field">Last Name:</label>
-                        <input id="father_lastname" name="father_lastname" type="text" required>
+                        <input id="father_lastname" name="father_lastname" type="text" required
+                            value="<?= $user_role === 'student' && !empty($user_parents_data['father_lastname']) ? htmlspecialchars($user_parents_data['father_lastname']) : '' ?>">
                         <div class="error-message">Please enter father's last name</div>
                     </div>
 
                     <div class="form-row">
                         <label for="father_givenname" class="float-left label-width required-field">Given Name:</label>
-                        <input id="father_givenname" name="father_givenname" type="text" required>
+                        <input id="father_givenname" name="father_givenname" type="text" required
+                            value="<?= $user_role === 'student' && !empty($user_parents_data['father_givenname']) ? htmlspecialchars($user_parents_data['father_givenname']) : '' ?>">
                         <div class="error-message">Please enter father's given name</div>
                     </div>
 
                     <div class="form-row">
                         <label for="father_middlename" class="float-left label-width">Middle Name:</label>
-                        <input id="father_middlename" name="father_middlename" type="text">
+                        <input id="father_middlename" name="father_middlename" type="text"
+                            value="<?= $user_role === 'student' && !empty($user_parents_data['father_middlename']) ? htmlspecialchars($user_parents_data['father_middlename']) : '' ?>">
                     </div>
 
                     <div class="form-row">
@@ -1058,7 +1720,8 @@ if (isset($_SESSION['error_message'])) {
                             Number:</label>
                         <input id="father_cellphone" name="father_cellphone" type="text" class="" required
                             oninput="this.value = this.value.replace(/[^0-9]/g, '')" maxlength="11"
-                            placeholder="e.g., 09171234567">
+                            placeholder="e.g., 09171234567"
+                            value="<?= $user_role === 'student' && !empty($user_parents_data['father_cellphone']) ? htmlspecialchars($user_parents_data['father_cellphone']) : '' ?>">
                         <div class="error-message">Please enter a valid 11-digit cellphone number</div>
                     </div>
 
@@ -1067,15 +1730,19 @@ if (isset($_SESSION['error_message'])) {
                             Attainment:</label>
                         <select name="father_education" id="father_education" required>
                             <option value="" disabled selected>Select Educational Attainment</option>
-                            <option value="No Formal Education">No Formal Education</option>
-                            <option value="Elementary Undergraduate">Elementary Undergraduate</option>
-                            <option value="Elementary Graduate">Elementary Graduate</option>
-                            <option value="High School Undergraduate">High School Undergraduate</option>
-                            <option value="High School Graduate">High School Graduate</option>
-                            <option value="Vocational Course">Vocational Course</option>
-                            <option value="College Undergraduate">College Undergraduate</option>
-                            <option value="College Graduate">College Graduate</option>
-                            <option value="Postgraduate">Postgraduate (Master's/PhD)</option>
+                            <?php
+                            $father_education = $user_role === 'student' && !empty($user_parents_data['father_education']) ? $user_parents_data['father_education'] : '';
+                            ?>
+                            <option value="No Formal Education" <?= ($father_education == 'No Formal Education') ? 'selected' : '' ?>>No Formal Education</option>
+                            <option value="Elementary Undergraduate" <?= ($father_education == 'Elementary Undergraduate') ? 'selected' : '' ?>>Elementary Undergraduate</option>
+                            <option value="Elementary Graduate" <?= ($father_education == 'Elementary Graduate') ? 'selected' : '' ?>>Elementary Graduate</option>
+                            <option value="High School Undergraduate" <?= ($father_education == 'High School Undergraduate') ? 'selected' : '' ?>>High School Undergraduate</option>
+                            <option value="High School Graduate" <?= ($father_education == 'High School Graduate') ? 'selected' : '' ?>>High School Graduate</option>
+                            <option value="Vocational Course" <?= ($father_education == 'Vocational Course') ? 'selected' : '' ?>>Vocational Course</option>
+                            <option value="College Undergraduate" <?= ($father_education == 'College Undergraduate') ? 'selected' : '' ?>>College Undergraduate</option>
+                            <option value="College Graduate" <?= ($father_education == 'College Graduate') ? 'selected' : '' ?>>College Graduate</option>
+                            <option value="Postgraduate" <?= ($father_education == 'Postgraduate') ? 'selected' : '' ?>>
+                                Postgraduate (Master's/PhD)</option>
                         </select>
                         <div class="error-message">Please select father's educational attainment</div>
                     </div>
@@ -1084,16 +1751,26 @@ if (isset($_SESSION['error_message'])) {
                         <label for="father_occupation" class="float-left label-width required-field">Occupation:</label>
                         <select name="father_occupation" id="father_occupation" required>
                             <option value="" disabled selected>Select Occupation</option>
-                            <option value="Government">Government</option>
-                            <option value="Private Sector">Private Sector</option>
-                            <option value="Self-Employed">Self-Employed</option>
-                            <option value="Laborer">Laborer</option>
-                            <option value="Freelancer">Freelancer</option>
-                            <option value="NGO/Non-Profit">NGO/Non-Profit</option>
-                            <option value="Overseas Employment">Overseas Employment</option>
-                            <option value="Casual">Casual</option>
-                            <option value="Contractual">Contractual</option>
-                            <option value="Intern">Intern</option>
+                            <?php
+                            $father_occupation = $user_role === 'student' && !empty($user_parents_data['father_occupation']) ? $user_parents_data['father_occupation'] : '';
+                            ?>
+                            <option value="Government" <?= ($father_occupation == 'Government') ? 'selected' : '' ?>>
+                                Government</option>
+                            <option value="Private Sector" <?= ($father_occupation == 'Private Sector') ? 'selected' : '' ?>>Private Sector</option>
+                            <option value="Self-Employed" <?= ($father_occupation == 'Self-Employed') ? 'selected' : '' ?>>
+                                Self-Employed</option>
+                            <option value="Laborer" <?= ($father_occupation == 'Laborer') ? 'selected' : '' ?>>Laborer
+                            </option>
+                            <option value="Freelancer" <?= ($father_occupation == 'Freelancer') ? 'selected' : '' ?>>
+                                Freelancer</option>
+                            <option value="NGO/Non-Profit" <?= ($father_occupation == 'NGO/Non-Profit') ? 'selected' : '' ?>>NGO/Non-Profit</option>
+                            <option value="Overseas Employment" <?= ($father_occupation == 'Overseas Employment') ? 'selected' : '' ?>>Overseas Employment</option>
+                            <option value="Casual" <?= ($father_occupation == 'Casual') ? 'selected' : '' ?>>Casual
+                            </option>
+                            <option value="Contractual" <?= ($father_occupation == 'Contractual') ? 'selected' : '' ?>>
+                                Contractual</option>
+                            <option value="Intern" <?= ($father_occupation == 'Intern') ? 'selected' : '' ?>>Intern
+                            </option>
                         </select>
                         <div class="error-message">Please select father's occupation</div>
                     </div>
@@ -1101,7 +1778,8 @@ if (isset($_SESSION['error_message'])) {
                     <div class="form-row">
                         <label for="father_income" class="float-left label-width required-field">Monthly Income:</label>
                         <input id="father_income" name="father_income" type="number" required min="0" step="0.01"
-                            placeholder="0.00">
+                            placeholder="0.00"
+                            value="<?= $user_role === 'student' && !empty($user_parents_data['father_income']) ? htmlspecialchars($user_parents_data['father_income']) : '' ?>">
                         <div class="error-message">Please enter father's monthly income</div>
                     </div>
                 </div>
@@ -1111,19 +1789,22 @@ if (isset($_SESSION['error_message'])) {
                     <h4>Mother's Information</h4>
                     <div class="form-row">
                         <label for="mother_lastname" class="float-left label-width required-field">Maiden Name:</label>
-                        <input id="mother_lastname" name="mother_lastname" type="text" required>
+                        <input id="mother_lastname" name="mother_lastname" type="text" required
+                            value="<?= $user_role === 'student' && !empty($user_parents_data['mother_lastname']) ? htmlspecialchars($user_parents_data['mother_lastname']) : '' ?>">
                         <div class="error-message">Please enter mother's maiden name</div>
                     </div>
 
                     <div class="form-row">
                         <label for="mother_givenname" class="float-left label-width required-field">Given Name:</label>
-                        <input id="mother_givenname" name="mother_givenname" type="text" required>
+                        <input id="mother_givenname" name="mother_givenname" type="text" required
+                            value="<?= $user_role === 'student' && !empty($user_parents_data['mother_givenname']) ? htmlspecialchars($user_parents_data['mother_givenname']) : '' ?>">
                         <div class="error-message">Please enter mother's given name</div>
                     </div>
 
                     <div class="form-row">
                         <label for="mother_middlename" class="float-left label-width">Middle Name:</label>
-                        <input id="mother_middlename" name="mother_middlename" type="text">
+                        <input id="mother_middlename" name="mother_middlename" type="text"
+                            value="<?= $user_role === 'student' && !empty($user_parents_data['mother_middlename']) ? htmlspecialchars($user_parents_data['mother_middlename']) : '' ?>">
                     </div>
 
                     <div class="form-row">
@@ -1131,7 +1812,8 @@ if (isset($_SESSION['error_message'])) {
                             Number:</label>
                         <input id="mother_cellphone" name="mother_cellphone" type="text" class="" required
                             oninput="this.value = this.value.replace(/[^0-9]/g, '')" maxlength="11"
-                            placeholder="e.g., 09171234567">
+                            placeholder="e.g., 09171234567"
+                            value="<?= $user_role === 'student' && !empty($user_parents_data['mother_cellphone']) ? htmlspecialchars($user_parents_data['mother_cellphone']) : '' ?>">
                         <div class="error-message">Please enter a valid 11-digit cellphone number</div>
                     </div>
 
@@ -1140,15 +1822,19 @@ if (isset($_SESSION['error_message'])) {
                             Attainment:</label>
                         <select name="mother_education" id="mother_education" required>
                             <option value="" disabled selected>Select Educational Attainment</option>
-                            <option value="No Formal Education">No Formal Education</option>
-                            <option value="Elementary Undergraduate">Elementary Undergraduate</option>
-                            <option value="Elementary Graduate">Elementary Graduate</option>
-                            <option value="High School Undergraduate">High School Undergraduate</option>
-                            <option value="High School Graduate">High School Graduate</option>
-                            <option value="Vocational Course">Vocational Course</option>
-                            <option value="College Undergraduate">College Undergraduate</option>
-                            <option value="College Graduate">College Graduate</option>
-                            <option value="Postgraduate">Postgraduate (Master's/PhD)</option>
+                            <?php
+                            $mother_education = $user_role === 'student' && !empty($user_parents_data['mother_education']) ? $user_parents_data['mother_education'] : '';
+                            ?>
+                            <option value="No Formal Education" <?= ($mother_education == 'No Formal Education') ? 'selected' : '' ?>>No Formal Education</option>
+                            <option value="Elementary Undergraduate" <?= ($mother_education == 'Elementary Undergraduate') ? 'selected' : '' ?>>Elementary Undergraduate</option>
+                            <option value="Elementary Graduate" <?= ($mother_education == 'Elementary Graduate') ? 'selected' : '' ?>>Elementary Graduate</option>
+                            <option value="High School Undergraduate" <?= ($mother_education == 'High School Undergraduate') ? 'selected' : '' ?>>High School Undergraduate</option>
+                            <option value="High School Graduate" <?= ($mother_education == 'High School Graduate') ? 'selected' : '' ?>>High School Graduate</option>
+                            <option value="Vocational Course" <?= ($mother_education == 'Vocational Course') ? 'selected' : '' ?>>Vocational Course</option>
+                            <option value="College Undergraduate" <?= ($mother_education == 'College Undergraduate') ? 'selected' : '' ?>>College Undergraduate</option>
+                            <option value="College Graduate" <?= ($mother_education == 'College Graduate') ? 'selected' : '' ?>>College Graduate</option>
+                            <option value="Postgraduate" <?= ($mother_education == 'Postgraduate') ? 'selected' : '' ?>>
+                                Postgraduate (Master's/PhD)</option>
                         </select>
                         <div class="error-message">Please select mother's educational attainment</div>
                     </div>
@@ -1157,16 +1843,26 @@ if (isset($_SESSION['error_message'])) {
                         <label for="mother_occupation" class="float-left label-width required-field">Occupation:</label>
                         <select name="mother_occupation" id="mother_occupation" required>
                             <option value="" disabled selected>Select Occupation</option>
-                            <option value="Government">Government</option>
-                            <option value="Private Sector">Private Sector</option>
-                            <option value="Self-Employed">Self-Employed</option>
-                            <option value="Laborer">Laborer</option>
-                            <option value="Freelancer">Freelancer</option>
-                            <option value="NGO/Non-Profit">NGO/Non-Profit</option>
-                            <option value="Overseas Employment">Overseas Employment</option>
-                            <option value="Casual">Casual</option>
-                            <option value="Contractual">Contractual</option>
-                            <option value="Intern">Intern</option>
+                            <?php
+                            $mother_occupation = $user_role === 'student' && !empty($user_parents_data['mother_occupation']) ? $user_parents_data['mother_occupation'] : '';
+                            ?>
+                            <option value="Government" <?= ($mother_occupation == 'Government') ? 'selected' : '' ?>>
+                                Government</option>
+                            <option value="Private Sector" <?= ($mother_occupation == 'Private Sector') ? 'selected' : '' ?>>Private Sector</option>
+                            <option value="Self-Employed" <?= ($mother_occupation == 'Self-Employed') ? 'selected' : '' ?>>
+                                Self-Employed</option>
+                            <option value="Laborer" <?= ($mother_occupation == 'Laborer') ? 'selected' : '' ?>>Laborer
+                            </option>
+                            <option value="Freelancer" <?= ($mother_occupation == 'Freelancer') ? 'selected' : '' ?>>
+                                Freelancer</option>
+                            <option value="NGO/Non-Profit" <?= ($mother_occupation == 'NGO/Non-Profit') ? 'selected' : '' ?>>NGO/Non-Profit</option>
+                            <option value="Overseas Employment" <?= ($mother_occupation == 'Overseas Employment') ? 'selected' : '' ?>>Overseas Employment</option>
+                            <option value="Casual" <?= ($mother_occupation == 'Casual') ? 'selected' : '' ?>>Casual
+                            </option>
+                            <option value="Contractual" <?= ($mother_occupation == 'Contractual') ? 'selected' : '' ?>>
+                                Contractual</option>
+                            <option value="Intern" <?= ($mother_occupation == 'Intern') ? 'selected' : '' ?>>Intern
+                            </option>
                         </select>
                         <div class="error-message">Please select mother's occupation</div>
                     </div>
@@ -1174,7 +1870,8 @@ if (isset($_SESSION['error_message'])) {
                     <div class="form-row mb-5">
                         <label for="mother_income" class="float-left label-width required-field">Monthly Income:</label>
                         <input id="mother_income" name="mother_income" type="number" required min="0" step="0.01"
-                            placeholder="0.00">
+                            placeholder="0.00"
+                            value="<?= $user_role === 'student' && !empty($user_parents_data['mother_income']) ? htmlspecialchars($user_parents_data['mother_income']) : '' ?>">
                         <div class="error-message">Please enter mother's monthly income</div>
                     </div>
                 </div>
@@ -1191,18 +1888,22 @@ if (isset($_SESSION['error_message'])) {
                 <div class="section-error" id="house-status-error"></div>
 
                 <div class="house-status-group" role="radiogroup" aria-label="House Status">
+                    <?php
+                    $user_house_status = $user_role === 'student' && !empty($user_house_data['house_status']) ? $user_house_data['house_status'] : '';
+                    ?>
                     <label class="house-option">
-                        <input type="radio" name="house_status" value="owned" required>
+                        <input type="radio" name="house_status" value="owned" required <?= ($user_house_status === 'owned') ? 'checked' : '' ?>>
                         <span class="option-label">House Owned</span>
                     </label>
 
                     <label class="house-option">
-                        <input type="radio" name="house_status" value="rented">
+                        <input type="radio" name="house_status" value="rented" <?= ($user_house_status === 'rented') ? 'checked' : '' ?>>
                         <span class="option-label">Rented</span>
                     </label>
 
                     <label class="house-option">
-                        <input type="radio" name="house_status" value="living with relatives">
+                        <input type="radio" name="house_status" value="living with relatives"
+                            <?= ($user_house_status === 'living with relatives') ? 'checked' : '' ?>>
                         <span class="option-label">Living with Relatives</span>
                     </label>
                 </div>
@@ -1220,65 +1921,82 @@ if (isset($_SESSION['error_message'])) {
                 <h2 class="text-center" style="margin-bottom: 20px;">Attach Supporting Documents</h2>
                 <div class="section-error" id="attachments-error"></div>
 
+                <!-- Folder Organization Info -->
+                <div class="folder-info">
+                    <i class="fas fa-folder-open" style="color: #2e7d32; margin-right: 8px;"></i>
+                    <strong>File Organization:</strong>
+                    Your files will be organized in a folder named:
+                    <span id="folderNamePreview"
+                        style="background: #fff; padding: 3px 8px; border-radius: 4px; border: 1px dashed #4caf50; font-family: monospace;">
+                        (Your Name)_(Application ID)/
+                    </span>
+                </div>
+
                 <div class="upload-section mt-4" aria-labelledby="attach-label">
                     <label id="attach-label" class="section-label required-field">Attach Supporting Documents (PDF / JPG
                         / PNG)</label>
 
-                    <!-- Document Requirements List -->
+                    <!-- Document Requirements List with Upload Areas -->
                     <div class="requirements-box"
-                        style="background: #f8f9fa; border-left: 4px solid #007bff; padding: 15px; margin-bottom: 20px; border-radius: 5px;">
-                        <h4 style="margin-top: 0; color: #2c3e50; font-size: 16px;">
+                        style="background: #f8f9fa; border-left: 4px solid #007bff; padding: 20px; margin-bottom: 30px; border-radius: 8px;">
+                        <h4 style="margin-top: 0; color: #2c3e50; font-size: 18px; margin-bottom: 20px;">
                             <i class="fas fa-info-circle" style="color: #007bff;"></i> Required Documents for
                             <span id="selectedGrantName">[Selected Grant]</span>:
                         </h4>
-                        <div id="grantRequirementsList" class="requirements-grid"
-                            style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 10px; margin-top: 10px;">
-                            <!-- Requirements will be dynamically loaded here -->
-                            <div class="requirement-item"
-                                style="display: flex; align-items: flex-start; margin-bottom: 8px;">
-                                <i class="fas fa-check-circle"
-                                    style="color: #28a745; margin-right: 10px; margin-top: 2px;"></i>
-                                <span>Select a scholarship grant to see specific requirements</span>
+
+                        <!-- Requirements upload containers will be dynamically loaded here -->
+                        <div id="requirementsUploadContainer">
+                            <div style="text-align: center; padding: 40px; color: #666;">
+                                <i class="fas fa-file-upload"
+                                    style="font-size: 48px; margin-bottom: 15px; color: #ddd;"></i>
+                                <p>Select a scholarship grant to view and upload required documents</p>
                             </div>
                         </div>
 
                         <div
-                            style="margin-top: 15px; padding: 10px; background: #fff3cd; border-radius: 5px; border-left: 4px solid #ffc107;">
+                            style="margin-top: 20px; padding: 15px; background: #fff3cd; border-radius: 5px; border-left: 4px solid #ffc107;">
                             <p style="margin: 0; font-size: 14px; color: #856404;">
                                 <i class="fas fa-exclamation-triangle" style="color: #ffc107; margin-right: 8px;"></i>
                                 <strong>Note:</strong> All documents must be clear, readable, and in PDF, JPG, or PNG
-                                format.
-                                Maximum file size: 5MB per file.
+                                format. Maximum file size: 5MB per file.
                             </p>
+                        </div>
+                    </div>
+
+                    <!-- Additional Files Section -->
+                    <div class="additional-files-section">
+                        <h5><i class="fas fa-plus-circle" style="color: #28a745; margin-right: 8px;"></i> Additional
+                            Supporting Documents</h5>
+                        <p class="additional-files-note">
+                            Upload any additional documents that support your scholarship application (optional).
+                        </p>
+
+                        <div id="drop-area" class="drop-area" tabindex="0">
+                            <p class="drop-text" aria-hidden="true">
+                                <i class="fas fa-cloud-upload-alt"></i><br>
+                                Drag & drop additional files here<br>or
+                            </p>
+
+                            <button type="button" class="browse-btn"
+                                onclick="document.getElementById('attachments').click();">
+                                Browse Files
+                            </button>
+
+                            <input type="file" name="attachments[]" id="attachments" multiple
+                                accept=".pdf,.jpg,.jpeg,.png" style="display: none;">
+                        </div>
+
+                        <!-- Additional Files Preview -->
+                        <div id="additional-files-preview" class="preview-container" style="margin-top: 20px;">
+                            <div class="preview-header"
+                                style="margin-bottom: 15px; padding-bottom: 10px; border-bottom: 1px solid #ddd;">
+                                <h4 style="margin: 0; color: #2c3e50; font-size: 16px;">Additional Files</h4>
+                            </div>
+                            <div id="additional-files-list"></div>
                         </div>
                     </div>
                 </div>
 
-                <div id="drop-area" class="drop-area" tabindex="0">
-                    <p class="drop-text" aria-hidden="true">
-                        <i class="fas fa-cloud-upload-alt"></i><br>
-                        Drag & drop files here<br>or
-                    </p>
-
-                    <button type="button" class="browse-btn" onclick="document.getElementById('attachments').click();">
-                        Browse Files
-                    </button>
-
-                    <input type="file" name="attachments[]" id="attachments" multiple accept=".pdf,.jpg,.jpeg,.png"
-                        style="display: none;">
-                </div>
-                <div class="error-message" style="margin-top: 10px;">Please attach all required supporting documents
-                </div>
-
-                <!-- File Preview with Categories -->
-                <div id="preview" class="preview-container" aria-live="polite">
-                    <div class="preview-header"
-                        style="margin-bottom: 15px; padding-bottom: 10px; border-bottom: 1px solid #ddd;">
-                        <h4 style="margin: 0; color: #2c3e50;">Uploaded Documents</h4>
-                        <small style="color: #666;">Click on file name to edit document type</small>
-                    </div>
-                    <div id="file-list"></div>
-                </div>
                 <div class="row button-row" style="margin-top:18px;">
                     <button type="button" class="buttonNav" onClick="prevStep()">Previous</button>
                     <button type="submit" class="submitBtn">Submit Application</button>
@@ -1290,8 +2008,7 @@ if (isset($_SESSION['error_message'])) {
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"
         integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
     <script>
-        // Global variable for selected files
-        let selectedFiles = [];
+        // Global variables
         let currentStep = 1;
         const totalSteps = 6;
         const sections = [
@@ -1302,6 +2019,11 @@ if (isset($_SESSION['error_message'])) {
             'house-status',
             'attachments-section'
         ];
+
+        // Store for requirement uploads
+        let requirementUploads = {};
+        let additionalFiles = [];
+        let additionalFileInput = null;
 
         // Function to toggle "Please specify" fields
         function toggleOtherField(selectElement, fieldId) {
@@ -1364,21 +2086,45 @@ if (isset($_SESSION['error_message'])) {
             }
         }
 
-        // Load grant requirements function
+        // Function to update folder name preview
+        function updateFolderNamePreview() {
+            const fullNameInput = document.getElementById('fullNameField');
+            const folderPreview = document.getElementById('folderNamePreview');
+
+            if (fullNameInput && folderPreview) {
+                let fullName = fullNameInput.value.trim();
+                if (fullName) {
+                    // Sanitize the name for folder creation
+                    let sanitizedName = fullName.replace(/[^a-zA-Z0-9\s\-]/g, '');
+                    sanitizedName = sanitizedName.replace(/\s+/g, '_');
+                    sanitizedName = sanitizedName.substring(0, 50); // Limit length
+
+                    // Generate application ID preview (using current timestamp as example)
+                    const timestamp = new Date().toISOString().replace(/[-:.]/g, '').substring(2, 15);
+                    const folderName = sanitizedName + '_' + timestamp;
+
+                    folderPreview.textContent = folderName + '/';
+                } else {
+                    folderPreview.textContent = '(Your Name)_(Application ID)/';
+                }
+            }
+        }
+
+        // Load grant requirements function with upload areas
         function loadGrantRequirements(grantName) {
             console.log('Loading requirements for grant:', grantName);
 
-            const requirementsList = document.getElementById('grantRequirementsList');
+            const requirementsContainer = document.getElementById('requirementsUploadContainer');
             const selectedGrantName = document.getElementById('selectedGrantName');
 
             if (!grantName || grantName === "") {
                 console.log('No grant name provided or empty');
-                requirementsList.innerHTML = `
-                <div class="requirement-item" style="display: flex; align-items: flex-start; margin-bottom: 8px;">
-                    <i class="fas fa-check-circle" style="color: #28a745; margin-right: 10px; margin-top: 2px;"></i>
-                    <span>Select a scholarship grant to see specific requirements</span>
-                </div>
-            `;
+                requirementsContainer.innerHTML = `
+                        <div style="text-align: center; padding: 40px; color: #666;">
+                            <i class="fas fa-file-upload" style="font-size: 48px; margin-bottom: 15px; color: #ddd;"></i>
+                            <p>Select a scholarship grant to view and upload required documents</p>
+                        </div>
+                    `;
                 selectedGrantName.textContent = '[Selected Grant]';
                 return;
             }
@@ -1386,12 +2132,15 @@ if (isset($_SESSION['error_message'])) {
             selectedGrantName.textContent = grantName;
 
             // Show loading message
-            requirementsList.innerHTML = `
-            <div class="requirement-item" style="display: flex; align-items: center; margin-bottom: 8px;">
-                <i class="fas fa-spinner fa-spin" style="color: #007bff; margin-right: 10px;"></i>
-                <span>Loading requirements for "${grantName}"...</span>
-            </div>
-        `;
+            requirementsContainer.innerHTML = `
+                    <div style="text-align: center; padding: 40px;">
+                        <i class="fas fa-spinner fa-spin" style="font-size: 48px; color: #007bff; margin-bottom: 15px;"></i>
+                        <p>Loading requirements for "${grantName}"...</p>
+                    </div>
+                `;
+
+            // Clear previous requirement uploads
+            requirementUploads = {};
 
             // Fetch requirements via AJAX
             const url = '../includes/get_grant_requirements.php?grant_name=' + encodeURIComponent(grantName);
@@ -1407,35 +2156,361 @@ if (isset($_SESSION['error_message'])) {
                     if (data.success && data.requirements && data.requirements.length > 0) {
                         let html = '';
                         data.requirements.forEach((req, index) => {
+                            const requirementId = 'req_' + index;
+                            requirementUploads[requirementId] = {
+                                requirementName: req.requirement_name,
+                                file: null
+                            };
+
                             html += `
-                            <div class="requirement-item" style="display: flex; align-items: flex-start; margin-bottom: 8px;">
-                                <i class="fas fa-check-circle" style="color: #28a745; margin-right: 10px; margin-top: 2px;"></i>
-                                <span>
-                                    <strong>${index + 1}. ${req.requirement_name}</strong>
-                                    ${req.requirement_type ? `<br><small>Type: ${req.requirement_type}</small>` : ''}
-                                </span>
-                            </div>
-                        `;
+                                    <div class="requirement-upload-container" id="req_container_${index}">
+                                        <div class="requirement-upload-header">
+                                            <div class="requirement-number">${index + 1}</div>
+                                            <div class="requirement-details">
+                                                <div class="requirement-title">${req.requirement_name}</div>
+                                                ${req.requirement_type ? `<div class="requirement-description">Type: ${req.requirement_type}</div>` : ''}
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="requirement-upload-area" id="upload_area_${index}" onclick="openFileInput('${requirementId}')">
+                                            <i class="fas fa-cloud-upload-alt" style="font-size: 32px; color: #007bff; margin-bottom: 10px;"></i>
+                                            <p style="margin: 10px 0; color: #666;">
+                                                Click to upload file for this requirement<br>
+                                                <small>PDF, JPG, PNG up to 5MB</small>
+                                            </p>
+                                        </div>
+                                        
+                                        <input type="hidden" name="requirement_names[]" value="${req.requirement_name}">
+                                        <input type="file" name="requirement_${index}" id="file_input_${index}" 
+                                            style="display: none;" accept=".pdf,.jpg,.jpeg,.png"
+                                            onchange="handleRequirementFileUpload(${index}, this)">
+                                        
+                                        <div id="requirement_preview_${index}" class="requirement-upload-preview" style="display: none;">
+                                            <!-- File preview will be inserted here -->
+                                        </div>
+                                        
+                                        <div class="requirement-error" id="requirement_error_${index}"></div>
+                                    </div>
+                                `;
                         });
-                        requirementsList.innerHTML = html;
+                        requirementsContainer.innerHTML = html;
                     } else {
-                        requirementsList.innerHTML = `
-                        <div class="requirement-item" style="display: flex; align-items: flex-start; margin-bottom: 8px;">
-                            <i class="fas fa-info-circle" style="color: #007bff; margin-right: 10px; margin-top: 2px;"></i>
-                            <span>No specific requirements listed for this grant. Please upload all standard supporting documents.</span>
-                        </div>
-                    `;
+                        requirementsContainer.innerHTML = `
+                                <div class="requirement-upload-container">
+                                    <div class="requirement-upload-header">
+                                        <div class="requirement-number">1</div>
+                                        <div class="requirement-details">
+                                            <div class="requirement-title">General Supporting Documents</div>
+                                            <div class="requirement-description">Upload all required documents for this grant</div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="requirement-upload-area" onclick="openFileInput('req_0')">
+                                        <i class="fas fa-cloud-upload-alt" style="font-size: 32px; color: #007bff; margin-bottom: 10px;"></i>
+                                        <p style="margin: 10px 0; color: #666;">
+                                            Click to upload supporting documents<br>
+                                            <small>PDF, JPG, PNG up to 5MB</small>
+                                        </p>
+                                    </div>
+                                    
+                                    <input type="hidden" name="requirement_names[]" value="General Documents">
+                                    <input type="file" name="requirement_0" id="file_input_0" 
+                                        style="display: none;" accept=".pdf,.jpg,.jpeg,.png"
+                                        onchange="handleRequirementFileUpload(0, this)">
+                                </div>
+                            `;
                     }
                 })
                 .catch(error => {
                     console.error('Error loading requirements:', error);
-                    requirementsList.innerHTML = `
-                    <div class="requirement-item" style="display: flex; align-items: flex-start; margin-bottom: 8px;">
-                        <i class="fas fa-exclamation-triangle" style="color: #dc3545; margin-right: 10px; margin-top: 2px;"></i>
-                        <span>Unable to load requirements. Please check your connection and try again.</span>
+                    requirementsContainer.innerHTML = `
+                            <div style="text-align: center; padding: 40px; color: #dc3545;">
+                                <i class="fas fa-exclamation-triangle" style="font-size: 48px; margin-bottom: 15px;"></i>
+                                <p>Unable to load requirements. Please check your connection and try again.</p>
+                            </div>
+                        `;
+                });
+        }
+
+        // Open file input for requirement
+        function openFileInput(requirementId) {
+            const index = requirementId.split('_')[1];
+            document.getElementById('file_input_' + index).click();
+        }
+
+        // Handle requirement file upload
+        function handleRequirementFileUpload(index, fileInput) {
+            const file = fileInput.files[0];
+            const uploadArea = document.getElementById('upload_area_' + index);
+            const previewContainer = document.getElementById('requirement_preview_' + index);
+            const errorContainer = document.getElementById('requirement_error_' + index);
+            const requirementContainer = document.getElementById('req_container_' + index);
+
+            // Reset states
+            errorContainer.style.display = 'none';
+            requirementContainer.classList.remove('error', 'completed');
+
+            if (!file) {
+                return;
+            }
+
+            // Validate file type
+            const allowedTypes = ['application/pdf', 'image/jpeg', 'image/jpg', 'image/png'];
+            if (!allowedTypes.includes(file.type)) {
+                errorContainer.textContent = 'Invalid file type. Only PDF, JPG, and PNG files are allowed.';
+                errorContainer.style.display = 'block';
+                requirementContainer.classList.add('error');
+                fileInput.value = '';
+                return;
+            }
+
+            // Validate file size (5MB)
+            if (file.size > 5 * 1024 * 1024) {
+                errorContainer.textContent = 'File is too large. Maximum size is 5MB.';
+                errorContainer.style.display = 'block';
+                requirementContainer.classList.add('error');
+                fileInput.value = '';
+                return;
+            }
+
+            // Store file in requirementUploads
+            const requirementId = 'req_' + index;
+            requirementUploads[requirementId] = {
+                requirementName: fileInput.previousElementSibling.value,
+                file: file
+            };
+
+            // Show preview
+            uploadArea.style.display = 'none';
+            previewContainer.style.display = 'block';
+            previewContainer.innerHTML = `
+                    <div class="requirement-file-info">
+                        <div class="requirement-file-icon">
+                            ${getFileIcon(file.type)}
+                        </div>
+                        <div class="requirement-file-details">
+                            <div class="requirement-file-name">${escapeHtml(file.name)}</div>
+                            <div style="font-size: 12px; color: #666;">
+                                ${formatFileSize(file.size)} • ${getFileType(file.type)}
+                            </div>
+                        </div>
+                        <div class="requirement-file-remove" onclick="removeRequirementFile(${index})">
+                            <i class="fas fa-times"></i>
+                        </div>
+                    </div>
+                    <div class="requirement-status completed">
+                        <i class="fas fa-check-circle"></i> File uploaded successfully
                     </div>
                 `;
+
+            // Mark as completed
+            requirementContainer.classList.add('completed');
+        }
+
+        // Remove requirement file
+        function removeRequirementFile(index) {
+            const requirementId = 'req_' + index;
+            const fileInput = document.getElementById('file_input_' + index);
+            const uploadArea = document.getElementById('upload_area_' + index);
+            const previewContainer = document.getElementById('requirement_preview_' + index);
+            const requirementContainer = document.getElementById('req_container_' + index);
+
+            // Clear file
+            requirementUploads[requirementId] = {
+                requirementName: fileInput.previousElementSibling.value,
+                file: null
+            };
+            fileInput.value = '';
+
+            // Reset UI
+            uploadArea.style.display = 'block';
+            previewContainer.style.display = 'none';
+            previewContainer.innerHTML = '';
+            requirementContainer.classList.remove('completed', 'error');
+        }
+
+        // Helper functions for file handling
+        function getFileIcon(fileType) {
+            if (fileType === 'application/pdf') {
+                return '<i class="fas fa-file-pdf"></i>';
+            } else if (fileType.startsWith('image/')) {
+                return '<i class="fas fa-file-image"></i>';
+            } else {
+                return '<i class="fas fa-file"></i>';
+            }
+        }
+
+        function getFileType(fileType) {
+            if (fileType === 'application/pdf') return 'PDF';
+            if (fileType === 'image/jpeg' || fileType === 'image/jpg') return 'JPG';
+            if (fileType === 'image/png') return 'PNG';
+            return fileType;
+        }
+
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Initialize additional files upload
+        function initializeAdditionalFilesUpload() {
+            const dropArea = document.getElementById('drop-area');
+            const fileInput = document.getElementById('attachments');
+            additionalFileInput = fileInput; // Store reference
+            const allowed = ['application/pdf', 'image/jpeg', 'image/jpg', 'image/png'];
+            const maxSize = 5 * 1024 * 1024;
+
+            // Store original event listener
+            const originalOnChange = fileInput.onchange;
+
+            // Drag and drop functionality
+            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+                dropArea.addEventListener(eventName, preventDefaults, false);
+                document.body.addEventListener(eventName, preventDefaults, false);
+            });
+
+            function preventDefaults(e) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+
+            ['dragenter', 'dragover'].forEach(eventName => {
+                dropArea.addEventListener(eventName, highlight, false);
+            });
+
+            ['dragleave', 'drop'].forEach(eventName => {
+                dropArea.addEventListener(eventName, unhighlight, false);
+            });
+
+            function highlight() {
+                dropArea.classList.add('highlight');
+            }
+
+            function unhighlight() {
+                dropArea.classList.remove('highlight');
+            }
+
+            // Handle dropped files
+            dropArea.addEventListener('drop', handleDrop, false);
+
+            function handleDrop(e) {
+                const dt = e.dataTransfer;
+                const files = dt.files;
+                handleAdditionalFiles(files);
+            }
+
+            // Handle file input change
+            fileInput.addEventListener('change', function (e) {
+                handleAdditionalFiles(e.target.files);
+            });
+
+            function handleAdditionalFiles(files) {
+                const newFiles = [...files];
+                newFiles.forEach(file => {
+                    // Validate file type
+                    if (!allowed.includes(file.type)) {
+                        alert(`File "${file.name}" is not a valid file type. Only PDF, JPG, and PNG files are allowed.`);
+                        return;
+                    }
+
+                    // Validate file size
+                    if (file.size > maxSize) {
+                        alert(`File "${file.name}" is too large. Maximum size is 5MB.`);
+                        return;
+                    }
+
+                    // Check if file already exists
+                    const fileExists = additionalFiles.some(existingFile =>
+                        existingFile.file.name === file.name && existingFile.file.size === file.size
+                    );
+
+                    if (!fileExists) {
+                        additionalFiles.push({
+                            id: Date.now() + Math.random(),
+                            file: file
+                        });
+                    }
                 });
+
+                updateAdditionalFilesPreview();
+                updateAdditionalFilesInput();
+            }
+
+            function updateAdditionalFilesPreview() {
+                const fileList = document.getElementById('additional-files-list');
+                const previewContainer = document.getElementById('additional-files-preview');
+
+                if (additionalFiles.length === 0) {
+                    fileList.innerHTML = '<p class="no-files" style="text-align: center; color: #666; padding: 20px;">No additional files uploaded</p>';
+                    previewContainer.style.display = 'none';
+                    return;
+                }
+
+                previewContainer.style.display = 'block';
+                fileList.innerHTML = '';
+
+                additionalFiles.forEach((fileObj, index) => {
+                    const file = fileObj.file;
+
+                    const fileItem = document.createElement('div');
+                    fileItem.className = 'file-item';
+                    fileItem.innerHTML = `
+                        <div class="file-info">
+                            <div class="file-icon">
+                                ${getFileIcon(file.type)}
+                            </div>
+                            <div class="file-details">
+                                <span class="file-name">${escapeHtml(file.name)}</span>
+                                <div class="file-meta">
+                                    <span class="file-size">${formatFileSize(file.size)}</span>
+                                    <span class="file-type">${getFileType(file.type)}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <button type="button" class="remove-file" onclick="removeAdditionalFile(${index})" title="Remove file">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    `;
+                    fileList.appendChild(fileItem);
+                });
+            }
+
+            window.removeAdditionalFile = function (index) {
+                additionalFiles.splice(index, 1);
+                updateAdditionalFilesPreview();
+                updateAdditionalFilesInput();
+            }
+
+            function updateAdditionalFilesInput() {
+                // Create a new DataTransfer object
+                const dataTransfer = new DataTransfer();
+                
+                // Add all files from additionalFiles array
+                additionalFiles.forEach(fileObj => {
+                    dataTransfer.items.add(fileObj.file);
+                });
+                
+                // Update the file input
+                fileInput.files = dataTransfer.files;
+                
+                // Trigger change event if there are files
+                if (additionalFiles.length > 0) {
+                    const event = new Event('change', { bubbles: true });
+                    fileInput.dispatchEvent(event);
+                }
+            }
+
+            // Initial preview update
+            updateAdditionalFilesPreview();
         }
 
         // Simple validation for number fields
@@ -1451,8 +2526,8 @@ if (isset($_SESSION['error_message'])) {
                     return false;
                 }
 
-                // Check graduation years
-                if (input.name.includes('yr_grad')) {
+                // Check graduation years (skip for college year grad as it's optional)
+                if (input.name.includes('yr_grad') && !input.name.includes('college')) {
                     const year = parseInt(input.value);
                     const currentYear = new Date().getFullYear();
                     if (year < 1900 || year > currentYear) {
@@ -1551,7 +2626,7 @@ if (isset($_SESSION['error_message'])) {
                     }
 
                     // Check phone number format
-                    if (input.classList.contains('phone-input')) {
+                    if (input.name.includes('cellNo') || input.name.includes('cellphone')) {
                         const phoneNumber = input.value.replace(/[^0-9]/g, '');
                         if (phoneNumber.length !== 11) {
                             parentRow.classList.add('error');
@@ -1609,18 +2684,36 @@ if (isset($_SESSION['error_message'])) {
 
             // Check file upload in attachments section
             if (currentSectionId === 'attachments-section') {
-                if (selectedFiles.length === 0) {
+                // Check if all requirements have files
+                let hasMissingRequirements = false;
+                Object.keys(requirementUploads).forEach(reqId => {
+                    if (!requirementUploads[reqId] || !requirementUploads[reqId].file) {
+                        const index = reqId.split('_')[1];
+                        const errorContainer = document.getElementById('requirement_error_' + index);
+                        if (errorContainer) {
+                            errorContainer.textContent = 'This file is required';
+                            errorContainer.style.display = 'block';
+                        }
+                        const requirementContainer = document.getElementById('req_container_' + index);
+                        if (requirementContainer) {
+                            requirementContainer.classList.add('error');
+                        }
+                        hasMissingRequirements = true;
+                    }
+                });
+
+                if (hasMissingRequirements) {
                     const errorMessage = currentSection.querySelector('.error-message');
                     if (errorMessage) errorMessage.style.display = 'block';
                     isValid = false;
-                    errorMessages.push('Please attach at least one supporting document');
+                    errorMessages.push('Please upload all required documents');
                 }
             }
 
             if (!isValid) {
                 // Show section error message
                 if (errorDiv && errorMessages.length > 0) {
-                    errorDiv.innerHTML = '<strong>Please fix the following errors:</strong><ul>' +
+                    errorDiv.innerHTML = '<strong>Please fill up the following required fields:</strong><ul>' +
                         errorMessages.map(error => `<li>${error}</li>`).join('') + '</ul>';
                     errorDiv.style.display = 'block';
 
@@ -1632,6 +2725,45 @@ if (isset($_SESSION['error_message'])) {
 
             return true;
         }
+        // Function to validate reason textarea and update character count
+        function validateReasonTextarea() {
+            const textarea = document.getElementById('reason_scholarship');
+            const charCount = document.getElementById('charCount');
+            const minChars = 50;
+
+            if (textarea && charCount) {
+                const currentLength = textarea.value.trim().length;
+                charCount.textContent = currentLength;
+
+                // Update color based on length
+                if (currentLength >= minChars) {
+                    charCount.style.color = '#28a745';
+                } else if (currentLength > 0) {
+                    charCount.style.color = '#ff9800';
+                } else {
+                    charCount.style.color = '#666';
+                }
+
+                // Also add/remove error class on the parent row
+                const parentRow = textarea.closest('.form-row');
+                if (parentRow) {
+                    const errorMessage = parentRow.querySelector('.error-message');
+                    if (currentLength < minChars) {
+                        parentRow.classList.add('error');
+                        if (errorMessage) errorMessage.style.display = 'block';
+                        if (currentLength > 0) {
+                            errorMessage.textContent = `Please enter at least ${minChars - currentLength} more characters`;
+                        } else {
+                            errorMessage.textContent = 'Please explain why you need a scholarship (minimum 50 characters)';
+                        }
+                    } else {
+                        parentRow.classList.remove('error');
+                        if (errorMessage) errorMessage.style.display = 'none';
+                    }
+                }
+            }
+        }
+
 
         // Navigate to next step
         function nextStep() {
@@ -1659,12 +2791,13 @@ if (isset($_SESSION['error_message'])) {
                     // Scroll to top of section
                     window.scrollTo({ top: 0, behavior: 'smooth' });
 
-                    // If moving to attachments section, load grant requirements
+                    // If moving to attachments section, load grant requirements and update folder preview
                     if (currentStep === 6) {
                         const grantSelect = document.querySelector('select[name="scholarship_grant"]');
                         if (grantSelect && grantSelect.value) {
                             loadGrantRequirements(grantSelect.value);
                         }
+                        updateFolderNamePreview();
                     }
                 }
             }
@@ -1752,7 +2885,7 @@ if (isset($_SESSION['error_message'])) {
                         }
 
                         // Check phone numbers
-                        if (input.classList.contains('phone-input') && input.value.trim()) {
+                        if ((input.name.includes('cellNo') || input.name.includes('cellphone')) && input.value.trim()) {
                             const phoneNumber = input.value.replace(/[^0-9]/g, '');
                             if (phoneNumber.length !== 11) {
                                 parentRow.classList.add('error');
@@ -1784,16 +2917,24 @@ if (isset($_SESSION['error_message'])) {
                 }
             });
 
-            // Validate file upload
-            if (selectedFiles.length === 0) {
-                allErrors.push('Please attach at least one supporting document');
-                // Also show the error in the attachments section
-                const attachmentsSection = document.getElementById('attachments-section');
-                if (attachmentsSection) {
-                    const errorMessage = attachmentsSection.querySelector('.error-message');
-                    if (errorMessage) errorMessage.style.display = 'block';
+            // Validate requirement uploads
+            let hasMissingRequirements = false;
+            Object.keys(requirementUploads).forEach(reqId => {
+                if (!requirementUploads[reqId] || !requirementUploads[reqId].file) {
+                    const index = reqId.split('_')[1];
+                    const errorContainer = document.getElementById('requirement_error_' + index);
+                    if (errorContainer) {
+                        errorContainer.textContent = 'This file is required';
+                        errorContainer.style.display = 'block';
+                    }
+                    const requirementContainer = document.getElementById('req_container_' + index);
+                    if (requirementContainer) {
+                        requirementContainer.classList.add('error');
+                    }
+                    hasMissingRequirements = true;
+                    allErrors.push(`Please upload file for: ${requirementUploads[reqId]?.requirementName || 'required document'}`);
                 }
-            }
+            });
 
             if (allErrors.length > 0) {
                 // Go to first section with error
@@ -1820,7 +2961,7 @@ if (isset($_SESSION['error_message'])) {
             const fileCountInput = document.createElement('input');
             fileCountInput.type = 'hidden';
             fileCountInput.name = 'file_count';
-            fileCountInput.value = selectedFiles.length;
+            fileCountInput.value = Object.keys(requirementUploads).length + additionalFiles.length;
 
             // Remove existing file_count input if it exists
             const existingFileCount = document.querySelector('input[name="file_count"]');
@@ -1834,216 +2975,6 @@ if (isset($_SESSION['error_message'])) {
             return true;
         }
 
-        // ========== FILE UPLOAD FUNCTIONALITY ==========
-        function initializeFileUpload() {
-            const dropArea = document.getElementById('drop-area');
-            const fileInput = document.getElementById('attachments');
-            const previewContainer = document.getElementById('preview');
-            const allowed = ['application/pdf', 'image/jpeg', 'image/jpg', 'image/png'];
-            const maxSize = 5 * 1024 * 1024; // 5MB
-
-            function showError(msg) {
-                const errorDiv = document.getElementById('attachments-error');
-                if (errorDiv) {
-                    errorDiv.textContent = msg;
-                    errorDiv.style.display = 'block';
-                    setTimeout(() => {
-                        errorDiv.style.display = 'none';
-                    }, 5000);
-                }
-            }
-
-            // Drag and drop functionality
-            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-                dropArea.addEventListener(eventName, preventDefaults, false);
-                document.body.addEventListener(eventName, preventDefaults, false);
-            });
-
-            function preventDefaults(e) {
-                e.preventDefault();
-                e.stopPropagation();
-            }
-
-            ['dragenter', 'dragover'].forEach(eventName => {
-                dropArea.addEventListener(eventName, highlight, false);
-            });
-
-            ['dragleave', 'drop'].forEach(eventName => {
-                dropArea.addEventListener(eventName, unhighlight, false);
-            });
-
-            function highlight() {
-                dropArea.classList.add('highlight');
-            }
-
-            function unhighlight() {
-                dropArea.classList.remove('highlight');
-            }
-
-            // Handle dropped files
-            dropArea.addEventListener('drop', handleDrop, false);
-
-            function handleDrop(e) {
-                const dt = e.dataTransfer;
-                const files = dt.files;
-                handleFiles(files);
-            }
-
-            // Handle file input change
-            fileInput.addEventListener('change', function (e) {
-                handleFiles(e.target.files);
-            });
-
-            function handleFiles(files) {
-                const errorDiv = document.getElementById('attachments-error');
-                if (errorDiv) {
-                    errorDiv.style.display = 'none';
-                }
-
-                [...files].forEach(file => {
-                    // Validate file type
-                    if (!allowed.includes(file.type)) {
-                        showError(`Invalid file type for ${file.name}. Only PDF, JPG, and PNG files are allowed.`);
-                        return;
-                    }
-
-                    // Validate file size
-                    if (file.size > maxSize) {
-                        showError(`File "${file.name}" is too large. Maximum size is 5MB.`);
-                        return;
-                    }
-
-                    // Check if file already exists
-                    const fileExists = selectedFiles.some(existingFile =>
-                        existingFile.file.name === file.name && existingFile.file.size === file.size
-                    );
-
-                    if (!fileExists) {
-                        selectedFiles.push({
-                            id: Date.now() + Math.random(),
-                            file: file,
-                            documentType: 'Other Document'
-                        });
-                    } else {
-                        showError(`File "${file.name}" is already added.`);
-                    }
-                });
-
-                updateFilePreview();
-                updateInputFiles();
-            }
-
-            function updateFilePreview() {
-                const fileList = document.getElementById('file-list');
-                const previewContainer = document.getElementById('preview');
-
-                if (selectedFiles.length === 0) {
-                    fileList.innerHTML = '<p class="no-files">No files uploaded yet</p>';
-                    previewContainer.classList.remove('visible');
-                    previewContainer.style.display = 'none';
-                    return;
-                }
-
-                previewContainer.classList.add('visible');
-                previewContainer.style.display = 'block';
-                fileList.innerHTML = '';
-
-                selectedFiles.forEach((fileObj, index) => {
-                    const file = fileObj.file;
-                    const fileId = fileObj.id;
-
-                    const fileItem = document.createElement('div');
-                    fileItem.className = 'file-item';
-                    fileItem.innerHTML = `
-                    <div class="file-info">
-                        <div class="file-icon">
-                            ${getFileIcon(file.type)}
-                        </div>
-                        <div class="file-details">
-                            <span class="file-name">${escapeHtml(file.name)}</span>
-                            <div class="file-meta">
-                                <span class="file-size">${formatFileSize(file.size)}</span>
-                                <span class="file-type">${getFileType(file.type)}</span>
-                                <span class="document-type">Document Type: <strong>${escapeHtml(fileObj.documentType)}</strong></span>
-                            </div>
-                        </div>
-                    </div>
-                    <button type="button" class="remove-file" onclick="removeFile(${index})" title="Remove file">
-                        <i class="fas fa-times"></i>
-                    </button>
-                `;
-                    fileList.appendChild(fileItem);
-                });
-            }
-
-            function getFileIcon(fileType) {
-                if (fileType === 'application/pdf') {
-                    return '<i class="fas fa-file-pdf"></i>';
-                } else if (fileType.startsWith('image/')) {
-                    return '<i class="fas fa-file-image"></i>';
-                } else {
-                    return '<i class="fas fa-file"></i>';
-                }
-            }
-
-            function getFileType(fileType) {
-                if (fileType === 'application/pdf') return 'PDF';
-                if (fileType === 'image/jpeg' || fileType === 'image/jpg') return 'JPG';
-                if (fileType === 'image/png') return 'PNG';
-                return fileType;
-            }
-
-            function formatFileSize(bytes) {
-                if (bytes === 0) return '0 Bytes';
-                const k = 1024;
-                const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-                const i = Math.floor(Math.log(bytes) / Math.log(k));
-                return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-            }
-
-            function escapeHtml(text) {
-                const div = document.createElement('div');
-                div.textContent = text;
-                return div.innerHTML;
-            }
-
-            // Make removeFile function global
-            window.removeFile = function (index) {
-                selectedFiles.splice(index, 1);
-                updateFilePreview();
-                updateInputFiles();
-            }
-
-            function updateInputFiles() {
-                const dataTransfer = new DataTransfer();
-                selectedFiles.forEach(fileObj => dataTransfer.items.add(fileObj.file));
-                fileInput.files = dataTransfer.files;
-
-                // Clear any validation error
-                const errorMessage = document.querySelector('#attachments-section .error-message');
-                if (errorMessage && selectedFiles.length > 0) {
-                    errorMessage.style.display = 'none';
-                }
-            }
-
-            // Initial preview update
-            updateFilePreview();
-        }
-
-        function toggleNav() {
-            const sideNav = document.getElementById('sideNav');
-            const toggleBtn = document.querySelector('.toggle-btn');
-            const toggleIcon = document.getElementById('toggle-icon');
-
-            if (sideNav.style.left === '0px' || sideNav.style.left === '') {
-                sideNav.style.left = '-250px';
-                toggleIcon.className = 'fas fa-bars';
-            } else {
-                sideNav.style.left = '0px';
-                toggleIcon.className = 'fas fa-times';
-            }
-        }
-
         // Initialize everything when DOM is loaded
         document.addEventListener('DOMContentLoaded', function () {
             // Check all dropdowns that have "others" option
@@ -2051,7 +2982,8 @@ if (isset($_SESSION['error_message'])) {
             if (religionSelect) {
                 toggleOtherField(religionSelect, 'religion_other');
             }
-
+            // Initialize character counter for scholarship reason
+            validateReasonTextarea();
             const indigenousSelect = document.getElementById('indigenous_group');
             if (indigenousSelect) {
                 toggleOtherField(indigenousSelect, 'indigenous_group_other');
@@ -2062,6 +2994,12 @@ if (isset($_SESSION['error_message'])) {
                 toggleOtherField(sexSelect, 'sex_other');
             }
 
+            // Update folder name when full name changes
+            const fullNameInput = document.getElementById('fullNameField');
+            if (fullNameInput) {
+                fullNameInput.addEventListener('input', updateFolderNamePreview);
+            }
+
             // Load requirements when scholarship grant is selected
             const grantSelect = document.querySelector('select[name="scholarship_grant"]');
             if (grantSelect) {
@@ -2069,7 +3007,7 @@ if (isset($_SESSION['error_message'])) {
                     loadGrantRequirements(this.value);
                 });
 
-                // Load requirements for initially selected grant
+                // Load requirements for initially selected grant (if any)
                 if (grantSelect.value && grantSelect.value !== '') {
                     loadGrantRequirements(grantSelect.value);
                 }
@@ -2094,8 +3032,11 @@ if (isset($_SESSION['error_message'])) {
             // Set date time when page loads
             document.getElementById("autoDateTime").value = getDateTime();
 
-            // Initialize file upload system
-            initializeFileUpload();
+            // Initialize additional files upload system
+            initializeAdditionalFilesUpload();
+
+            // Update folder name preview initially
+            updateFolderNamePreview();
 
             // Handle success/error messages
             var successMessage = document.getElementById("successMessage");
@@ -2111,6 +3052,12 @@ if (isset($_SESSION['error_message'])) {
                 setTimeout(function () {
                     errorMessage.style.display = "none";
                 }, 5000);
+            }
+
+            // Calculate age if date of birth is pre-filled
+            const dobInput = document.getElementById('date_of_birth');
+            if (dobInput && dobInput.value) {
+                calculateAge();
             }
         });
     </script>

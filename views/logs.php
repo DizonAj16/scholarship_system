@@ -35,6 +35,8 @@ try {
     <link rel="stylesheet" href="../css/preloader.css?v=<?php echo time(); ?>">
     <link rel="stylesheet" href="../css/dashboard.css?v=<?php echo time(); ?>">
     <script src="../js/preloader.js?v=<?php echo time(); ?>"></script>
+    <script src="../js/toggle_nav.js?v=<?php echo time(); ?>"></script>
+
     <link rel="stylesheet" href="../css/logs.css?v=<?php echo time(); ?>">
 
 </head>
@@ -50,7 +52,7 @@ try {
         </div>
     </div> -->
 
-<!-- 
+    <!-- 
     <button class="toggle-btn" onclick="toggleNav()">
         <i class="fas fa-times" id="toggle-icon"></i>
     </button> -->
@@ -75,11 +77,10 @@ try {
 
                 <li><a href="./scholarship_form.php"><i class="fas fa-solid fa-file"></i><span
                             class="nav-item-2">Scholarship Form</span></a></li>
-                <li><a href="./manage_dropdowns.php"><i class="fas fa-list"></i><span class="nav-item-2">Manage
-                            Scholarships</span></a></li>
+                <li><a href="./manage_dropdowns.php"><i class="fas fa-list"></i><span class="nav-item-2">Scholarship Settings</span></a></li>
                 <li><a href="./applications.php"><i class="fas fa-solid fa-folder"></i><span
                             class="nav-item-2">Applications</span></a></li>
-                <li><a href="./logs.php" class="active"><i class="fas fa-clipboard-list"></i><span
+                <li><a href="./logs.php" class="activea"><i class="fas fa-clipboard-list"></i><span
                             class="nav-item-2">Logs</span></a></li>
             <?php elseif ($_SESSION["role"] === 'student'): ?>
                 <li><a href="./my_applications.php"><i class="fas fa-solid fa-folder-open"></i><span class="nav-item-2">My
@@ -98,6 +99,9 @@ try {
             <li><a href="../auth/logout.php" class="logout"><i class="fas fa-solid fa-right-from-bracket"></i><span
                         class="nav-item-2">Logout</span></a></li>
         </ul>
+        <button class="toggle-btn" onclick="toggleNav()">
+            <i class="fas fa-bars" id="toggle-icon"></i>
+        </button>
     </nav>
 
     <div class="content">
@@ -146,25 +150,6 @@ try {
         </table>
     </div>
 
-    <script>
-        function toggleNav() {
-            const sideNav = document.getElementById('sideNav');
-            const toggleIcon = document.getElementById('toggle-icon');
-
-            // Check if the navigation is currently open (visible)
-            if (sideNav.style.transform === 'translateX(0px)' || sideNav.style.transform === '') {
-                // Close the navigation
-                sideNav.style.transform = 'translateX(-250px)';
-                toggleIcon.classList.remove('fa-times');
-                toggleIcon.classList.add('fa-bars');
-            } else {
-                // Open the navigation
-                sideNav.style.transform = 'translateX(0px)';
-                toggleIcon.classList.remove('fa-bars');
-                toggleIcon.classList.add('fa-times');
-            }
-        }
-    </script>
 </body>
 
 </html>
