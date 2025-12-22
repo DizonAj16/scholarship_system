@@ -39,6 +39,9 @@ $announcements = $annQuery->fetchAll(PDO::FETCH_ASSOC);
     </button> -->
 
     <nav class="stroke" id="sideNav">
+        <button class="toggle-btn" onclick="toggleNav()">
+            <i class="fas fa-bars" id="toggle-icon"></i>
+        </button>
         <ul>
             <li>
                 <a href="#" class="logo">
@@ -119,36 +122,37 @@ $announcements = $annQuery->fetchAll(PDO::FETCH_ASSOC);
                 </a>
             </li>
         </ul>
-        <button class="toggle-btn" onclick="toggleNav()">
-            <i class="fas fa-bars" id="toggle-icon"></i>
-        </button>
+
 
     </nav>
 
     <div class="content">
-        <h1>Welcome to the Office of Scholarship Programs</h1>
-        <p>This section contains information and resources related to scholarships available for ZPPSU students. Please
-            explore the sections below to learn more about the programs we offer, recent updates, and how to apply.</p>
+        <div class="content-1">
+            <h1>Welcome to the Office of Scholarship Programs</h1>
+            <p>This section contains information and resources related to scholarships available for ZPPSU students.
+                Please
+                explore the sections below to learn more about the programs we offer, recent updates, and how to apply.
+            </p>
 
-        <!-- Announcements Section -->
-        <section>
-            <h2>Latest Announcements</h2>
+            <!-- Announcements Section -->
+            <section>
+                <h2>Latest Announcements</h2>
 
-            <?php if (count($announcements) === 0): ?>
-                <p>No announcements available at the moment.</p>
-            <?php else: ?>
-                <div class="announcement-cards">
-                    <?php foreach ($announcements as $a): ?>
-                        <div class="announcement-card">
-                            <h3><?= htmlspecialchars($a['title']); ?></h3>
-                            <p><?= nl2br(htmlspecialchars($a['message'])); ?></p>
-                            <span class="announcement-date">Posted: <?= $a['created_at']; ?></span>
-                        </div>
-                    <?php endforeach; ?>
-                </div>
-            <?php endif; ?>
-        </section>
-        <!-- <section>
+                <?php if (count($announcements) === 0): ?>
+                    <p>No announcements available at the moment.</p>
+                <?php else: ?>
+                    <div class="announcement-cards">
+                        <?php foreach ($announcements as $a): ?>
+                            <div class="announcement-card">
+                                <h3><?= htmlspecialchars($a['title']); ?></h3>
+                                <p><?= nl2br(htmlspecialchars($a['message'])); ?></p>
+                                <span class="announcement-date">Posted: <?= $a['created_at']; ?></span>
+                            </div>
+                        <?php endforeach; ?>
+                    </div>
+                <?php endif; ?>
+            </section>
+            <!-- <section>
             <h2>Recent Announcements</h2>
             <ul class="ul1">
                 <li><strong>Deadline for Fall Semester Applications:</strong> October 15, 2024</li>
@@ -157,10 +161,10 @@ $announcements = $annQuery->fetchAll(PDO::FETCH_ASSOC);
                 <li><strong>Information Session:</strong> Join our virtual scholarship info session on September 30,
                     2024.</li>
             </ul>
-        </section> -->
+         </section> -->
 
-        <!-- Scholarship Opportunities Section
-        <section>
+            <!-- Scholarship Opportunities Section
+                <   section>
             <h2>Available Scholarships</h2>
             <ul class="ul1">
                 <li><strong>Academic Excellence Scholarship:</strong> Full tuition for students with outstanding
@@ -169,33 +173,34 @@ $announcements = $annQuery->fetchAll(PDO::FETCH_ASSOC);
                 <li><strong>Community Leadership Scholarship:</strong> Scholarships for students who show leadership in
                     their communities.</li>
             </ul>
-        </section> -->
+            </section> -->
 
-        <!-- Application Information Section -->
-        <section>
-            <h2>How to Apply</h2>
-            <p>To apply for a scholarship, follow these steps:</p>
-            <ol class="ol1">
-                <li class="form-link">Fill out the <a href="./scholarship_form.php"><i class="fa-solid fa-file"></i>
-                        Scholarship
-                        Application Form</a></li>
-                <li>Submit all required documents, including transcripts and recommendation letters.</li>
-                <li>Check your email for application status updates.</li>
-            </ol>
-        </section>
-
-
+            <!-- Application Information Section -->
+            <section>
+                <h2>How to Apply</h2>
+                <p>To apply for a scholarship, follow these steps:</p>
+                <ol class="ol1">
+                    <li class="form-link">Fill out the <a href="./scholarship_form.php"><i class="fa-solid fa-file"></i>
+                            Scholarship
+                            Application Form</a></li>
+                    <li>Submit all required documents, including transcripts and recommendation letters.</li>
+                    <li>Check your email for application status updates.</li>
+                </ol>
+            </section>
 
 
 
-        <!-- Upcoming Events Section
-        <section>
+
+
+            <!-- Upcoming Events Section
+            <section>
             <h2>Upcoming Events</h2>
             <ul class="ul1">
                 <li><strong>Scholarship Info Session:</strong> September 30, 2024, via Zoom</li>
                 <li><strong>Scholarship Award Ceremony:</strong> November 15, 2024, ZPPSU Auditorium</li>
             </ul>
-        </section> -->
+            </section> -->
+        </div>
     </div>
 
 </body>

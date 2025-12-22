@@ -1,5 +1,6 @@
 <?php
 require '../includes/session.php'; // Ensure this includes database connection and session setup
+require '../includes/send_email.php'; // Include the email functions
 
 try {
     // Check if the application ID is provided
@@ -8,8 +9,23 @@ try {
     }
 
     $applicationId = (int) $_GET['id'];
+    $notify = isset($_GET['notify']) && $_GET['notify'] === 'yes';
+    $rejectionReason = isset($_GET['reason']) ? htmlspecialchars($_GET['reason']) : '';
 
-    // Prepare the SQL query to update the application status to 'rejected'
+    // Fetch the applicant's details
+    $query = $pdo->prepare("SELECT full_name, email FROM scholarship_applications WHERE application_id = :id");
+    $query->bindParam(':id', $applicationId, PDO::PARAM_INT);
+    $query->execute();
+    $applicant = $query->fetch(PDO::FETCH_ASSOC);
+
+    if (!$applicant) {
+        throw new Exception('Applicant not found.');
+    }
+
+    $applicantEmail = $applicant['email'];
+    $applicantName = $applicant['full_name'];
+
+    // Prepare the SQL query to update the application status to 'not qualified'
     $stmt = $pdo->prepare("
         UPDATE scholarship_applications 
         SET status = 'not qualified' 
@@ -20,8 +36,21 @@ try {
 
     // Check if any row was updated
     if ($stmt->rowCount() > 0) {
-        $_SESSION['success_message'] = "Application ID $applicationId has been rejected.";
-        logActivity($pdo, $_SESSION['id'], 'Application Status Rejected', "Application ID $applicationId marked as 'rejected'.");
+        if ($notify) {
+            // Send notification email
+            $emailStatus = sendRejectionEmail($applicantEmail, $applicantName, $rejectionReason);
+            
+            if ($emailStatus === true) {
+                $_SESSION['success_message'] = "Application ID $applicationId has been rejected and notification sent to $applicantName.";
+                logActivity($pdo, $_SESSION['id'], 'Application Status Rejected', "Application ID $applicationId marked as 'not qualified' and notified.");
+            } else {
+                $_SESSION['warning_message'] = "Application rejected but email could not be sent: $emailStatus";
+                logActivity($pdo, $_SESSION['id'], 'Application Status Rejected', "Application ID $applicationId marked as 'not qualified' but email failed: $emailStatus");
+            }
+        } else {
+            $_SESSION['success_message'] = "Application ID $applicationId has been rejected.";
+            logActivity($pdo, $_SESSION['id'], 'Application Status Rejected', "Application ID $applicationId marked as 'not qualified' without notification.");
+        }
     } else {
         $_SESSION['error_message'] = "No application found with ID $applicationId or it has already been processed.";
         logActivity($pdo, $_SESSION['id'], 'Error Updating Status', "No application found with ID $applicationId or it has already been processed.");

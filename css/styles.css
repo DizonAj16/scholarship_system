@@ -152,22 +152,20 @@ nav.expanded ~ .content {
 /* Fixed Toggle Button */
 .toggle-btn {
   position: fixed;
-  top: 25px;
-  left: 25px;
-  background: linear-gradient(45deg, #800000, #ffd700);
-  color: white;
+  top: 15px!important;
+  left: 15px!important;
+  background: transparent;
+  color: #ffd700;
   border: none;
   padding: 14px;
   width: 50px; /* Fixed width */
   height: 50px; /* Fixed height */
-  border-radius: 50%;
   cursor: pointer;
   z-index: 1100;
   font-size: 22px;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.25);
   transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
   overflow: hidden; /* Prevent content overflow */
 }

@@ -289,28 +289,9 @@ tr:hover {
   background-color: #f44336;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
-.toggle-btn {
-  position: fixed;
-  top: 20px;
-  right: 20px;
-  background: linear-gradient(45deg, #800000, #ffd700);
-  color: white;
-  border: none;
-  padding: 12px 16px;
-  border-radius: 50%;
-  cursor: pointer;
-  z-index: 1100;
-  font-size: 20px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
-  transition: background-color 0.3s ease, transform 0.2s ease;
-}
 
-.toggle-btn:hover {
-  transform: scale(1.1);
-}
+
+
 
 
 @media (max-width: 499px) {

@@ -53,6 +53,79 @@ if ($user_role === 'student') {
     $stmt->execute([':user_id' => $user_id]);
     $user_parents_data = $stmt->fetch(PDO::FETCH_ASSOC);
 
+    // Initialize income variables with default values
+    $father_income = '';
+    $is_father_custom = false;
+    $father_custom_value = '';
+    $mother_income = '';
+    $is_mother_custom = false;
+    $mother_custom_value = '';
+
+    // In the PHP section where you process the parent's data:
+    if ($user_role === 'student' && !empty($user_parents_data)) {
+        // Determine if father's income is a custom amount
+        $father_income = $user_parents_data['father_income'] ?? '';
+        $is_father_custom = false;
+        $father_custom_value = '';
+
+        // Check if the stored value matches any of the dropdown options
+        $dropdown_options = [
+            '0-5000',
+            '5000-10000',
+            '10000-15000',
+            '15000-20000',
+            '20000-25000',
+            '25000-30000',
+            '30000-35000',
+            '35000-40000',
+            '40000-45000',
+            '45000-50000',
+            '50000+',
+            'Not Applicable',
+            'Prefer not to say'
+        ];
+
+        if (!empty($father_income)) {
+            // Remove peso sign and extra spaces for comparison
+            $clean_father_income = str_replace('₱', '', $father_income);
+            $clean_father_income = trim($clean_father_income);
+
+            // Check if it matches any dropdown option (without peso sign)
+            $matches_dropdown = in_array($clean_father_income, $dropdown_options);
+
+            if (!$matches_dropdown) {
+                // It's a custom amount
+                $is_father_custom = true;
+                $father_custom_value = $father_income;
+                $father_income = 'custom';
+            } else {
+                // It matches a dropdown option
+                $father_income = $clean_father_income; // Use the clean version
+            }
+        }
+
+        // Same for mother's income
+        $mother_income = $user_parents_data['mother_income'] ?? '';
+        $is_mother_custom = false;
+        $mother_custom_value = '';
+
+        if (!empty($mother_income)) {
+            // Remove peso sign and extra spaces for comparison
+            $clean_mother_income = str_replace('₱', '', $mother_income);
+            $clean_mother_income = trim($clean_mother_income);
+
+            // Check if it matches any dropdown option (without peso sign)
+            $matches_dropdown = in_array($clean_mother_income, $dropdown_options);
+
+            if (!$matches_dropdown) {
+                $is_mother_custom = true;
+                $mother_custom_value = $mother_income;
+                $mother_income = 'custom';
+            } else {
+                $mother_income = $clean_mother_income; // Use the clean version
+            }
+        }
+    }
     // Fetch user house info data
     $stmt = $pdo->prepare("SELECT * FROM user_house_info WHERE user_id = :user_id");
     $stmt->execute([':user_id' => $user_id]);
@@ -112,14 +185,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         'father_cellphone' => preg_replace('/[^0-9]/', '', $_POST['father_cellphone']), // Remove non-numeric characters
         'father_education' => $_POST['father_education'],
         'father_occupation' => $_POST['father_occupation'],
-        'father_income' => $_POST['father_income'],
+        'father_income' => $_POST['father_income'] === 'custom' && isset($_POST['father_income_custom'])
+            ? $_POST['father_income_custom']
+            : $_POST['father_income'],
         'mother_lastname' => $_POST['mother_lastname'],
         'mother_givenname' => $_POST['mother_givenname'],
         'mother_middlename' => $_POST['mother_middlename'],
         'mother_cellphone' => preg_replace('/[^0-9]/', '', $_POST['mother_cellphone']), // Remove non-numeric characters
         'mother_education' => $_POST['mother_education'],
         'mother_occupation' => $_POST['mother_occupation'],
-        'mother_income' => $_POST['mother_income'],
+        'mother_income' => $_POST['mother_income'] === 'custom' && isset($_POST['mother_income_custom'])
+            ? $_POST['mother_income_custom']
+            : $_POST['mother_income'],
         'house_status' => $_POST['house_status'],
     ];
 
@@ -198,15 +275,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         // Insert into schools_attended table
         $schools_sql = "INSERT INTO schools_attended (
-            application_id, elementary, elementary_year_grad, elementary_honors,
-            secondary, secondary_year_grad, secondary_honors,
-            college, college_year_grad, college_honors
-        ) VALUES (
-            :application_id, :elementary, :elementary_year_grad, :elementary_honors,
-            :secondary, :secondary_year_grad, :secondary_honors,
-            :college, :college_year_grad, :college_honors
-        )";
-        
+                    application_id, elementary, elementary_year_grad, elementary_honors,
+                    secondary, secondary_year_grad, secondary_honors,
+                    college, college_year_grad, college_honors
+                ) VALUES (
+                    :application_id, :elementary, :elementary_year_grad, :elementary_honors,
+                    :secondary, :secondary_year_grad, :secondary_honors,
+                    :college, :college_year_grad, :college_honors
+                )";
+
         $schools_stmt = $pdo->prepare($schools_sql);
         $schools_stmt->bindParam(':application_id', $application_id);
         $schools_stmt->bindParam(':elementary', $data['elementary']);
@@ -218,14 +295,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $schools_stmt->bindParam(':college', $data['college']);
         $schools_stmt->bindParam(':college_year_grad', $data['college_year_grad']);
         $schools_stmt->bindParam(':college_honors', $data['college_honors']);
-        
+
         // Handle NULL value for college_year_grad
         if ($data['college_year_grad'] === null) {
             $schools_stmt->bindValue(':college_year_grad', null, PDO::PARAM_NULL);
         } else {
             $schools_stmt->bindParam(':college_year_grad', $data['college_year_grad']);
         }
-        
+
         if (!$schools_stmt->execute()) {
             throw new Exception("Failed to save schools attended information.");
         }
@@ -310,7 +387,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 if ($_FILES['attachments']['error'][$i] !== UPLOAD_ERR_OK) {
                     continue;
                 }
-                
+
                 $fileName = $_FILES['attachments']['name'][$i];
                 $fileTmp = $_FILES['attachments']['tmp_name'][$i];
                 $fileSize = $_FILES['attachments']['size'][$i];
@@ -358,7 +435,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         logActivity($pdo, $user_id, $action, $details);
 
         $_SESSION['success_message'] = 'Your scholarship application has been successfully submitted.';
-        header("Location: " . $_SERVER['PHP_SELF']);
+
+        // Redirect based on user role
+        if ($user_role === 'admin') {
+            header("Location: ../views/applications.php");
+        } else {
+            header("Location: ../views/my_applications.php");
+        }
         exit();
     } catch (PDOException $e) {
         // Rollback transaction on error
@@ -382,8 +465,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 if (empty($sem_sy_list)) {
     // If no default is set, show an error message
     $error_message = '<div class="alert alert-danger" style="margin: 20px auto; max-width: 800px;">
-            <h4><i class="fas fa-exclamation-triangle"></i> No Active Semester/School Year</h4>
-            <p>There is currently no active semester/school year set for applications. Please contact the administrator to set a default semester and school year.</p>';
+                    <h4><i class="fas fa-exclamation-triangle"></i> No Active Semester/School Year</h4>
+                    <p>There is currently no active semester/school year set for applications. Please contact the administrator to set a default semester and school year.</p>';
 
     // If user is admin, show additional message
     if ($user_role === 'admin') {
@@ -756,8 +839,6 @@ if (isset($_SESSION['error_message'])) {
                 padding: 20px;
             }
 
-
-
             .buttonNav,
             .submitBtn {
                 min-width: 120px;
@@ -1121,7 +1202,7 @@ if (isset($_SESSION['error_message'])) {
             margin-top: 5px;
             display: none;
         }
-        
+
         /* Validation Summary Styles */
         .validation-summary {
             background: #f8d7da;
@@ -1132,22 +1213,22 @@ if (isset($_SESSION['error_message'])) {
             display: none;
             border-left: 4px solid #dc3545;
         }
-        
+
         .validation-summary h3 {
             margin-top: 0;
             font-size: 18px;
             color: #721c24;
         }
-        
+
         .validation-summary ul {
             margin: 10px 0 0 20px;
             padding: 0;
         }
-        
+
         .validation-summary li {
             margin-bottom: 5px;
         }
-        
+
         /* Error message styles */
         .section-error {
             background: #f8d7da;
@@ -1158,26 +1239,285 @@ if (isset($_SESSION['error_message'])) {
             display: none;
             border-left: 4px solid #dc3545;
         }
-        
+
         .error-message {
             color: #dc3545;
             font-size: 14px;
             margin-top: 5px;
             display: none;
         }
-        
+
         .form-row.error .error-message {
             display: block;
         }
-        
+
         .form-row.error input,
         .form-row.error select,
         .form-row.error textarea {
             border-color: #dc3545 !important;
         }
-        
+
         .form-row.error .requirement-upload-area {
             border-color: #dc3545 !important;
+        }
+
+        /* Confirmation Modal Styles */
+        .confirmation-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 9999;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .confirmation-modal.active {
+            display: flex;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .modal-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(1px);
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 600px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            z-index: 10000;
+            position: relative;
+            margin: 20px;
+            animation: modalSlideIn 0.3s ease;
+        }
+
+        @keyframes modalSlideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-50px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px;
+            border-bottom: 1px solid #e0e0e0;
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+            border-radius: 12px 12px 0 0;
+        }
+
+        .modal-header h3 {
+            margin: 0;
+            color: #2c3e50;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .modal-header h3 i {
+            color: #ff9800;
+        }
+
+        .close-modal {
+            background: none;
+            border: none;
+            font-size: 28px;
+            color: #666;
+            cursor: pointer;
+            padding: 0;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: all 0.3s;
+        }
+
+        .close-modal:hover {
+            background: #f5f5f5;
+            color: #333;
+            transform: rotate(90deg);
+        }
+
+        .modal-body {
+            padding: 25px;
+        }
+
+        .application-summary {
+            background: #f8f9fa;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .summary-item {
+            margin-bottom: 12px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .summary-item:last-child {
+            margin-bottom: 0;
+            padding-bottom: 0;
+            border-bottom: none;
+        }
+
+        .summary-label {
+            font-weight: 600;
+            color: #555;
+            display: block;
+            margin-bottom: 4px;
+            font-size: 14px;
+        }
+
+        .summary-value {
+            color: #2c3e50;
+            font-size: 15px;
+        }
+
+        .warning-box {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 8px;
+            padding: 15px;
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            margin-top: 20px;
+        }
+
+        .warning-box i {
+            color: #ff9800;
+            font-size: 20px;
+            flex-shrink: 0;
+        }
+
+        .warning-box p {
+            margin: 0;
+            color: #856404;
+            font-size: 14px;
+        }
+
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 15px;
+            padding: 20px;
+            border-top: 1px solid #e0e0e0;
+            background: #f8f9fa;
+            border-radius: 0 0 12px 12px;
+        }
+
+        .btn-cancel,
+        .btn-confirm {
+            padding: 12px 30px;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 15px;
+        }
+
+        .btn-cancel {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-cancel:hover {
+            background: #5a6268;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(108, 117, 125, 0.3);
+        }
+
+        .btn-confirm {
+            background: linear-gradient(135deg, #28a745, #218838);
+            color: white;
+        }
+
+        .btn-confirm:hover {
+            background: linear-gradient(135deg, #218838, #1e7e34);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(40, 167, 69, 0.3);
+        }
+
+        .btn-confirm:disabled {
+            background: #cccccc;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        /* Loading spinner for submit button */
+        .btn-confirm.loading {
+            position: relative;
+            color: transparent;
+        }
+
+        .btn-confirm.loading::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 20px;
+            height: 20px;
+            margin: -10px 0 0 -10px;
+            border: 3px solid #ffffff;
+            border-top-color: transparent;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        /* Responsive modal */
+        @media (max-width: 768px) {
+            .modal-content {
+                width: 95%;
+                margin: 10px;
+            }
+
+            .modal-footer {
+                flex-direction: column;
+            }
+
+            .btn-cancel,
+            .btn-confirm {
+                width: 100%;
+                margin-bottom: 10px;
+            }
+
+            .btn-cancel:last-child,
+            .btn-confirm:last-child {
+                margin-bottom: 0;
+            }
+        }
+
+        /* Disable form submission when modal is open */
+        body.modal-open {
+            overflow: hidden;
         }
     </style>
 </head>
@@ -1214,7 +1554,8 @@ if (isset($_SESSION['error_message'])) {
                         <span class="nav-item-2">Scholarship Form</span>
                     </a>
                 </li>
-                <li><a href="./manage_dropdowns.php"><i class="fas fa-list"></i><span class="nav-item-2">Scholarship Settings</span></a></li>
+                <li><a href="./manage_dropdowns.php"><i class="fas fa-list"></i><span class="nav-item-2">Scholarship
+                            Settings</span></a></li>
                 <li>
                     <a href="./applications.php">
                         <i class="fas fa-solid fa-folder"></i>
@@ -1314,7 +1655,7 @@ if (isset($_SESSION['error_message'])) {
             </div>
         <?php endif; ?>
 
-        <form method="POST" id="checkout-form" onSubmit="return validateForm()" enctype="multipart/form-data">
+        <form method="POST" id="checkout-form" enctype="multipart/form-data">
             <div class="wizard-flow-chart">
                 <div class="step current" id="step1">
                     <span>1</span>
@@ -1372,7 +1713,8 @@ if (isset($_SESSION['error_message'])) {
                     <div class="form-row">
                         <label class="float-left label-width required-field">Full Name</label>
                         <input name="fullName" type="text" required id="fullNameField"
-                            value="<?= $user_role === 'student' && !empty($user_profile_data['full_name']) ? htmlspecialchars($user_profile_data['full_name']) : '' ?>">
+                            value="<?= $user_role === 'student' && !empty($user_profile_data['full_name']) ? htmlspecialchars($user_profile_data['full_name']) : '' ?>"
+                            readonly>
                         <div class="error-message">Please enter your full name</div>
                     </div>
 
@@ -1645,9 +1987,9 @@ if (isset($_SESSION['error_message'])) {
 
                     <div class="form-row">
                         <label class="float-left label-width">Year Graduated</label>
-                        <input type="number" name="college_yr_grad" min="1900" max="<?php echo date('Y'); ?>" 
-                               placeholder="Leave blank if not applicable"
-                               value="<?= $user_role === 'student' && !empty($user_schools_data['college_year_grad']) ? htmlspecialchars($user_schools_data['college_year_grad']) : '' ?>">
+                        <input type="number" name="college_yr_grad" min="1900" max="<?php echo date('Y'); ?>"
+                            placeholder="Leave blank if not applicable"
+                            value="<?= $user_role === 'student' && !empty($user_schools_data['college_year_grad']) ? htmlspecialchars($user_schools_data['college_year_grad']) : '' ?>">
                     </div>
 
                     <div class="form-row">
@@ -1777,10 +2119,45 @@ if (isset($_SESSION['error_message'])) {
 
                     <div class="form-row">
                         <label for="father_income" class="float-left label-width required-field">Monthly Income:</label>
-                        <input id="father_income" name="father_income" type="number" required min="0" step="0.01"
-                            placeholder="0.00"
-                            value="<?= $user_role === 'student' && !empty($user_parents_data['father_income']) ? htmlspecialchars($user_parents_data['father_income']) : '' ?>">
-                        <div class="error-message">Please enter father's monthly income</div>
+                        <select name="father_income" id="father_income" required
+                            onchange="toggleCustomIncome(this, 'father')">
+                            <option value="" disabled <?= empty($father_income) ? 'selected' : '' ?>>Select Monthly
+                                Income Range</option>
+                            <option value="0-5000" <?= ($father_income === '0-5000') ? 'selected' : '' ?>>₱0 - ₱5,000
+                            </option>
+                            <option value="5000-10000" <?= ($father_income === '5000-10000') ? 'selected' : '' ?>>₱5,000 -
+                                ₱10,000</option>
+                            <option value="10000-15000" <?= ($father_income === '10000-15000') ? 'selected' : '' ?>>₱10,000
+                                - ₱15,000</option>
+                            <option value="15000-20000" <?= ($father_income === '15000-20000') ? 'selected' : '' ?>>₱15,000
+                                - ₱20,000</option>
+                            <option value="20000-25000" <?= ($father_income === '20000-25000') ? 'selected' : '' ?>>₱20,000
+                                - ₱25,000</option>
+                            <option value="25000-30000" <?= ($father_income === '25000-30000') ? 'selected' : '' ?>>₱25,000
+                                - ₱30,000</option>
+                            <option value="30000-35000" <?= ($father_income === '30000-35000') ? 'selected' : '' ?>>₱30,000
+                                - ₱35,000</option>
+                            <option value="35000-40000" <?= ($father_income === '35000-40000') ? 'selected' : '' ?>>₱35,000
+                                - ₱40,000</option>
+                            <option value="40000-45000" <?= ($father_income === '40000-45000') ? 'selected' : '' ?>>₱40,000
+                                - ₱45,000</option>
+                            <option value="45000-50000" <?= ($father_income === '45000-50000') ? 'selected' : '' ?>>₱45,000
+                                - ₱50,000</option>
+                            <option value="50000+" <?= ($father_income === '50000+') ? 'selected' : '' ?>>₱50,000+</option>
+                            <option value="Not Applicable" <?= ($father_income === 'Not Applicable') ? 'selected' : '' ?>>
+                                Not Applicable (No Income)</option>
+                            <option value="Prefer not to say" <?= ($father_income === 'Prefer not to say') ? 'selected' : '' ?>>Prefer not to say</option>
+                            <option value="custom" <?= ($is_father_custom) ? 'selected' : '' ?>>Custom Amount</option>
+                        </select>
+                        <div class="specify-field" id="father_custom_income_field"
+                            style="display: <?= $is_father_custom ? 'block' : 'none' ?>;">
+                            <label for="father_income_custom">Enter Exact Monthly Income:</label>
+                            <input type="number" name="father_income_custom" id="father_income_custom" min="0"
+                                step="0.01" placeholder="0.00"
+                                value="<?= $is_father_custom ? htmlspecialchars($father_custom_value) : '' ?>">
+                            <small>Enter the exact monthly income in pesos (e.g., 32500.50)</small>
+                        </div>
+                        <div class="error-message">Please select monthly income range</div>
                     </div>
                 </div>
 
@@ -1869,10 +2246,45 @@ if (isset($_SESSION['error_message'])) {
 
                     <div class="form-row mb-5">
                         <label for="mother_income" class="float-left label-width required-field">Monthly Income:</label>
-                        <input id="mother_income" name="mother_income" type="number" required min="0" step="0.01"
-                            placeholder="0.00"
-                            value="<?= $user_role === 'student' && !empty($user_parents_data['mother_income']) ? htmlspecialchars($user_parents_data['mother_income']) : '' ?>">
-                        <div class="error-message">Please enter mother's monthly income</div>
+                        <select name="mother_income" id="mother_income" required
+                            onchange="toggleCustomIncome(this, 'mother')">
+                            <option value="" disabled <?= empty($mother_income) ? 'selected' : '' ?>>Select Monthly
+                                Income Range</option>
+                            <option value="0-5000" <?= ($mother_income === '0-5000') ? 'selected' : '' ?>>₱0 - ₱5,000
+                            </option>
+                            <option value="5000-10000" <?= ($mother_income === '5000-10000') ? 'selected' : '' ?>>₱5,000 -
+                                ₱10,000</option>
+                            <option value="10000-15000" <?= ($mother_income === '10000-15000') ? 'selected' : '' ?>>₱10,000
+                                - ₱15,000</option>
+                            <option value="15000-20000" <?= ($mother_income === '15000-20000') ? 'selected' : '' ?>>₱15,000
+                                - ₱20,000</option>
+                            <option value="20000-25000" <?= ($mother_income === '20000-25000') ? 'selected' : '' ?>>₱20,000
+                                - ₱25,000</option>
+                            <option value="25000-30000" <?= ($mother_income === '25000-30000') ? 'selected' : '' ?>>₱25,000
+                                - ₱30,000</option>
+                            <option value="30000-35000" <?= ($mother_income === '30000-35000') ? 'selected' : '' ?>>₱30,000
+                                - ₱35,000</option>
+                            <option value="35000-40000" <?= ($mother_income === '35000-40000') ? 'selected' : '' ?>>₱35,000
+                                - ₱40,000</option>
+                            <option value="40000-45000" <?= ($mother_income === '40000-45000') ? 'selected' : '' ?>>₱40,000
+                                - ₱45,000</option>
+                            <option value="45000-50000" <?= ($mother_income === '45000-50000') ? 'selected' : '' ?>>₱45,000
+                                - ₱50,000</option>
+                            <option value="50000+" <?= ($mother_income === '50000+') ? 'selected' : '' ?>>₱50,000+</option>
+                            <option value="Not Applicable" <?= ($mother_income === 'Not Applicable') ? 'selected' : '' ?>>
+                                Not Applicable (No Income)</option>
+                            <option value="Prefer not to say" <?= ($mother_income === 'Prefer not to say') ? 'selected' : '' ?>>Prefer not to say</option>
+                            <option value="custom" <?= ($is_mother_custom) ? 'selected' : '' ?>>Custom Amount</option>
+                        </select>
+                        <div class="specify-field" id="mother_custom_income_field"
+                            style="display: <?= $is_mother_custom ? 'block' : 'none' ?>;">
+                            <label for="mother_income_custom">Enter Exact Monthly Income:</label>
+                            <input type="number" name="mother_income_custom" id="mother_income_custom" min="0"
+                                step="0.01" placeholder="0.00"
+                                value="<?= $is_mother_custom ? htmlspecialchars($mother_custom_value) : '' ?>">
+                            <small>Enter the exact monthly income in pesos (e.g., 32500.50)</small>
+                        </div>
+                        <div class="error-message">Please select monthly income range</div>
                     </div>
                 </div>
 
@@ -1999,12 +2411,36 @@ if (isset($_SESSION['error_message'])) {
 
                 <div class="row button-row" style="margin-top:18px;">
                     <button type="button" class="buttonNav" onClick="prevStep()">Previous</button>
-                    <button type="submit" class="submitBtn">Submit Application</button>
+                    <button type="button" class="submitBtn" onclick="handleFormSubmission()">Submit Application</button>
                 </div>
             </section>
         </form>
     </div>
-
+    <!-- Confirmation Modal -->
+    <div id="confirmationModal" class="confirmation-modal">
+        <div class="modal-overlay" id="modalOverlay"></div>
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="fas fa-exclamation-triangle"></i> Confirm Submission</h3>
+                <button type="button" class="close-modal" onclick="closeConfirmationModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p><strong>Are you sure you want to submit your scholarship application?</strong></p>
+                <div class="application-summary" id="applicationSummary">
+                    <!-- Dynamic content will be inserted here -->
+                </div>
+                <div class="warning-box">
+                    <i class="fas fa-exclamation-circle"></i>
+                    <p>Once submitted, you cannot edit this application. Please review all information before
+                        confirming.</p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-cancel" onclick="closeConfirmationModal()">Cancel</button>
+                <button type="button" class="btn-confirm" onclick="submitApplication()">Yes, Submit Application</button>
+            </div>
+        </div>
+    </div>
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"
         integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
     <script>
@@ -2024,6 +2460,100 @@ if (isset($_SESSION['error_message'])) {
         let requirementUploads = {};
         let additionalFiles = [];
         let additionalFileInput = null;
+
+        function showConfirmationModal() {
+            // First validate the form
+            if (!validateForm()) {
+                return false;
+            }
+
+            // Collect application summary data
+            const formData = new FormData(document.getElementById('checkout-form'));
+            const summaryData = {
+                scholarship_grant: formData.get('scholarship_grant'),
+                full_name: formData.get('fullName'),
+                course_major: formData.get('course_major'),
+                email: formData.get('email'),
+                date: new Date().toLocaleDateString(),
+                requirement_count: Object.keys(requirementUploads).length,
+                additional_files: additionalFiles.length
+            };
+
+            // Build summary HTML
+            const summaryHtml = `
+                <div class="summary-item">
+                    <span class="summary-label">Scholarship Grant:</span>
+                    <span class="summary-value">${escapeHtml(summaryData.scholarship_grant)}</span>
+                </div>
+                <div class="summary-item">
+                    <span class="summary-label">Applicant Name:</span>
+                    <span class="summary-value">${escapeHtml(summaryData.full_name)}</span>
+                </div>
+                <div class="summary-item">
+                    <span class="summary-label">Course/Major:</span>
+                    <span class="summary-value">${escapeHtml(summaryData.course_major ? summaryData.course_major.replace('|', ' / ') : '')}</span>
+                </div>
+                <div class="summary-item">
+                    <span class="summary-label">Email:</span>
+                    <span class="summary-value">${escapeHtml(summaryData.email)}</span>
+                </div>
+                <div class="summary-item">
+                    <span class="summary-label">Submission Date:</span>
+                    <span class="summary-value">${summaryData.date}</span>
+                </div>
+                <div class="summary-item">
+                    <span class="summary-label">Documents to Upload:</span>
+                    <span class="summary-value">
+                        ${summaryData.requirement_count} required document(s) + 
+                        ${summaryData.additional_files} additional file(s)
+                    </span>
+                </div>
+            `;
+
+            // Insert summary and show modal
+            document.getElementById('applicationSummary').innerHTML = summaryHtml;
+            const modal = document.getElementById('confirmationModal');
+            modal.classList.add('active');
+            document.body.classList.add('modal-open');
+
+            // Prevent background scrolling
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeConfirmationModal() {
+            const modal = document.getElementById('confirmationModal');
+            modal.classList.remove('active');
+
+            setTimeout(() => {
+                document.body.classList.remove('modal-open');
+                document.body.style.overflow = '';
+
+                // Reset confirm button state
+                const confirmBtn = document.querySelector('.btn-confirm');
+                confirmBtn.disabled = false;
+                confirmBtn.classList.remove('loading');
+                confirmBtn.textContent = 'Yes, Submit Application';
+            }, 300);
+        }
+
+        function submitApplication() {
+            const confirmBtn = document.querySelector('.btn-confirm');
+            const form = document.getElementById('checkout-form');
+
+            // Disable button and show loading state
+            confirmBtn.disabled = true;
+            confirmBtn.classList.add('loading');
+            confirmBtn.textContent = 'Submitting...';
+
+            // Small delay to show loading state
+            setTimeout(() => {
+                // Close modal
+                closeConfirmationModal();
+
+                // Submit the form
+                form.submit();
+            }, 1000);
+        }
 
         // Function to toggle "Please specify" fields
         function toggleOtherField(selectElement, fieldId) {
@@ -2110,6 +2640,28 @@ if (isset($_SESSION['error_message'])) {
             }
         }
 
+        // Helper function to ensure requirementUploads is properly initialized
+        function ensureRequirementUploadsInitialized() {
+            const requirementContainers = document.querySelectorAll('.requirement-upload-container');
+            requirementContainers.forEach((container, index) => {
+                const requirementId = 'req_' + index;
+                const hiddenInput = container.querySelector('input[type="hidden"][name="requirement_names[]"]');
+                const fileInput = container.querySelector('input[type="file"]');
+
+                if (!requirementUploads[requirementId]) {
+                    requirementUploads[requirementId] = {
+                        requirementName: hiddenInput ? hiddenInput.value : 'General Documents',
+                        file: fileInput && fileInput.files[0] ? fileInput.files[0] : null
+                    };
+                } else {
+                    // Update file reference if it exists
+                    if (fileInput && fileInput.files[0] && !requirementUploads[requirementId].file) {
+                        requirementUploads[requirementId].file = fileInput.files[0];
+                    }
+                }
+            });
+        }
+
         // Load grant requirements function with upload areas
         function loadGrantRequirements(grantName) {
             console.log('Loading requirements for grant:', grantName);
@@ -2120,11 +2672,11 @@ if (isset($_SESSION['error_message'])) {
             if (!grantName || grantName === "") {
                 console.log('No grant name provided or empty');
                 requirementsContainer.innerHTML = `
-                        <div style="text-align: center; padding: 40px; color: #666;">
-                            <i class="fas fa-file-upload" style="font-size: 48px; margin-bottom: 15px; color: #ddd;"></i>
-                            <p>Select a scholarship grant to view and upload required documents</p>
-                        </div>
-                    `;
+                    <div style="text-align: center; padding: 40px; color: #666;">
+                        <i class="fas fa-file-upload" style="font-size: 48px; margin-bottom: 15px; color: #ddd;"></i>
+                        <p>Select a scholarship grant to view and upload required documents</p>
+                    </div>
+                `;
                 selectedGrantName.textContent = '[Selected Grant]';
                 return;
             }
@@ -2133,11 +2685,11 @@ if (isset($_SESSION['error_message'])) {
 
             // Show loading message
             requirementsContainer.innerHTML = `
-                    <div style="text-align: center; padding: 40px;">
-                        <i class="fas fa-spinner fa-spin" style="font-size: 48px; color: #007bff; margin-bottom: 15px;"></i>
-                        <p>Loading requirements for "${grantName}"...</p>
-                    </div>
-                `;
+                <div style="text-align: center; padding: 40px;">
+                    <i class="fas fa-spinner fa-spin" style="font-size: 48px; color: #007bff; margin-bottom: 15px;"></i>
+                    <p>Loading requirements for "${grantName}"...</p>
+                </div>
+            `;
 
             // Clear previous requirement uploads
             requirementUploads = {};
@@ -2163,79 +2715,100 @@ if (isset($_SESSION['error_message'])) {
                             };
 
                             html += `
-                                    <div class="requirement-upload-container" id="req_container_${index}">
-                                        <div class="requirement-upload-header">
-                                            <div class="requirement-number">${index + 1}</div>
-                                            <div class="requirement-details">
-                                                <div class="requirement-title">${req.requirement_name}</div>
-                                                ${req.requirement_type ? `<div class="requirement-description">Type: ${req.requirement_type}</div>` : ''}
-                                            </div>
-                                        </div>
-                                        
-                                        <div class="requirement-upload-area" id="upload_area_${index}" onclick="openFileInput('${requirementId}')">
-                                            <i class="fas fa-cloud-upload-alt" style="font-size: 32px; color: #007bff; margin-bottom: 10px;"></i>
-                                            <p style="margin: 10px 0; color: #666;">
-                                                Click to upload file for this requirement<br>
-                                                <small>PDF, JPG, PNG up to 5MB</small>
-                                            </p>
-                                        </div>
-                                        
-                                        <input type="hidden" name="requirement_names[]" value="${req.requirement_name}">
-                                        <input type="file" name="requirement_${index}" id="file_input_${index}" 
-                                            style="display: none;" accept=".pdf,.jpg,.jpeg,.png"
-                                            onchange="handleRequirementFileUpload(${index}, this)">
-                                        
-                                        <div id="requirement_preview_${index}" class="requirement-upload-preview" style="display: none;">
-                                            <!-- File preview will be inserted here -->
-                                        </div>
-                                        
-                                        <div class="requirement-error" id="requirement_error_${index}"></div>
-                                    </div>
-                                `;
-                        });
-                        requirementsContainer.innerHTML = html;
-                    } else {
-                        requirementsContainer.innerHTML = `
-                                <div class="requirement-upload-container">
+                                <div class="requirement-upload-container" id="req_container_${index}">
                                     <div class="requirement-upload-header">
-                                        <div class="requirement-number">1</div>
+                                        <div class="requirement-number">${index + 1}</div>
                                         <div class="requirement-details">
-                                            <div class="requirement-title">General Supporting Documents</div>
-                                            <div class="requirement-description">Upload all required documents for this grant</div>
+                                            <div class="requirement-title">${req.requirement_name}</div>
+                                            ${req.requirement_type ? `<div class="requirement-description">Type: ${req.requirement_type}</div>` : ''}
                                         </div>
                                     </div>
                                     
-                                    <div class="requirement-upload-area" onclick="openFileInput('req_0')">
+                                    <div class="requirement-upload-area" id="upload_area_${index}" onclick="openFileInput('${requirementId}')">
                                         <i class="fas fa-cloud-upload-alt" style="font-size: 32px; color: #007bff; margin-bottom: 10px;"></i>
                                         <p style="margin: 10px 0; color: #666;">
-                                            Click to upload supporting documents<br>
+                                            Click to upload file for this requirement<br>
                                             <small>PDF, JPG, PNG up to 5MB</small>
                                         </p>
                                     </div>
                                     
-                                    <input type="hidden" name="requirement_names[]" value="General Documents">
-                                    <input type="file" name="requirement_0" id="file_input_0" 
+                                    <input type="hidden" name="requirement_names[]" value="${req.requirement_name}">
+                                    <input type="file" name="requirement_${index}" id="file_input_${index}" 
                                         style="display: none;" accept=".pdf,.jpg,.jpeg,.png"
-                                        onchange="handleRequirementFileUpload(0, this)">
+                                        onchange="handleRequirementFileUpload(${index}, this)">
+                                    
+                                    <div id="requirement_preview_${index}" class="requirement-upload-preview" style="display: none;">
+                                        <!-- File preview will be inserted here -->
+                                    </div>
+                                    
+                                    <div class="requirement-error" id="requirement_error_${index}"></div>
                                 </div>
                             `;
+                        });
+                        requirementsContainer.innerHTML = html;
+                    } else {
+                        requirementsContainer.innerHTML = `
+                            <div class="requirement-upload-container" id="req_container_0">
+                                <div class="requirement-upload-header">
+                                    <div class="requirement-number">1</div>
+                                    <div class="requirement-details">
+                                        <div class="requirement-title">General Supporting Documents</div>
+                                        <div class="requirement-description">Upload all required documents for this grant</div>
+                                    </div>
+                                </div>
+                                
+                                <div class="requirement-upload-area" id="upload_area_0" onclick="openFileInput('req_0')">
+                                    <i class="fas fa-cloud-upload-alt" style="font-size: 32px; color: #007bff; margin-bottom: 10px;"></i>
+                                    <p style="margin: 10px 0; color: #666;">
+                                        Click to upload supporting documents<br>
+                                        <small>PDF, JPG, PNG up to 5MB</small>
+                                    </p>
+                                </div>
+                                
+                                <input type="hidden" name="requirement_names[]" value="General Documents">
+                                <input type="file" name="requirement_0" id="file_input_0" 
+                                    style="display: none;" accept=".pdf,.jpg,.jpeg,.png"
+                                    onchange="handleRequirementFileUpload(0, this)">
+                                
+                                <div id="requirement_preview_0" class="requirement-upload-preview" style="display: none;">
+                                    <!-- File preview will be inserted here -->
+                                </div>
+                                
+                                <div class="requirement-error" id="requirement_error_0"></div>
+                            </div>
+                        `;
+
+                        // Initialize requirementUploads for this default requirement
+                        requirementUploads['req_0'] = {
+                            requirementName: 'General Documents',
+                            file: null
+                        };
                     }
                 })
                 .catch(error => {
                     console.error('Error loading requirements:', error);
                     requirementsContainer.innerHTML = `
-                            <div style="text-align: center; padding: 40px; color: #dc3545;">
-                                <i class="fas fa-exclamation-triangle" style="font-size: 48px; margin-bottom: 15px;"></i>
-                                <p>Unable to load requirements. Please check your connection and try again.</p>
-                            </div>
-                        `;
+                        <div style="text-align: center; padding: 40px; color: #dc3545;">
+                            <i class="fas fa-exclamation-triangle" style="font-size: 48px; margin-bottom: 15px;"></i>
+                            <p>Unable to load requirements. Please check your connection and try again.</p>
+                        </div>
+                    `;
+                })
+                .finally(() => {
+                    // Ensure all requirements are properly initialized
+                    setTimeout(() => {
+                        ensureRequirementUploadsInitialized();
+                    }, 100);
                 });
         }
 
         // Open file input for requirement
         function openFileInput(requirementId) {
             const index = requirementId.split('_')[1];
-            document.getElementById('file_input_' + index).click();
+            const fileInput = document.getElementById('file_input_' + index);
+            if (fileInput) {
+                fileInput.click();
+            }
         }
 
         // Handle requirement file upload
@@ -2247,8 +2820,8 @@ if (isset($_SESSION['error_message'])) {
             const requirementContainer = document.getElementById('req_container_' + index);
 
             // Reset states
-            errorContainer.style.display = 'none';
-            requirementContainer.classList.remove('error', 'completed');
+            if (errorContainer) errorContainer.style.display = 'none';
+            if (requirementContainer) requirementContainer.classList.remove('error', 'completed');
 
             if (!file) {
                 return;
@@ -2257,33 +2830,45 @@ if (isset($_SESSION['error_message'])) {
             // Validate file type
             const allowedTypes = ['application/pdf', 'image/jpeg', 'image/jpg', 'image/png'];
             if (!allowedTypes.includes(file.type)) {
-                errorContainer.textContent = 'Invalid file type. Only PDF, JPG, and PNG files are allowed.';
-                errorContainer.style.display = 'block';
-                requirementContainer.classList.add('error');
+                if (errorContainer) {
+                    errorContainer.textContent = 'Invalid file type. Only PDF, JPG, and PNG files are allowed.';
+                    errorContainer.style.display = 'block';
+                }
+                if (requirementContainer) requirementContainer.classList.add('error');
                 fileInput.value = '';
                 return;
             }
 
             // Validate file size (5MB)
             if (file.size > 5 * 1024 * 1024) {
-                errorContainer.textContent = 'File is too large. Maximum size is 5MB.';
-                errorContainer.style.display = 'block';
-                requirementContainer.classList.add('error');
+                if (errorContainer) {
+                    errorContainer.textContent = 'File is too large. Maximum size is 5MB.';
+                    errorContainer.style.display = 'block';
+                }
+                if (requirementContainer) requirementContainer.classList.add('error');
                 fileInput.value = '';
                 return;
             }
 
             // Store file in requirementUploads
             const requirementId = 'req_' + index;
-            requirementUploads[requirementId] = {
-                requirementName: fileInput.previousElementSibling.value,
-                file: file
-            };
+            const hiddenInput = fileInput.previousElementSibling; // Get the hidden input with requirement name
+
+            // Update requirementUploads
+            if (!requirementUploads[requirementId]) {
+                requirementUploads[requirementId] = {
+                    requirementName: hiddenInput ? hiddenInput.value : 'General Documents',
+                    file: file
+                };
+            } else {
+                requirementUploads[requirementId].file = file;
+            }
 
             // Show preview
-            uploadArea.style.display = 'none';
-            previewContainer.style.display = 'block';
-            previewContainer.innerHTML = `
+            if (uploadArea) uploadArea.style.display = 'none';
+            if (previewContainer) {
+                previewContainer.style.display = 'block';
+                previewContainer.innerHTML = `
                     <div class="requirement-file-info">
                         <div class="requirement-file-icon">
                             ${getFileIcon(file.type)}
@@ -2302,9 +2887,14 @@ if (isset($_SESSION['error_message'])) {
                         <i class="fas fa-check-circle"></i> File uploaded successfully
                     </div>
                 `;
+            }
 
             // Mark as completed
-            requirementContainer.classList.add('completed');
+            if (requirementContainer) requirementContainer.classList.add('completed');
+
+            // Log for debugging
+            console.log(`File uploaded for requirement ${index}:`, file.name);
+            console.log('Current requirementUploads:', requirementUploads);
         }
 
         // Remove requirement file
@@ -2315,18 +2905,24 @@ if (isset($_SESSION['error_message'])) {
             const previewContainer = document.getElementById('requirement_preview_' + index);
             const requirementContainer = document.getElementById('req_container_' + index);
 
-            // Clear file
-            requirementUploads[requirementId] = {
-                requirementName: fileInput.previousElementSibling.value,
-                file: null
-            };
-            fileInput.value = '';
+            // Clear file from requirementUploads
+            if (requirementUploads[requirementId]) {
+                requirementUploads[requirementId].file = null;
+            }
+
+            if (fileInput) fileInput.value = '';
 
             // Reset UI
-            uploadArea.style.display = 'block';
-            previewContainer.style.display = 'none';
-            previewContainer.innerHTML = '';
-            requirementContainer.classList.remove('completed', 'error');
+            if (uploadArea) uploadArea.style.display = 'block';
+            if (previewContainer) {
+                previewContainer.style.display = 'none';
+                previewContainer.innerHTML = '';
+            }
+            if (requirementContainer) requirementContainer.classList.remove('completed', 'error');
+
+            // Log for debugging
+            console.log(`File removed from requirement ${index}`);
+            console.log('Current requirementUploads:', requirementUploads);
         }
 
         // Helper functions for file handling
@@ -2368,9 +2964,6 @@ if (isset($_SESSION['error_message'])) {
             additionalFileInput = fileInput; // Store reference
             const allowed = ['application/pdf', 'image/jpeg', 'image/jpg', 'image/png'];
             const maxSize = 5 * 1024 * 1024;
-
-            // Store original event listener
-            const originalOnChange = fileInput.onchange;
 
             // Drag and drop functionality
             ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
@@ -2493,15 +3086,15 @@ if (isset($_SESSION['error_message'])) {
             function updateAdditionalFilesInput() {
                 // Create a new DataTransfer object
                 const dataTransfer = new DataTransfer();
-                
+
                 // Add all files from additionalFiles array
                 additionalFiles.forEach(fileObj => {
                     dataTransfer.items.add(fileObj.file);
                 });
-                
+
                 // Update the file input
                 fileInput.files = dataTransfer.files;
-                
+
                 // Trigger change event if there are files
                 if (additionalFiles.length > 0) {
                     const event = new Event('change', { bubbles: true });
@@ -2602,14 +3195,40 @@ if (isset($_SESSION['error_message'])) {
                             }
                             return;
                         }
-
-                        // Check for negative values in income fields
-                        if ((input.name.includes('income') || input.name.includes('father_income') || input.name.includes('mother_income')) && parseFloat(input.value) < 0) {
+                        // Check for negative values in custom income fields (only for number inputs)
+                        if (input.type === 'number' && (input.name.includes('income_custom')) && parseFloat(input.value) < 0) {
                             parentRow.classList.add('error');
                             if (errorMessage) errorMessage.style.display = 'block';
                             isValid = false;
                             errorMessages.push(`${input.labels[0]?.textContent || input.name} cannot be negative`);
                             return;
+                        }
+
+                        // For dropdown income fields, check if "custom" is selected and custom field is empty
+                        if (input.name === 'father_income' && input.value === 'custom') {
+                            const customInput = document.getElementById('father_income_custom');
+                            const customField = document.getElementById('father_custom_income_field');
+                            if (customField && customField.style.display === 'block' && (!customInput || !customInput.value.trim())) {
+                                parentRow.classList.add('error');
+                                if (errorMessage) errorMessage.style.display = 'block';
+                                errorMessage.textContent = 'Please enter custom income amount';
+                                isValid = false;
+                                errorMessages.push('Please enter father\'s custom income amount');
+                                return;
+                            }
+                        }
+
+                        if (input.name === 'mother_income' && input.value === 'custom') {
+                            const customInput = document.getElementById('mother_income_custom');
+                            const customField = document.getElementById('mother_custom_income_field');
+                            if (customField && customField.style.display === 'block' && (!customInput || !customInput.value.trim())) {
+                                parentRow.classList.add('error');
+                                if (errorMessage) errorMessage.style.display = 'block';
+                                errorMessage.textContent = 'Please enter custom income amount';
+                                isValid = false;
+                                errorMessages.push('Please enter mother\'s custom income amount');
+                                return;
+                            }
                         }
                     }
 
@@ -2684,10 +3303,14 @@ if (isset($_SESSION['error_message'])) {
 
             // Check file upload in attachments section
             if (currentSectionId === 'attachments-section') {
+                // Ensure requirementUploads is initialized
+                ensureRequirementUploadsInitialized();
+
                 // Check if all requirements have files
                 let hasMissingRequirements = false;
                 Object.keys(requirementUploads).forEach(reqId => {
-                    if (!requirementUploads[reqId] || !requirementUploads[reqId].file) {
+                    const req = requirementUploads[reqId];
+                    if (!req || !req.file) {
                         const index = reqId.split('_')[1];
                         const errorContainer = document.getElementById('requirement_error_' + index);
                         if (errorContainer) {
@@ -2701,6 +3324,22 @@ if (isset($_SESSION['error_message'])) {
                         hasMissingRequirements = true;
                     }
                 });
+
+                // Special handling: if no requirements were found, check the default one
+                const requirementContainers = document.querySelectorAll('.requirement-upload-container');
+                if (requirementContainers.length === 1 && Object.keys(requirementUploads).length === 0) {
+                    const defaultContainer = requirementContainers[0];
+                    const fileInput = defaultContainer.querySelector('input[type="file"]');
+                    if (!fileInput || !fileInput.files || fileInput.files.length === 0) {
+                        defaultContainer.classList.add('error');
+                        const errorDiv = defaultContainer.querySelector('.requirement-error');
+                        if (errorDiv) {
+                            errorDiv.textContent = 'This file is required';
+                            errorDiv.style.display = 'block';
+                        }
+                        hasMissingRequirements = true;
+                    }
+                }
 
                 if (hasMissingRequirements) {
                     const errorMessage = currentSection.querySelector('.error-message');
@@ -2725,6 +3364,7 @@ if (isset($_SESSION['error_message'])) {
 
             return true;
         }
+
         // Function to validate reason textarea and update character count
         function validateReasonTextarea() {
             const textarea = document.getElementById('reason_scholarship');
@@ -2763,7 +3403,6 @@ if (isset($_SESSION['error_message'])) {
                 }
             }
         }
-
 
         // Navigate to next step
         function nextStep() {
@@ -2851,6 +3490,10 @@ if (isset($_SESSION['error_message'])) {
         function validateForm() {
             // Validate all sections before submission
             let allErrors = [];
+            let hasValidationErrors = false;
+
+            // Ensure requirementUploads is initialized
+            ensureRequirementUploadsInitialized();
 
             sections.forEach(sectionId => {
                 const section = document.getElementById(sectionId);
@@ -2872,6 +3515,7 @@ if (isset($_SESSION['error_message'])) {
                             if (errorMessage) errorMessage.style.display = 'block';
                             const label = input.labels[0]?.textContent?.replace('*', '').trim() || input.name;
                             allErrors.push(`${label} is required`);
+                            hasValidationErrors = true;
                         }
 
                         // Additional validation for specific fields
@@ -2881,6 +3525,7 @@ if (isset($_SESSION['error_message'])) {
                                 parentRow.classList.add('error');
                                 if (errorMessage) errorMessage.style.display = 'block';
                                 allErrors.push(`Please enter a valid email address`);
+                                hasValidationErrors = true;
                             }
                         }
 
@@ -2891,10 +3536,12 @@ if (isset($_SESSION['error_message'])) {
                                 parentRow.classList.add('error');
                                 if (errorMessage) errorMessage.style.display = 'block';
                                 allErrors.push(`Please enter a valid 11-digit cellphone number for ${input.labels[0]?.textContent?.replace('*', '').trim() || input.name}`);
+                                hasValidationErrors = true;
                             } else if (!phoneNumber.startsWith('09')) {
                                 parentRow.classList.add('error');
                                 if (errorMessage) errorMessage.style.display = 'block';
                                 allErrors.push(`${input.labels[0]?.textContent?.replace('*', '').trim() || input.name} must start with '09'`);
+                                hasValidationErrors = true;
                             }
                         }
 
@@ -2902,6 +3549,7 @@ if (isset($_SESSION['error_message'])) {
                             parentRow.classList.add('error');
                             if (errorMessage) errorMessage.style.display = 'block';
                             allErrors.push(`Please provide a detailed reason for scholarship (minimum 50 characters)`);
+                            hasValidationErrors = true;
                         }
                     }
                 });
@@ -2913,14 +3561,18 @@ if (isset($_SESSION['error_message'])) {
                         const houseStatusError = section.querySelector('.error-message');
                         if (houseStatusError) houseStatusError.style.display = 'block';
                         allErrors.push('Please select house status');
+                        hasValidationErrors = true;
                     }
                 }
             });
 
             // Validate requirement uploads
             let hasMissingRequirements = false;
+
+            // Check requirementUploads object
             Object.keys(requirementUploads).forEach(reqId => {
-                if (!requirementUploads[reqId] || !requirementUploads[reqId].file) {
+                const req = requirementUploads[reqId];
+                if (!req || !req.file) {
                     const index = reqId.split('_')[1];
                     const errorContainer = document.getElementById('requirement_error_' + index);
                     if (errorContainer) {
@@ -2932,11 +3584,34 @@ if (isset($_SESSION['error_message'])) {
                         requirementContainer.classList.add('error');
                     }
                     hasMissingRequirements = true;
-                    allErrors.push(`Please upload file for: ${requirementUploads[reqId]?.requirementName || 'required document'}`);
+                    allErrors.push(`Please upload file for: ${req?.requirementName || 'required document'}`);
+                    hasValidationErrors = true;
                 }
             });
 
-            if (allErrors.length > 0) {
+            // Special handling: if no requirementUploads but there are requirement containers
+            const requirementContainers = document.querySelectorAll('.requirement-upload-container');
+            if (requirementContainers.length > 0 && Object.keys(requirementUploads).length === 0) {
+                requirementContainers.forEach((container, index) => {
+                    const fileInput = container.querySelector('input[type="file"]');
+                    if (!fileInput || !fileInput.files || fileInput.files.length === 0) {
+                        container.classList.add('error');
+                        const errorDiv = container.querySelector('.requirement-error');
+                        if (errorDiv) {
+                            errorDiv.textContent = 'This file is required';
+                            errorDiv.style.display = 'block';
+                        }
+                        hasMissingRequirements = true;
+                        hasValidationErrors = true;
+
+                        const hiddenInput = container.querySelector('input[type="hidden"][name="requirement_names[]"]');
+                        const reqName = hiddenInput ? hiddenInput.value : 'General Documents';
+                        allErrors.push(`Please upload file for: ${reqName}`);
+                    }
+                });
+            }
+
+            if (hasValidationErrors) {
                 // Go to first section with error
                 for (let i = 0; i < sections.length; i++) {
                     const section = document.getElementById(sections[i]);
@@ -2961,7 +3636,17 @@ if (isset($_SESSION['error_message'])) {
             const fileCountInput = document.createElement('input');
             fileCountInput.type = 'hidden';
             fileCountInput.name = 'file_count';
-            fileCountInput.value = Object.keys(requirementUploads).length + additionalFiles.length;
+
+            // Count all files
+            let totalFiles = 0;
+            Object.keys(requirementUploads).forEach(reqId => {
+                if (requirementUploads[reqId] && requirementUploads[reqId].file) {
+                    totalFiles++;
+                }
+            });
+            totalFiles += additionalFiles.length;
+
+            fileCountInput.value = totalFiles;
 
             // Remove existing file_count input if it exists
             const existingFileCount = document.querySelector('input[name="file_count"]');
@@ -2971,19 +3656,55 @@ if (isset($_SESSION['error_message'])) {
 
             document.getElementById('checkout-form').appendChild(fileCountInput);
 
-            // If all validations pass, submit the form
+            // If all validations pass, show confirmation modal instead of submitting
             return true;
         }
 
+        function handleFormSubmission() {
+            // Ensure all requirement uploads are properly initialized
+            ensureRequirementUploadsInitialized();
+
+            if (validateForm()) {
+                showConfirmationModal();
+            }
+        }
+        // Function to toggle custom income fields
+        function toggleCustomIncome(selectElement, parentType) {
+            const customField = document.getElementById(parentType + '_custom_income_field');
+            const customInput = document.getElementById(parentType + '_income_custom');
+
+            if (selectElement.value === 'custom') {
+                customField.style.display = 'block';
+                if (customInput) customInput.required = true;
+            } else {
+                customField.style.display = 'none';
+                if (customInput) {
+                    customInput.required = false;
+                    // Don't clear the value in case user switches back
+                }
+            }
+        }
         // Initialize everything when DOM is loaded
         document.addEventListener('DOMContentLoaded', function () {
+            // Initialize custom income fields
+            const fatherIncomeSelect = document.getElementById('father_income');
+            if (fatherIncomeSelect) {
+                toggleCustomIncome(fatherIncomeSelect, 'father');
+            }
+
+            const motherIncomeSelect = document.getElementById('mother_income');
+            if (motherIncomeSelect) {
+                toggleCustomIncome(motherIncomeSelect, 'mother');
+            }
             // Check all dropdowns that have "others" option
             const religionSelect = document.getElementById('religion');
             if (religionSelect) {
                 toggleOtherField(religionSelect, 'religion_other');
             }
+
             // Initialize character counter for scholarship reason
             validateReasonTextarea();
+
             const indigenousSelect = document.getElementById('indigenous_group');
             if (indigenousSelect) {
                 toggleOtherField(indigenousSelect, 'indigenous_group_other');
@@ -3059,6 +3780,20 @@ if (isset($_SESSION['error_message'])) {
             if (dobInput && dobInput.value) {
                 calculateAge();
             }
+
+            // Close modal when clicking overlay
+            const modalOverlay = document.getElementById('modalOverlay');
+            if (modalOverlay) {
+                modalOverlay.addEventListener('click', closeConfirmationModal);
+            }
+
+            // Close modal with Escape key
+            document.addEventListener('keydown', function (e) {
+                const modal = document.getElementById('confirmationModal');
+                if (e.key === 'Escape' && modal.classList.contains('active')) {
+                    closeConfirmationModal();
+                }
+            });
         });
     </script>
 </body>

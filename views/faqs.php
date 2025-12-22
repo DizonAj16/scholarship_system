@@ -214,18 +214,95 @@ include '../includes/session.php'
     </div>
 
     <script>
-
-
+        // Enhanced toggle functionality with animations
         function toggleFAQ(element) {
             const answer = element.nextElementSibling;
             const icon = element.querySelector('i');
+            const faqItem = element.parentElement;
 
-            if (answer.style.display === "none") {
+            // Close all other FAQ items (optional - for accordion style)
+            // const allFaqItems = document.querySelectorAll('.faq-item.active');
+            // allFaqItems.forEach(item => {
+            //     if (item !== faqItem) {
+            //         item.classList.remove('active');
+            //         item.querySelector('p').style.display = 'none';
+            //         item.querySelector('i').classList.replace('fa-chevron-up', 'fa-chevron-down');
+            //     }
+            // });
+
+            // Toggle current FAQ
+            faqItem.classList.toggle('active');
+
+            if (answer.style.display === "none" || !answer.style.display) {
                 answer.style.display = "block";
+                answer.style.animation = 'slideDown 0.4s ease-out';
                 icon.classList.replace('fa-chevron-down', 'fa-chevron-up');
+
+                // Scroll to question if opening
+                setTimeout(() => {
+                    element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }, 100);
             } else {
                 answer.style.display = "none";
                 icon.classList.replace('fa-chevron-up', 'fa-chevron-down');
+            }
+        }
+
+        // Add number attributes to FAQ items
+        document.addEventListener('DOMContentLoaded', function () {
+            const faqItems = document.querySelectorAll('.faq-item h2');
+            faqItems.forEach((item, index) => {
+                item.setAttribute('data-number', (index + 1).toString().padStart(2, '0'));
+            });
+
+            // Optional: Add keyboard navigation
+            document.addEventListener('keydown', function (e) {
+                if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+                    const currentFaq = document.activeElement.closest('.faq-item');
+                    if (currentFaq) {
+                        e.preventDefault();
+                        const allFaqs = Array.from(document.querySelectorAll('.faq-item'));
+                        const currentIndex = allFaqs.indexOf(currentFaq);
+                        let nextIndex;
+
+                        if (e.key === 'ArrowDown') {
+                            nextIndex = currentIndex < allFaqs.length - 1 ? currentIndex + 1 : 0;
+                        } else {
+                            nextIndex = currentIndex > 0 ? currentIndex - 1 : allFaqs.length - 1;
+                        }
+
+                        allFaqs[nextIndex].querySelector('h2').focus();
+                    }
+                }
+            });
+        });
+
+        // Optional: Search functionality
+        function searchFAQs() {
+            const searchTerm = document.getElementById('faqSearch').value.toLowerCase();
+            const faqItems = document.querySelectorAll('.faq-item');
+            let visibleCount = 0;
+
+            faqItems.forEach(item => {
+                const question = item.querySelector('h2').textContent.toLowerCase();
+                const answer = item.querySelector('p').textContent.toLowerCase();
+
+                if (question.includes(searchTerm) || answer.includes(searchTerm)) {
+                    item.style.display = 'block';
+                    visibleCount++;
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+
+            // Show/hide no results message
+            const noResults = document      .querySelector('.no-results');
+            if (noResults) {
+                if (visibleCount === 0 && searchTerm !== '') {
+                    noResults.style.display = 'block';
+                } else {
+                    noResults.style.display = 'none';
+                }
             }
         }
     </script>

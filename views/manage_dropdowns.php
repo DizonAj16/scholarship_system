@@ -155,18 +155,18 @@ if (isset($_GET['deleted']))
     <link rel="stylesheet" href="../css/styles.css?v=<?php echo time(); ?>">
     <link rel="stylesheet" href="../css/dashboard.css?v=<?php echo time(); ?>">
     <link rel="stylesheet" href="../css/manage_dropdowns.css?v=<?php echo time(); ?>">
-    
+
     <!-- ADD JQUERY UI CSS -->
     <link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
-    
+
     <script src="../js/fontawesome.js"></script>
     <script src="../js/toggle_nav.js?v=<?php echo time(); ?>"></script>
-    
+
     <!-- LOAD JQUERY FIRST -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <!-- THEN LOAD JQUERY UI -->
     <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
-    
+
     <style>
         /* Additional styles for requirements management */
         .requirements-container {
@@ -212,7 +212,8 @@ if (isset($_GET['deleted']))
             border-radius: 6px;
             border-left: 4px solid #007bff;
             transition: all 0.2s ease;
-            cursor: move; /* IMPORTANT: Add cursor style */
+            cursor: move;
+            /* IMPORTANT: Add cursor style */
         }
 
         .requirement-item:hover {
@@ -378,7 +379,7 @@ if (isset($_GET['deleted']))
             padding: 15px 25px;
             cursor: pointer;
             border-right: 1px solid #dee2e6;
-            transition: all 0.3s ease;
+            /* transition: all 0.3s ease; */
             font-weight: 500;
             color: #6c757d;
             display: flex;
@@ -407,13 +408,13 @@ if (isset($_GET['deleted']))
 
         .tab-pane.active {
             display: block;
-            animation: fadeIn 0.5s ease;
+            /* animation: fadeIn 0.5s ease; */
         }
 
-        @keyframes fadeIn {
+        /* @keyframes fadeIn {
             from { opacity: 0; transform: translateY(10px); }
             to { opacity: 1; transform: translateY(0); }
-        }
+        } */
 
         .dashboard-card {
             margin-bottom: 20px;
@@ -461,384 +462,397 @@ if (isset($_GET['deleted']))
 
     <!-- PAGE CONTENT -->
     <div class="content">
-        <h1 class="page-title">Manage Dropdown Options</h1>
+        <h1 class="page-title">Scholarship Settings</h1>
 
-        <?php if ($message): ?>
-            <div class="alert alert-success" id="successMessage">
-                <?= $message ?>
-            </div>
-        <?php endif; ?>
+        <div class="content-1">
 
-        <div class="tab-container">
-            <ul class="tab-header">
-                <li class="tab-item <?= $active_tab === 'sem_sy' ? 'active' : '' ?>" 
-                    data-tab="sem_sy">
-                    <i class="fas fa-calendar-alt"></i> Semester & School Year
-                </li>
-                <li class="tab-item <?= $active_tab === 'course_major' ? 'active' : '' ?>" 
-                    data-tab="course_major">
-                    <i class="fas fa-graduation-cap"></i> Course & Major
-                </li>
-                <li class="tab-item <?= $active_tab === 'scholarship_grant' ? 'active' : '' ?>" 
-                    data-tab="scholarship_grant">
-                    <i class="fas fa-award"></i> Scholarship Grants
-                </li>
-                <li class="tab-item <?= $active_tab === 'grant_requirements' ? 'active' : '' ?>" 
-                    data-tab="grant_requirements">
-                    <i class="fas fa-file-alt"></i> Grant Requirements
-                </li>
-            </ul>
-
-            <div class="tab-content">
-                <!-- SEMESTER & SCHOOL YEAR TAB -->
-                <div class="tab-pane <?= $active_tab === 'sem_sy' ? 'active' : '' ?>" id="sem_sy">
-                    <div class="dashboard-card">
-                        <div class="card-header">
-                            <h3><i class="fas fa-calendar-alt"></i> Semester & School Year</h3>
-                        </div>
-                        <div class="card-body">
-                            <h4 class="section-title"><i class="fas fa-plus-circle"></i> Add New Entry</h4>
-                            <form method="POST" class="add-form">
-                                <input type="hidden" name="type" value="sem_sy">
-                                <input type="hidden" name="action" value="add">
-
-                                <div class="form-group">
-                                    <label for="semester">Semester</label>
-                                    <select name="semester" id="semester" class="form-control" required>
-                                        <option value="">Select Semester</option>
-                                        <option value="1st sem">1st Semester</option>
-                                        <option value="2nd sem">2nd Semester</option>
-                                        <option value="Summer">Summer</option>
-                                    </select>
-                                </div>
-
-                                <div class="form-group">
-                                    <label for="school_year">School Year</label>
-                                    <input type="text" name="school_year" id="school_year" class="form-control"
-                                        placeholder="Ex: 2025-2026" pattern="\d{4}-\d{4}" title="Format: YYYY-YYYY" required>
-                                </div>
-
-                                <div class="default-checkbox">
-                                    <label>
-                                        <input type="checkbox" name="is_default" value="1">
-                                        <span>Set as default semester/school year</span>
-                                    </label>
-                                    <small class="text-muted">This will be pre-selected in forms</small>
-                                </div>
-
-                                <button type="submit" class="btn btn-primary">
-                                    <i class="fas fa-plus"></i> Add Entry
-                                </button>
-                            </form>
-
-                            <h4 class="section-title" style="margin-top: 30px;">
-                                <i class="fas fa-list-ul"></i> Existing Entries
-                            </h4>
-
-                            <?php if (empty($sem_sy_list)): ?>
-                                <div class="empty-state">
-                                    <i class="fas fa-calendar-times"></i>
-                                    <p>No semester entries found</p>
-                                </div>
-                            <?php else: ?>
-                                <div class="table-responsive">
-                                    <table class="table">
-                                        <thead>
-                                            <tr>
-                                                <th>Semester</th>
-                                                <th>School Year</th>
-                                                <th>Status</th>
-                                                <th>Actions</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            <?php foreach ($sem_sy_list as $s): ?>
-                                                <tr>
-                                                    <td><?= htmlspecialchars($s['semester']) ?></td>
-                                                    <td><?= htmlspecialchars($s['school_year']) ?></td>
-                                                    <td>
-                                                        <?php if ($s['is_default']): ?>
-                                                            <span class="default-badge">Default</span>
-                                                        <?php else: ?>
-                                                            <form method="POST" style="display: inline;">
-                                                                <input type="hidden" name="type" value="set_default_sem_sy">
-                                                                <input type="hidden" name="id" value="<?= $s['id'] ?>">
-                                                                <button type="submit" class="set-default-btn"
-                                                                    onclick="return confirm('Set this as the default semester/school year?')">
-                                                                    Set as Default
-                                                                </button>
-                                                            </form>
-                                                        <?php endif; ?>
-                                                    </td>
-                                                    <td>
-                                                        <a href="?delete=<?= $s['id'] ?>&type=sem_sy&tab=sem_sy" class="btn-delete-icon"
-                                                            onclick="return confirm('Are you sure you want to delete this entry?')"
-                                                            title="Delete">
-                                                            <i class="fas fa-trash-alt"></i>
-                                                        </a>
-                                                    </td>
-                                                </tr>
-                                            <?php endforeach; ?>
-                                        </tbody>
-                                    </table>
-                                </div>
-                            <?php endif; ?>
-                        </div>
-                    </div>
+            <?php if ($message): ?>
+                <div class="alert alert-success" id="successMessage">
+                    <?= $message ?>
                 </div>
+            <?php endif; ?>
 
-                <!-- COURSE & MAJOR TAB -->
-                <div class="tab-pane <?= $active_tab === 'course_major' ? 'active' : '' ?>" id="course_major">
-                    <div class="dashboard-card">
-                        <div class="card-header">
-                            <h3><i class="fas fa-graduation-cap"></i> Course & Major</h3>
-                        </div>
-                        <div class="card-body">
-                            <h4 class="section-title"><i class="fas fa-plus-circle"></i> Add New Entry</h4>
-                            <form method="POST" class="add-form">
-                                <input type="hidden" name="type" value="course_major">
-                                <input type="hidden" name="action" value="add">
+            <div class="tab-container">
+                <ul class="tab-header">
+                    <li class="tab-item <?= $active_tab === 'sem_sy' ? 'active' : '' ?>" data-tab="sem_sy">
+                        <i class="fas fa-calendar-alt"></i> Semester & School Year
+                    </li>
+                    <li class="tab-item <?= $active_tab === 'course_major' ? 'active' : '' ?>" data-tab="course_major">
+                        <i class="fas fa-graduation-cap"></i> Course & Major
+                    </li>
+                    <li class="tab-item <?= $active_tab === 'scholarship_grant' ? 'active' : '' ?>"
+                        data-tab="scholarship_grant">
+                        <i class="fas fa-award"></i> Scholarship Grants
+                    </li>
+                    <li class="tab-item <?= $active_tab === 'grant_requirements' ? 'active' : '' ?>"
+                        data-tab="grant_requirements">
+                        <i class="fas fa-file-alt"></i> Grant Requirements
+                    </li>
+                </ul>
 
-                                <div class="form-group">
-                                    <label for="course">Course</label>
-                                    <input type="text" name="course" id="course" class="form-control"
-                                        placeholder="Ex: BS Information Technology" required>
-                                </div>
+                <div class="tab-content">
+                    <!-- SEMESTER & SCHOOL YEAR TAB -->
+                    <div class="tab-pane <?= $active_tab === 'sem_sy' ? 'active' : '' ?>" id="sem_sy">
+                        <div class="dashboard-card">
+                            <div class="card-header">
+                                <h3><i class="fas fa-calendar-alt"></i> Semester & School Year</h3>
+                            </div>
+                            <div class="card-body">
+                                <h4 class="section-title"><i class="fas fa-plus-circle"></i> Add New Entry</h4>
+                                <form method="POST" class="add-form">
+                                    <input type="hidden" name="type" value="sem_sy">
+                                    <input type="hidden" name="action" value="add">
 
-                                <div class="form-group">
-                                    <label for="major">Major</label>
-                                    <input type="text" name="major" id="major" class="form-control"
-                                        placeholder="Ex: Web Development" required>
-                                </div>
-
-                                <button type="submit" class="btn btn-primary">
-                                    <i class="fas fa-plus"></i> Add Entry
-                                </button>
-                            </form>
-
-                            <h4 class="section-title" style="margin-top: 30px;">
-                                <i class="fas fa-list-ul"></i> Existing Entries
-                            </h4>
-
-                            <?php if (empty($course_major_list)): ?>
-                                <div class="empty-state">
-                                    <i class="fas fa-book"></i>
-                                    <p>No course entries found</p>
-                                </div>
-                            <?php else: ?>
-                                <div class="table-responsive">
-                                    <table class="table">
-                                        <thead>
-                                            <tr>
-                                                <th>Course</th>
-                                                <th>Major</th>
-                                                <th>Actions</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            <?php foreach ($course_major_list as $c): ?>
-                                                <tr>
-                                                    <td><?= htmlspecialchars($c['course']) ?></td>
-                                                    <td><?= htmlspecialchars($c['major']) ?></td>
-                                                    <td>
-                                                        <a href="?delete=<?= $c['id'] ?>&type=course_major&tab=course_major" class="btn-delete-icon"
-                                                            onclick="return confirm('Are you sure you want to delete this entry?')"
-                                                            title="Delete">
-                                                            <i class="fas fa-trash-alt"></i>
-                                                        </a>
-                                                    </td>
-                                                </tr>
-                                            <?php endforeach; ?>
-                                        </tbody>
-                                    </table>
-                                </div>
-                            <?php endif; ?>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- SCHOLARSHIP GRANT TAB -->
-                <div class="tab-pane <?= $active_tab === 'scholarship_grant' ? 'active' : '' ?>" id="scholarship_grant">
-                    <div class="dashboard-card">
-                        <div class="card-header">
-                            <h3><i class="fas fa-award"></i> Scholarship Grants</h3>
-                        </div>
-                        <div class="card-body">
-                            <h4 class="section-title"><i class="fas fa-plus-circle"></i> Add New Entry</h4>
-                            <form method="POST" class="add-form">
-                                <input type="hidden" name="type" value="scholarship_grant">
-                                <input type="hidden" name="action" value="add">
-
-                                <div class="form-group">
-                                    <label for="grant_name">Grant Name</label>
-                                    <input type="text" name="grant_name" id="grant_name" class="form-control"
-                                        placeholder="Ex: Academic Scholarship" required>
-                                </div>
-
-                                <button type="submit" class="btn btn-primary">
-                                    <i class="fas fa-plus"></i> Add Grant
-                                </button>
-                            </form>
-
-                            <h4 class="section-title" style="margin-top: 30px;">
-                                <i class="fas fa-list-ul"></i> Existing Grants
-                            </h4>
-
-                            <?php if (empty($scholarship_grant_list)): ?>
-                                <div class="empty-state">
-                                    <i class="fas fa-award"></i>
-                                    <p>No scholarship grants found</p>
-                                </div>
-                            <?php else: ?>
-                                <div class="table-responsive">
-                                    <table class="table">
-                                        <thead>
-                                            <tr>
-                                                <th>Grant Name</th>
-                                                <th>Actions</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            <?php foreach ($scholarship_grant_list as $g): ?>
-                                                <tr>
-                                                    <td><?= htmlspecialchars($g['grant_name']) ?></td>
-                                                    <td>
-                                                        <a href="?delete=<?= $g['id'] ?>&type=scholarship_grant&tab=scholarship_grant" class="btn-delete-icon"
-                                                            onclick="return confirm('Are you sure you want to delete this scholarship grant?')"
-                                                            title="Delete">
-                                                            <i class="fas fa-trash-alt"></i>
-                                                        </a>
-                                                    </td>
-                                                </tr>
-                                            <?php endforeach; ?>
-                                        </tbody>
-                                    </table>
-                                </div>
-                            <?php endif; ?>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- GRANT REQUIREMENTS TAB -->
-                <div class="tab-pane <?= $active_tab === 'grant_requirements' ? 'active' : '' ?>" id="grant_requirements">
-                    <div class="dashboard-card full-width">
-                        <div class="card-header">
-                            <h3><i class="fas fa-file-alt"></i> Manage Grant Requirements</h3>
-                        </div>
-                        <div class="card-body">
-                            <h4 class="section-title"><i class="fas fa-plus-circle"></i> Add New Requirement</h4>
-                            <form method="POST" class="add-form">
-                                <input type="hidden" name="type" value="grant_requirements">
-                                <input type="hidden" name="action" value="add">
-
-                                <div class="requirement-form-group">
                                     <div class="form-group">
-                                        <label for="grant_name_select">Scholarship Grant</label>
-                                        <select name="grant_name" id="grant_name_select" class="form-control" required>
-                                            <option value="">Select Scholarship Grant</option>
-                                            <?php foreach ($scholarship_grant_list as $grant): ?>
-                                                <option value="<?= htmlspecialchars($grant['grant_name']) ?>">
-                                                    <?= htmlspecialchars($grant['grant_name']) ?>
-                                                </option>
-                                            <?php endforeach; ?>
+                                        <label for="semester">Semester</label>
+                                        <select name="semester" id="semester" class="form-control" required>
+                                            <option value="">Select Semester</option>
+                                            <option value="1st sem">1st Semester</option>
+                                            <option value="2nd sem">2nd Semester</option>
+                                            <option value="Summer">Summer</option>
                                         </select>
                                     </div>
 
                                     <div class="form-group">
-                                        <label for="requirement_name">Requirement Name</label>
-                                        <input type="text" name="requirement_name" id="requirement_name" class="form-control"
-                                            placeholder="Ex: Recent 2x2 ID Picture" required>
+                                        <label for="school_year">School Year</label>
+                                        <input type="text" name="school_year" id="school_year" class="form-control"
+                                            placeholder="Ex: 2025-2026" pattern="\d{4}-\d{4}" title="Format: YYYY-YYYY"
+                                            required>
                                     </div>
-                                </div>
 
-                                <div class="form-group">
-                                    <label for="requirement_type">Requirement Type (Optional)</label>
-                                    <input type="text" name="requirement_type" id="requirement_type" class="form-control"
-                                        placeholder="Ex: Photo, Certificate, Form, etc.">
-                                    <small class="text-muted">Examples: Photo, Certificate, Form, ID, Card, Proof, etc.</small>
-                                </div>
+                                    <div class="default-checkbox">
+                                        <label>
+                                            <input type="checkbox" name="is_default" value="1">
+                                            <span>Set as default semester/school year</span>
+                                        </label>
+                                        <small class="text-muted">This will be pre-selected in forms</small>
+                                    </div>
 
-                                <button type="submit" class="btn btn-primary">
-                                    <i class="fas fa-plus"></i> Add Requirement
-                                </button>
-                            </form>
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="fas fa-plus"></i> Add Entry
+                                    </button>
+                                </form>
 
-                            <h4 class="section-title" style="margin-top: 30px;">
-                                <i class="fas fa-list-ul"></i> Existing Requirements by Grant
-                            </h4>
+                                <h4 class="section-title" style="margin-top: 30px;">
+                                    <i class="fas fa-list-ul"></i> Existing Entries
+                                </h4>
 
-                            <?php if (empty($grant_requirements)): ?>
-                                <div class="empty-requirements">
-                                    <i class="fas fa-file-alt"></i>
-                                    <h5>No requirements found</h5>
-                                    <p>Add requirements for each scholarship grant using the form above.</p>
-                                </div>
-                            <?php else: ?>
-                                <div class="requirements-container">
-                                    <?php foreach ($grant_requirements as $grant_name => $requirements): ?>
-                                        <div class="requirements-by-grant">
-                                            <div class="grant-requirements-header">
-                                                <h5 class="grant-title">
-                                                    <i class="fas fa-award"></i> <?= htmlspecialchars($grant_name) ?>
-                                                    <span class="badge"
-                                                        style="background: #007bff; color: white; padding: 2px 8px; border-radius: 12px; font-size: 12px; margin-left: 10px;">
-                                                        <?= count($requirements) ?> requirement(s)
-                                                    </span>
-                                                </h5>
-                                            </div>
+                                <?php if (empty($sem_sy_list)): ?>
+                                    <div class="empty-state">
+                                        <i class="fas fa-calendar-times"></i>
+                                        <p>No semester entries found</p>
+                                    </div>
+                                <?php else: ?>
+                                    <div class="table-responsive">
+                                        <table class="table">
+                                            <thead>
+                                                <tr>
+                                                    <th>Semester</th>
+                                                    <th>School Year</th>
+                                                    <th>Status</th>
+                                                    <th>Actions</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <?php foreach ($sem_sy_list as $s): ?>
+                                                    <tr>
+                                                        <td><?= htmlspecialchars($s['semester']) ?></td>
+                                                        <td><?= htmlspecialchars($s['school_year']) ?></td>
+                                                        <td>
+                                                            <?php if ($s['is_default']): ?>
+                                                                <span class="default-badge">Default</span>
+                                                            <?php else: ?>
+                                                                <form method="POST" style="display: inline;">
+                                                                    <input type="hidden" name="type" value="set_default_sem_sy">
+                                                                    <input type="hidden" name="id" value="<?= $s['id'] ?>">
+                                                                    <button type="submit" class="set-default-btn"
+                                                                        onclick="return confirm('Set this as the default semester/school year?')">
+                                                                        Set as Default
+                                                                    </button>
+                                                                </form>
+                                                            <?php endif; ?>
+                                                        </td>
+                                                        <td>
+                                                            <a href="?delete=<?= $s['id'] ?>&type=sem_sy&tab=sem_sy"
+                                                                class="btn-delete-icon"
+                                                                onclick="return confirm('Are you sure you want to delete this entry?')"
+                                                                title="Delete">
+                                                                <i class="fas fa-trash-alt"></i>
+                                                            </a>
+                                                        </td>
+                                                    </tr>
+                                                <?php endforeach; ?>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                <?php endif; ?>
+                            </div>
+                        </div>
+                    </div>
 
-                                            <?php if (empty($requirements)): ?>
-                                                <div class="text-center text-muted py-3">
-                                                    No requirements for this grant
-                                                </div>
-                                            <?php else: ?>
-                                                <form method="POST" class="reorder-form" data-grant="<?= htmlspecialchars($grant_name) ?>">
-                                                    <input type="hidden" name="reorder_requirements" value="1">
-                                                    <ul class="requirements-list sortable-requirements"
-                                                        data-grant="<?= htmlspecialchars($grant_name) ?>">
-                                                        <?php foreach ($requirements as $req): ?>
-                                                            <li class="requirement-item" data-id="<?= $req['id'] ?>">
-                                                                <div class="reorder-handle">
-                                                                    <i class="fas fa-grip-vertical"></i>
-                                                                </div>
-                                                                <div class="requirement-details">
-                                                                    <div class="requirement-name">
-                                                                        <?= htmlspecialchars($req['requirement_name']) ?>
-                                                                    </div>
-                                                                    <?php if ($req['requirement_type']): ?>
-                                                                        <span class="requirement-type">
-                                                                            <?= htmlspecialchars($req['requirement_type']) ?>
-                                                                        </span>
-                                                                    <?php endif; ?>
-                                                                </div>
-                                                                <div class="requirement-actions">
-                                                                    <a href="?delete=<?= $req['id'] ?>&type=grant_requirements&tab=grant_requirements"
-                                                                        class="btn-delete-icon"
-                                                                        onclick="return confirm('Are you sure you want to delete this requirement?')"
-                                                                        title="Delete">
-                                                                        <i class="fas fa-trash-alt"></i>
-                                                                    </a>
-                                                                </div>
-                                                                <input type="hidden" name="requirement_order[]" value="<?= $req['id'] ?>">
-                                                            </li>
-                                                        <?php endforeach; ?>
-                                                    </ul>
-                                                    <div class="text-right mt-3">
-                                                        <button type="submit" class="btn btn-sm btn-outline-primary save-order-btn">
-                                                            <i class="fas fa-save"></i> Save Order
-                                                        </button>
-                                                    </div>
-                                                </form>
-                                            <?php endif; ?>
+                    <!-- COURSE & MAJOR TAB -->
+                    <div class="tab-pane <?= $active_tab === 'course_major' ? 'active' : '' ?>" id="course_major">
+                        <div class="dashboard-card">
+                            <div class="card-header">
+                                <h3><i class="fas fa-graduation-cap"></i> Course & Major</h3>
+                            </div>
+                            <div class="card-body">
+                                <h4 class="section-title"><i class="fas fa-plus-circle"></i> Add New Entry</h4>
+                                <form method="POST" class="add-form">
+                                    <input type="hidden" name="type" value="course_major">
+                                    <input type="hidden" name="action" value="add">
+
+                                    <div class="form-group">
+                                        <label for="course">Course</label>
+                                        <input type="text" name="course" id="course" class="form-control"
+                                            placeholder="Ex: BS Information Technology" required>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label for="major">Major</label>
+                                        <input type="text" name="major" id="major" class="form-control"
+                                            placeholder="Ex: Web Development" required>
+                                    </div>
+
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="fas fa-plus"></i> Add Entry
+                                    </button>
+                                </form>
+
+                                <h4 class="section-title" style="margin-top: 30px;">
+                                    <i class="fas fa-list-ul"></i> Existing Entries
+                                </h4>
+
+                                <?php if (empty($course_major_list)): ?>
+                                    <div class="empty-state">
+                                        <i class="fas fa-book"></i>
+                                        <p>No course entries found</p>
+                                    </div>
+                                <?php else: ?>
+                                    <div class="table-responsive">
+                                        <table class="table">
+                                            <thead>
+                                                <tr>
+                                                    <th>Course</th>
+                                                    <th>Major</th>
+                                                    <th>Actions</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <?php foreach ($course_major_list as $c): ?>
+                                                    <tr>
+                                                        <td><?= htmlspecialchars($c['course']) ?></td>
+                                                        <td><?= htmlspecialchars($c['major']) ?></td>
+                                                        <td>
+                                                            <a href="?delete=<?= $c['id'] ?>&type=course_major&tab=course_major"
+                                                                class="btn-delete-icon"
+                                                                onclick="return confirm('Are you sure you want to delete this entry?')"
+                                                                title="Delete">
+                                                                <i class="fas fa-trash-alt"></i>
+                                                            </a>
+                                                        </td>
+                                                    </tr>
+                                                <?php endforeach; ?>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                <?php endif; ?>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- SCHOLARSHIP GRANT TAB -->
+                    <div class="tab-pane <?= $active_tab === 'scholarship_grant' ? 'active' : '' ?>"
+                        id="scholarship_grant">
+                        <div class="dashboard-card">
+                            <div class="card-header">
+                                <h3><i class="fas fa-award"></i> Scholarship Grants</h3>
+                            </div>
+                            <div class="card-body">
+                                <h4 class="section-title"><i class="fas fa-plus-circle"></i> Add New Entry</h4>
+                                <form method="POST" class="add-form">
+                                    <input type="hidden" name="type" value="scholarship_grant">
+                                    <input type="hidden" name="action" value="add">
+
+                                    <div class="form-group">
+                                        <label for="grant_name">Grant Name</label>
+                                        <input type="text" name="grant_name" id="grant_name" class="form-control"
+                                            placeholder="Ex: Academic Scholarship" required>
+                                    </div>
+
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="fas fa-plus"></i> Add Grant
+                                    </button>
+                                </form>
+
+                                <h4 class="section-title" style="margin-top: 30px;">
+                                    <i class="fas fa-list-ul"></i> Existing Grants
+                                </h4>
+
+                                <?php if (empty($scholarship_grant_list)): ?>
+                                    <div class="empty-state">
+                                        <i class="fas fa-award"></i>
+                                        <p>No scholarship grants found</p>
+                                    </div>
+                                <?php else: ?>
+                                    <div class="table-responsive">
+                                        <table class="table">
+                                            <thead>
+                                                <tr>
+                                                    <th>Grant Name</th>
+                                                    <th>Actions</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <?php foreach ($scholarship_grant_list as $g): ?>
+                                                    <tr>
+                                                        <td><?= htmlspecialchars($g['grant_name']) ?></td>
+                                                        <td>
+                                                            <a href="?delete=<?= $g['id'] ?>&type=scholarship_grant&tab=scholarship_grant"
+                                                                class="btn-delete-icon"
+                                                                onclick="return confirm('Are you sure you want to delete this scholarship grant?')"
+                                                                title="Delete">
+                                                                <i class="fas fa-trash-alt"></i>
+                                                            </a>
+                                                        </td>
+                                                    </tr>
+                                                <?php endforeach; ?>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                <?php endif; ?>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- GRANT REQUIREMENTS TAB -->
+                    <div class="tab-pane <?= $active_tab === 'grant_requirements' ? 'active' : '' ?>"
+                        id="grant_requirements">
+                        <div class="dashboard-card full-width">
+                            <div class="card-header">
+                                <h3><i class="fas fa-file-alt"></i> Manage Grant Requirements</h3>
+                            </div>
+                            <div class="card-body">
+                                <h4 class="section-title"><i class="fas fa-plus-circle"></i> Add New Requirement</h4>
+                                <form method="POST" class="add-form">
+                                    <input type="hidden" name="type" value="grant_requirements">
+                                    <input type="hidden" name="action" value="add">
+
+                                    <div class="requirement-form-group">
+                                        <div class="form-group">
+                                            <label for="grant_name_select">Scholarship Grant</label>
+                                            <select name="grant_name" id="grant_name_select" class="form-control"
+                                                required>
+                                                <option value="">Select Scholarship Grant</option>
+                                                <?php foreach ($scholarship_grant_list as $grant): ?>
+                                                    <option value="<?= htmlspecialchars($grant['grant_name']) ?>">
+                                                        <?= htmlspecialchars($grant['grant_name']) ?>
+                                                    </option>
+                                                <?php endforeach; ?>
+                                            </select>
                                         </div>
-                                    <?php endforeach; ?>
-                                </div>
-                            <?php endif; ?>
+
+                                        <div class="form-group">
+                                            <label for="requirement_name">Requirement Name</label>
+                                            <input type="text" name="requirement_name" id="requirement_name"
+                                                class="form-control" placeholder="Ex: Recent 2x2 ID Picture" required>
+                                        </div>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label for="requirement_type">Requirement Type (Optional)</label>
+                                        <input type="text" name="requirement_type" id="requirement_type"
+                                            class="form-control" placeholder="Ex: Photo, Certificate, Form, etc.">
+                                        <small class="text-muted">Examples: Photo, Certificate, Form, ID, Card, Proof,
+                                            etc.</small>
+                                    </div>
+
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="fas fa-plus"></i> Add Requirement
+                                    </button>
+                                </form>
+
+                                <h4 class="section-title" style="margin-top: 30px;">
+                                    <i class="fas fa-list-ul"></i> Existing Requirements by Grant
+                                </h4>
+
+                                <?php if (empty($grant_requirements)): ?>
+                                    <div class="empty-requirements">
+                                        <i class="fas fa-file-alt"></i>
+                                        <h5>No requirements found</h5>
+                                        <p>Add requirements for each scholarship grant using the form above.</p>
+                                    </div>
+                                <?php else: ?>
+                                    <div class="requirements-container">
+                                        <?php foreach ($grant_requirements as $grant_name => $requirements): ?>
+                                            <div class="requirements-by-grant">
+                                                <div class="grant-requirements-header">
+                                                    <h5 class="grant-title">
+                                                        <i class="fas fa-award"></i> <?= htmlspecialchars($grant_name) ?>
+                                                        <span class="badge"
+                                                            style="background: #007bff; color: white; padding: 2px 8px; border-radius: 12px; font-size: 12px; margin-left: 10px;">
+                                                            <?= count($requirements) ?> requirement(s)
+                                                        </span>
+                                                    </h5>
+                                                </div>
+
+                                                <?php if (empty($requirements)): ?>
+                                                    <div class="text-center text-muted py-3">
+                                                        No requirements for this grant
+                                                    </div>
+                                                <?php else: ?>
+                                                    <form method="POST" class="reorder-form"
+                                                        data-grant="<?= htmlspecialchars($grant_name) ?>">
+                                                        <input type="hidden" name="reorder_requirements" value="1">
+                                                        <ul class="requirements-list sortable-requirements"
+                                                            data-grant="<?= htmlspecialchars($grant_name) ?>">
+                                                            <?php foreach ($requirements as $req): ?>
+                                                                <li class="requirement-item" data-id="<?= $req['id'] ?>">
+                                                                    <div class="reorder-handle">
+                                                                        <i class="fas fa-grip-vertical"></i>
+                                                                    </div>
+                                                                    <div class="requirement-details">
+                                                                        <div class="requirement-name">
+                                                                            <?= htmlspecialchars($req['requirement_name']) ?>
+                                                                        </div>
+                                                                        <?php if ($req['requirement_type']): ?>
+                                                                            <span class="requirement-type">
+                                                                                <?= htmlspecialchars($req['requirement_type']) ?>
+                                                                            </span>
+                                                                        <?php endif; ?>
+                                                                    </div>
+                                                                    <div class="requirement-actions">
+                                                                        <a href="?delete=<?= $req['id'] ?>&type=grant_requirements&tab=grant_requirements"
+                                                                            class="btn-delete-icon"
+                                                                            onclick="return confirm('Are you sure you want to delete this requirement?')"
+                                                                            title="Delete">
+                                                                            <i class="fas fa-trash-alt"></i>
+                                                                        </a>
+                                                                    </div>
+                                                                    <input type="hidden" name="requirement_order[]"
+                                                                        value="<?= $req['id'] ?>">
+                                                                </li>
+                                                            <?php endforeach; ?>
+                                                        </ul>
+                                                        <div class="text-right mt-3">
+                                                            <button type="submit"
+                                                                class="btn btn-sm btn-outline-primary save-order-btn">
+                                                                <i class="fas fa-save"></i> Save Order
+                                                            </button>
+                                                        </div>
+                                                    </form>
+                                                <?php endif; ?>
+                                            </div>
+                                        <?php endforeach; ?>
+                                    </div>
+                                <?php endif; ?>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
+
     </div>
 
     <script>
@@ -865,7 +879,7 @@ if (isset($_GET['deleted']))
             tabItems.forEach(tab => {
                 tab.addEventListener('click', function () {
                     const tabId = this.getAttribute('data-tab');
-                    
+
                     // Update URL without reloading page
                     const url = new URL(window.location);
                     url.searchParams.set('tab', tabId);
@@ -894,7 +908,7 @@ if (isset($_GET['deleted']))
             window.addEventListener('popstate', function () {
                 const urlParams = new URLSearchParams(window.location.search);
                 const tab = urlParams.get('tab') || 'sem_sy';
-                
+
                 // Update active tab
                 tabItems.forEach(item => {
                     if (item.getAttribute('data-tab') === tab) {
@@ -903,7 +917,7 @@ if (isset($_GET['deleted']))
                         item.classList.remove('active');
                     }
                 });
-                
+
                 // Show corresponding tab pane
                 tabPanes.forEach(pane => {
                     if (pane.id === tab) {
@@ -953,42 +967,42 @@ if (isset($_GET['deleted']))
         // Function to initialize sortable
         function initializeSortable() {
             console.log("Initializing sortable...");
-            
-            $('.sortable-requirements').each(function(index) {
+
+            $('.sortable-requirements').each(function (index) {
                 console.log("Initializing sortable for list #" + index);
-                
+
                 $(this).sortable({
                     handle: '.reorder-handle',
                     placeholder: 'ui-sortable-placeholder',
                     forcePlaceholderSize: true,
-                    start: function(e, ui) {
+                    start: function (e, ui) {
                         console.log("Drag started");
                         ui.placeholder.height(ui.item.height());
                     },
-                    update: function(event, ui) {
+                    update: function (event, ui) {
                         console.log("Order changed, updating hidden inputs...");
-                        
+
                         // Update hidden inputs when order changes
                         const $list = $(this);
                         let requirementIds = [];
-                        
-                        $list.find('li').each(function(index) {
+
+                        $list.find('li').each(function (index) {
                             const $li = $(this);
                             const id = $li.data('id');
                             requirementIds.push(id);
-                            
+
                             // Update the hidden input value
                             $li.find('input[name="requirement_order[]"]').val(id);
                         });
-                        
+
                         console.log("Updated IDs:", requirementIds);
-                        
+
                         // Show save button for this specific form
                         const $form = $list.closest('.reorder-form');
                         $form.find('.save-order-btn').show();
                     }
                 }).disableSelection();
-                
+
                 console.log("Sortable initialized for list #" + index);
             });
 
@@ -1001,7 +1015,7 @@ if (isset($_GET['deleted']))
                 const grantName = $form.data('grant');
 
                 console.log("Saving order for grant:", grantName);
-                
+
                 // Validate that all requirement IDs are present
                 const requirementIds = [];
                 $form.find('input[name="requirement_order[]"]').each(function () {
@@ -1012,7 +1026,7 @@ if (isset($_GET['deleted']))
                 });
 
                 console.log("Requirement IDs to save:", requirementIds);
-                
+
                 if (requirementIds.length === 0) {
                     e.preventDefault();
                     alert('No requirements to save!');
@@ -1033,7 +1047,7 @@ if (isset($_GET['deleted']))
 
                 return true;
             });
-            
+
             console.log("Sortable test: Try dragging any requirement item");
         }
     </script>

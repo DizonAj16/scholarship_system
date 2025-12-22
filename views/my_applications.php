@@ -333,7 +333,30 @@ if (isset($_SESSION['error_message'])) {
                     </li>
                 <?php endif; ?>
             </ul>
-
+            <!-- Add New Application Button -->
+            <div class="new-application-btn-container" style="margin: 20px 0; text-align: end   ;">
+                <a href="../views/scholarship_form.php" class="btn-new-application" style="
+                    display: inline-block;
+                    background: linear-gradient(135deg, #28a745, #218838);
+                    color: white;
+                    padding: 12px 30px;
+                    border-radius: 6px;
+                    text-decoration: none;
+                    font-weight: 600;
+                    font-size: 16px;
+                    transition: all 0.3s;
+                    box-shadow: 0 4px 8px rgba(40, 167, 69, 0.2);
+                    border: none;
+                    cursor: pointer;
+                ">
+                    <i class="fas fa-plus-circle" style="margin-right: 8px;"></i>
+                    Submit New Scholarship Application
+                </a>
+                <p style="margin-top: 10px; color: #666; font-size: 14px;">
+                    <i class="fas fa-info-circle" style="margin-right: 5px;"></i>
+                    Click to start a new scholarship application
+                </p>
+            </div>
 
 
 
@@ -395,7 +418,206 @@ if (isset($_SESSION['error_message'])) {
                 }
 
 
+                // Enhanced search and filter functionality
+                document.addEventListener('DOMContentLoaded', function () {
+                    // Initialize tooltips
+                    initializeTooltips();
 
+                    // Add loading state to table rows on action click
+                    addLoadingStates();
+
+                    // Enhanced keyboard navigation
+                    setupKeyboardNavigation();
+
+                    // Auto-hide success messages after delay
+                    autoHideMessages();
+
+                    // Add hover effect to new application button
+                    const newAppBtn = document.querySelector('.btn-new-application');
+                    if (newAppBtn) {
+                        newAppBtn.addEventListener('mouseenter', function () {
+                            this.style.transform = 'translateY(-2px)';
+                            this.style.boxShadow = '0 6px 12px rgba(40, 167, 69, 0.3)';
+                        });
+
+                        newAppBtn.addEventListener('mouseleave', function () {
+                            this.style.transform = 'translateY(0)';
+                            this.style.boxShadow = '0 4px 8px rgba(40, 167, 69, 0.2)';
+                        });
+                    }
+                });
+
+                function initializeTooltips() {
+                    const tooltips = document.querySelectorAll('[data-tooltip]');
+                    tooltips.forEach(element => {
+                        element.addEventListener('mouseenter', function (e) {
+                            const tooltip = document.createElement('div');
+                            tooltip.className = 'custom-tooltip';
+                            tooltip.textContent = this.getAttribute('data-tooltip');
+                            tooltip.style.position = 'absolute';
+                            tooltip.style.background = '#5d4037';
+                            tooltip.style.color = 'white';
+                            tooltip.style.padding = '8px 15px';
+                            tooltip.style.borderRadius = '8px';
+                            tooltip.style.fontSize = '0.9rem';
+                            tooltip.style.zIndex = '10000';
+                            tooltip.style.boxShadow = '0 4px 15px rgba(0,0,0,0.2)';
+                            tooltip.style.whiteSpace = 'nowrap';
+
+                            const rect = this.getBoundingClientRect();
+                            tooltip.style.top = (rect.top - 40) + 'px';
+                            tooltip.style.left = (rect.left + rect.width / 2 - tooltip.offsetWidth / 2) + 'px';
+
+                            document.body.appendChild(tooltip);
+
+                            // Position adjustment
+                            tooltip.style.left = (rect.left + rect.width / 2 - tooltip.offsetWidth / 2) + 'px';
+
+                            this._tooltip = tooltip;
+                        });
+
+                        element.addEventListener('mouseleave', function () {
+                            if (this._tooltip) {
+                                this._tooltip.remove();
+                                this._tooltip = null;
+                            }
+                        });
+                    });
+                }
+
+                function addLoadingStates() {
+                    const actionLinks = document.querySelectorAll('.actions a');
+                    actionLinks.forEach(link => {
+                        link.addEventListener('click', function (e) {
+                            if (this.classList.contains('btn-delete')) {
+                                if (!confirm('This action cannot be undone. Proceed with deletion?')) {
+                                    e.preventDefault();
+                                    return false;
+                                }
+                            }
+
+                            // Add loading state
+                            const originalHTML = this.innerHTML;
+                            this.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+                            this.style.pointerEvents = 'none';
+
+                            // Revert after 3 seconds if still loading
+                            setTimeout(() => {
+                                this.innerHTML = originalHTML;
+                                this.style.pointerEvents = 'auto';
+                            }, 3000);
+                        });
+                    });
+                }
+
+                function setupKeyboardNavigation() {
+                    // Make table rows focusable
+                    const tableRows = document.querySelectorAll('tbody tr');
+                    tableRows.forEach((row, index) => {
+                        row.setAttribute('tabindex', '0');
+                        row.style.cursor = 'pointer';
+
+                        row.addEventListener('click', function (e) {
+                            if (!e.target.closest('.actions')) {
+                                const viewLink = this.querySelector('.btn-view');
+                                if (viewLink) viewLink.click();
+                            }
+                        });
+
+                        row.addEventListener('keydown', function (e) {
+                            if (e.key === 'Enter' && !e.target.closest('.actions')) {
+                                const viewLink = this.querySelector('.btn-view');
+                                if (viewLink) viewLink.click();
+                            }
+                        });
+                    });
+
+                    // Keyboard navigation for table
+                    document.addEventListener('keydown', function (e) {
+                        if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+                            const focusedRow = document.activeElement.closest('tr');
+                            if (focusedRow && focusedRow.parentElement.tagName === 'TBODY') {
+                                e.preventDefault();
+                                const allRows = Array.from(document.querySelectorAll('tbody tr'));
+                                const currentIndex = allRows.indexOf(focusedRow);
+                                let nextIndex;
+
+                                if (e.key === 'ArrowDown') {
+                                    nextIndex = currentIndex < allRows.length - 1 ? currentIndex + 1 : 0;
+                                } else {
+                                    nextIndex = currentIndex > 0 ? currentIndex - 1 : allRows.length - 1;
+                                }
+
+                                allRows[nextIndex].focus();
+                            }
+                        }
+                    });
+                }
+
+                function autoHideMessages() {
+                    const messages = document.querySelectorAll('.alert');
+                    messages.forEach(message => {
+                        setTimeout(() => {
+                            message.style.transition = 'opacity 0.5s ease';
+                            message.style.opacity = '0';
+                            setTimeout(() => {
+                                message.style.display = 'none';
+                            }, 500);
+                        }, 4000);
+                    });
+                }
+
+                // Existing functions enhanced
+                function resetSearch() {
+                    const searchInput = document.getElementById("searchInput");
+                    searchInput.value = "";
+
+                    // Add visual feedback
+                    searchInput.style.borderColor = '#CFB53B';
+                    searchInput.style.boxShadow = '0 0 0 4px rgba(207, 181, 59, 0.2)';
+
+                    setTimeout(() => {
+                        searchInput.style.borderColor = '#e8d6c3';
+                        searchInput.style.boxShadow = '0 2px 8px rgba(123, 17, 19, 0.05)';
+                    }, 1000);
+
+                    // Redirect to reset search
+                    var url = new URL(window.location.href);
+                    url.searchParams.delete('search');
+                    url.searchParams.delete('sort');
+                    url.searchParams.delete('sort_status');
+                    url.searchParams.set('page', '1');
+                    window.location.href = url.toString();
+                }
+
+                function sortApplications() {
+                    const sortValue = document.getElementById("sortDropdown").value;
+                    const url = new URL(window.location.href);
+                    url.searchParams.set('sort', sortValue);
+                    url.searchParams.set('page', '1');
+
+                    // Add loading state to table
+                    const tableBody = document.querySelector('tbody');
+                    tableBody.classList.add('loading');
+
+                    setTimeout(() => {
+                        window.location.href = url.toString();
+                    }, 300);
+                }
+
+                // Add search input debounce
+                let searchTimeout;
+                const searchInput = document.getElementById("searchInput");
+                if (searchInput) {
+                    searchInput.addEventListener('input', function () {
+                        clearTimeout(searchTimeout);
+                        searchTimeout = setTimeout(() => {
+                            if (this.value.trim().length >= 2 || this.value.trim() === '') {
+                                this.form.submit();
+                            }
+                        }, 500);
+                    });
+                }
 
             </script>
         </div>

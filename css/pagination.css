@@ -1,3 +1,4 @@
+/* Pagination Styles */
 .pagination {
     margin: 20px 0;
     display: flex;
@@ -11,21 +12,34 @@
     text-decoration: none;
     color: #333;
     border-radius: 4px;
-    transition: background-color 0.3s ease;
+    transition: all 0.3s ease;
 }
 
 .pagination a.active {
     background-color: maroon;
-    color: white;
+    color: gold;
     border-color: maroon;
 }
 
 .pagination a:hover {
     background-color: gold;
-    color: white;
+    color: maroon;
 }
 
 .pagination a.prev,
 .pagination a.next {
     font-weight: bold;
+}
+
+.pagination a.prev:hover,
+.pagination a.next:hover {
+    background-color: maroon;
+    color: gold;
+}
+
+/* Hide pagination when showing all records (for print) */
+@media print {
+    .pagination {
+        display: none !important;
+    }
 }

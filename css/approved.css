@@ -17,7 +17,7 @@ header {
 
 button {
     background-color: maroon;
-    color: gold;
+    color: rgb(0, 0, 0);
     border: none;
     padding: 10px 15px;
     border-radius: 5px;
@@ -119,6 +119,107 @@ footer {
 .print-button i {
     font-size: 18px;
 }
+
+/* Pagination Controls */
+.pagination-controls {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: 20px 0;
+    padding: 15px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.records-per-page {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.records-per-page label {
+    font-weight: 600;
+    color: #333;
+}
+
+.records-dropdown {
+    position: relative;
+    display: inline-block;
+}
+
+.records-dropdown-btn {
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 8px 15px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    min-width: 120px;
+    transition: all 0.3s ease;
+}
+
+.records-dropdown-btn:hover {
+    border-color: maroon;
+    color: maroon;
+}
+
+.records-dropdown-btn i {
+    margin-left: 10px;
+    transition: transform 0.3s ease;
+}
+
+.records-dropdown-btn.active i {
+    transform: rotate(180deg);
+}
+
+.records-dropdown-content {
+    display: none;
+    position: absolute;
+    background: #fff;
+    min-width: 120px;
+    box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+    border-radius: 4px;
+    z-index: 1000;
+    top: 100%;
+    left: 0;
+    margin-top: 5px;
+}
+
+.records-dropdown-content.show {
+    display: block;
+}
+
+.records-dropdown-content a {
+    display: block;
+    padding: 10px 15px;
+    text-decoration: none;
+    color: #333;
+    transition: all 0.2s ease;
+}
+
+.records-dropdown-content a:hover {
+    background: #f8f9fa;
+    color: maroon;
+}
+
+.records-dropdown-content a.active {
+    background: maroon;
+    color: gold;
+}
+
+.pagination-info {
+    font-size: 14px;
+    color: #666;
+}
+
+.pagination-info strong {
+    color: #333;
+}
+
+/* Print styles for the pagination page */
 @media print {
     body {
         font-size: 12px;
@@ -134,5 +235,28 @@ footer {
     }
     @page {
         size: landscape;
+        margin: 1cm;
     }
+    .pagination-controls,
+    .no-print {
+        display: none !important;
+    }
+}
+
+/* Hide elements for print */
+.no-print {
+    /* This class is used for elements that should not appear in print */
+}
+
+/* Print header and footer */
+.print-header {
+    display: none;
+}
+
+.print-footer {
+    display: none;
+}
+
+.print-summary {
+    display: none;
 }

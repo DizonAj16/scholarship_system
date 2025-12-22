@@ -1,5 +1,6 @@
 <?php
 require '../includes/session.php'; // Ensure this includes database connection and session setup
+require '../includes/send_email.php'; // Include the email functions
 
 try {
     // Check if the application ID is provided
@@ -8,6 +9,20 @@ try {
     }
 
     $applicationId = (int) $_GET['id'];
+    $notify = isset($_GET['notify']) && $_GET['notify'] === 'yes';
+
+    // Fetch the applicant's details
+    $query = $pdo->prepare("SELECT full_name, email FROM scholarship_applications WHERE application_id = :id");
+    $query->bindParam(':id', $applicationId, PDO::PARAM_INT);
+    $query->execute();
+    $applicant = $query->fetch(PDO::FETCH_ASSOC);
+
+    if (!$applicant) {
+        throw new Exception('Applicant not found.');
+    }
+
+    $applicantEmail = $applicant['email'];
+    $applicantName = $applicant['full_name'];
 
     // Prepare the SQL query to update the application status to 'pending'
     $stmt = $pdo->prepare("
@@ -20,8 +35,21 @@ try {
 
     // Check if any row was updated
     if ($stmt->rowCount() > 0) {
-        $_SESSION['success_message'] = "Application ID $applicationId has been marked back to 'pending'.";
-        logActivity($pdo, $_SESSION['id'], 'Application Status Updated', "Application ID $applicationId marked as 'pending'.");
+        if ($notify) {
+            // Send notification email
+            $emailStatus = sendPendingEmail($applicantEmail, $applicantName);
+            
+            if ($emailStatus === true) {
+                $_SESSION['success_message'] = "Application ID $applicationId has been marked as 'pending' and notification sent to $applicantName.";
+                logActivity($pdo, $_SESSION['id'], 'Application Status Updated', "Application ID $applicationId marked as 'pending' and notified.");
+            } else {
+                $_SESSION['warning_message'] = "Application status updated to pending but email could not be sent: $emailStatus";
+                logActivity($pdo, $_SESSION['id'], 'Application Status Updated', "Application ID $applicationId marked as 'pending' but email failed: $emailStatus");
+            }
+        } else {
+            $_SESSION['success_message'] = "Application ID $applicationId has been marked as 'pending'.";
+            logActivity($pdo, $_SESSION['id'], 'Application Status Updated', "Application ID $applicationId marked as 'pending' without notification.");
+        }
     } else {
         $_SESSION['error_message'] = "No application found with ID $applicationId or it has already been processed.";
         logActivity($pdo, $_SESSION['id'], 'Error Updating Status', "No application found with ID $applicationId or it has already been processed.");

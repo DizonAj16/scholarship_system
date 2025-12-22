@@ -557,42 +557,49 @@ if (isset($_SESSION['error_message'])) {
                                         data-tooltip="Delete Application">
                                         <i class="fas fa-solid fa-trash"></i>
                                     </a>
-                                    <?php if ($row['status'] === 'approved' && $row['notified'] === 'no'): ?>
-                                        <!-- Show Notify Applicant button if approved but not notified -->
-                                        <a href="../application_process/approve_application.php?id=<?= $row['application_id'] ?>&action=notify"
-                                            class="btn-notify"
-                                            onclick="return confirm('Are you sure you want to notify the applicant?');"
-                                            data-tooltip="Notify Applicant">
-                                            <i class="fas fa-solid fa-envelope"></i>
-                                        </a>
-                                    <?php elseif ($row['status'] !== 'approved'): ?>
-                                        <!-- Show Approve and Notify and Approve Only buttons if not approved -->
-                                        <a href="../application_process/approve_application.php?id=<?= $row['application_id'] ?>&action=notify"
-                                            class="btn-approve"
-                                            onclick="return confirm('Are you sure you want to approve this application and notify the applicant?');"
-                                            data-tooltip="Approve Application and Notify">
-                                            <i class="fas fa-solid fa-envelope"></i>
-                                        </a>
-                                        <a href="../application_process/approve_application.php?id=<?= $row['application_id'] ?>&notify=no"
-                                            class="btn-approve"
-                                            onclick="return confirm('Are you sure you want to approve this application without notifying?');"
-                                            data-tooltip="Approve Application Only">
-                                            <i class="fas fa-solid fa-circle-check"></i>
-                                        </a>
-                                        <!-- Show Reject and Pending buttons only if not approved -->
-                                        <a href="../application_process/reject_application.php?id=<?= $row['application_id'] ?>"
-                                            class="btn-reject"
-                                            onclick="return confirm('Are you sure you want to reject this application?');"
-                                            data-tooltip="Reject Application">
-                                            <i class="fas fa-solid fa-circle-xmark"></i>
-                                        </a>
-                                        <a href="../application_process/pending_application.php?id=<?= $row['application_id'] ?>"
-                                            class="btn-pending"
-                                            onclick="return confirm('Are you sure you want to change the status of this application back to pending?');"
-                                            data-tooltip="Change to Pending">
-                                            <i class="fas fa-solid fa-circle-notch"></i>
-                                        </a>
-                                    <?php endif; ?>
+<?php if ($row['status'] !== 'approved'): ?>
+            <!-- Show Approve with Notify and Approve Only buttons if not approved -->
+            <a href="../application_process/approve_application.php?id=<?= $row['application_id'] ?>&action=notify"
+                class="btn-approve"
+                onclick="return confirm('Are you sure you want to approve this application and notify the applicant?');"
+                data-tooltip="Approve Application and Notify">
+                <i class="fas fa-solid fa-envelope"></i>
+            </a>
+            <a href="../application_process/approve_application.php?id=<?= $row['application_id'] ?>&notify=no"
+                class="btn-approve"
+                onclick="return confirm('Are you sure you want to approve this application without notifying?');"
+                data-tooltip="Approve Application Only">
+                <i class="fas fa-solid fa-circle-check"></i>
+            </a>
+            
+            <!-- Updated Pending buttons with notification options -->
+            <a href="../application_process/pending_application.php?id=<?= $row['application_id'] ?>&notify=yes"
+                class="btn-pending"
+                onclick="return confirm('Are you sure you want to change status to pending and notify the applicant?');"
+                data-tooltip="Change to Pending and Notify">
+                <i class="fas fa-solid fa-envelope"></i>
+            </a>
+            <a href="../application_process/pending_application.php?id=<?= $row['application_id'] ?>&notify=no"
+                class="btn-pending"
+                onclick="return confirm('Are you sure you want to change status to pending without notification?');"
+                data-tooltip="Change to Pending Only">
+                <i class="fas fa-solid fa-circle-notch"></i>
+            </a>
+            
+<!-- In your table row -->
+<a href="#" 
+    class="btn-reject notify-reject-btn"
+    data-application-id="<?= $row['application_id'] ?>"
+    data-tooltip="Reject Application with Notification">
+    <i class="fas fa-solid fa-envelope"></i>
+</a>
+            <a href="../application_process/reject_application.php?id=<?= $row['application_id'] ?>&notify=no"
+                class="btn-reject"
+                onclick="return confirm('Are you sure you want to reject this application without notification?');"
+                data-tooltip="Reject Application Only">
+                <i class="fas fa-solid fa-circle-xmark"></i>
+            </a>
+        <?php endif; ?>
                                 </div>
                             </td>
                         </tr>
@@ -614,6 +621,16 @@ if (isset($_SESSION['error_message'])) {
                         </td>
                     </tr>
                 <?php endif; ?>
+
+                    <!-- Loading row (hidden by default) -->
+    <tr id="loadingRow" style="display: none;">
+        <td colspan="10" style="text-align: center; padding: 20px;">
+            <div style="display: inline-flex; align-items: center; gap: 10px;">
+                <div class="spinner-small" style="width: 20px; height: 20px; border: 2px solid #f3f3f3; border-top: 2px solid #3498db; border-radius: 50%; animation: spin 1s linear infinite;"></div>
+                <span>Loading applications...</span>
+            </div>
+        </td>
+    </tr>
             </tbody>
         </table>
 
@@ -642,6 +659,21 @@ if (isset($_SESSION['error_message'])) {
         </ul>
 
         <script>
+            // Simple loading functions
+function showTableLoading() {
+    document.getElementById('loadingRow').style.display = '';
+    if (document.getElementById('noDataRow')) {
+        document.getElementById('noDataRow').style.display = 'none';
+    }
+}
+
+function hideTableLoading() {
+    document.getElementById('loadingRow').style.display = 'none';
+    if (document.getElementById('noDataRow')) {
+        document.getElementById('noDataRow').style.display = '';
+    }
+}
+
             // Display the success or error message
             var successMessage = document.getElementById("successMessage");
             if (successMessage) {
@@ -696,6 +728,8 @@ if (isset($_SESSION['error_message'])) {
             }
 
             function applyTableFilter(selectElement) {
+                    showTableLoading();
+
                 const name = selectElement.name;
                 const value = selectElement.value;
                 
@@ -719,18 +753,89 @@ if (isset($_SESSION['error_message'])) {
                 window.location.href = url.toString();
             }
 
-
+// Function to show reject dialog with reason input
+function showRejectDialog(applicationId) {
+    console.log('=== DEBUG: showRejectDialog called ===');
+    console.log('Parameter received:', applicationId);
+    console.log('Type of parameter:', typeof applicationId);
+    
+    // Check if it's a valid number
+    if (isNaN(applicationId) || applicationId <= 0) {
+        console.error('Invalid application ID:', applicationId);
+        alert('Error: Invalid application ID');
+        return;
+    }
+    
+    const reason = prompt('Enter rejection reason (optional):\n\nThis will be included in the email notification.', '');
+    
+    if (reason !== null) { // User didn't click cancel
+        console.log('User entered reason:', reason);
+        console.log('Confirming rejection for ID:', applicationId);
+        
+        if (confirm(`Are you sure you want to reject application ID ${applicationId} and notify the applicant?`)) {
+            // Encode the reason for URL
+            const encodedReason = encodeURIComponent(reason);
+            console.log('Redirecting to reject_application.php with ID:', applicationId);
+            window.location.href = `../application_process/reject_application.php?id=${applicationId}&notify=yes&reason=${encodedReason}`;
+        } else {
+            console.log('User cancelled the rejection');
+        }
+    } else {
+        console.log('User cancelled the prompt');
+    }
+}
             
-            // Add visual feedback for active filters
-            document.addEventListener('DOMContentLoaded', function() {
-                const filters = document.querySelectorAll('.table-header-filter');
-                filters.forEach(filter => {
-                    if (filter.value !== '') {
-                        filter.style.backgroundColor = '#e3f2fd';
-                        filter.style.borderColor = '#4a90e2';
-                    }
-                });
-            });
+// Remove the old showRejectDialog function and use event delegation
+document.addEventListener('DOMContentLoaded', function() {
+        const paginationLinks = document.querySelectorAll('.pagination a');
+    paginationLinks.forEach(link => {
+        link.addEventListener('click', function(e) {
+            if (this.getAttribute('href') && !this.getAttribute('href').startsWith('#')) {
+                showTableLoading();
+            }
+        });
+    });
+    // Event delegation for reject with notify buttons
+    document.addEventListener('click', function(e) {
+        if (e.target.closest('.notify-reject-btn')) {
+            e.preventDefault();
+            const button = e.target.closest('.notify-reject-btn');
+            const applicationId = button.getAttribute('data-application-id');
+            
+            // Find the table row to get the displayed ID
+            const row = button.closest('tr');
+            const displayedId = row.querySelector('td:first-child').textContent.trim();
+            
+            console.log('Button clicked - Data ID:', applicationId, 'Displayed ID:', displayedId);
+            
+            if (applicationId !== displayedId) {
+                console.warn('MISMATCH: Data attribute differs from displayed ID!');
+            }
+            
+            const reason = prompt('Enter rejection reason (optional):\n\nThis will be included in the email notification.', '');
+            
+            if (reason !== null) {
+                if (confirm(`Are you sure you want to reject application ID ${applicationId} and notify the applicant?`)) {
+                    const encodedReason = encodeURIComponent(reason);
+                    window.location.href = `../application_process/reject_application.php?id=${applicationId}&notify=yes&reason=${encodedReason}`;
+                }
+            }
+        }
+        
+        // For reject without notify buttons
+        if (e.target.closest('.btn-reject[href*="reject_application.php"]')) {
+            const link = e.target.closest('.btn-reject[href*="reject_application.php"]');
+            const url = new URL(link.href);
+            const applicationId = url.searchParams.get('id');
+            
+            console.log('Reject without notify clicked - ID:', applicationId);
+            
+            if (!confirm('Are you sure you want to reject this application without notification?')) {
+                e.preventDefault();
+            }
+        }
+    });
+});
         </script>
     </div>
 </div>
