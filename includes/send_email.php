@@ -13,13 +13,13 @@ function sendApprovalEmail($applicantEmail, $applicantName, $applicationStatus)
         $mail->isSMTP();
         $mail->Host = 'smtp.gmail.com';
         $mail->SMTPAuth = true;
-        $mail->Username = 'scholarshipofficezppsu@gmail.com';  // Your email address
-        $mail->Password = 'kmecdkhsrigdjjds';  // App password generated in Gmail
+        $mail->Username = 'zppsuscholarshipoffice@gmail.com';
+        $mail->Password = 'llinaayecimnuzni';  // App password generated in Gmail
         $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
         $mail->Port = 587;
 
         // Recipients
-        $mail->setFrom('scholarshipofficezppsu@gmail.com', 'ZPPSU Scholarship Office');  // Sender's email
+        $mail->setFrom('zppsuscholarshipoffice@gmail.com', 'ZPPSU Scholarship Office');  // Sender's email
         $mail->addAddress($applicantEmail, $applicantName);  // Recipient's email
 
         // Content
@@ -31,7 +31,7 @@ function sendApprovalEmail($applicantEmail, $applicantName, $applicationStatus)
         <p>Should you have any further questions or require assistance, please feel free to contact us.</p>
         <p>Best regards,</p>
         <p><strong>ZPPSU Office of Scholarship Programs</strong></p>";
-        
+
         // Attempt to send the email
         if ($mail->send()) {
             return true;  // Return true if email is sent successfully
@@ -53,13 +53,13 @@ function sendPendingEmail($applicantEmail, $applicantName)
         $mail->isSMTP();
         $mail->Host = 'smtp.gmail.com';
         $mail->SMTPAuth = true;
-        $mail->Username = 'scholarshipofficezppsu@gmail.com';
-        $mail->Password = 'kmecdkhsrigdjjds';
+        $mail->Username = 'zppsuscholarshipoffice@gmail.com';
+        $mail->Password = 'llinaayecimnuzni';
         $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
         $mail->Port = 587;
 
         // Recipients
-        $mail->setFrom('scholarshipofficezppsu@gmail.com', 'ZPPSU Scholarship Office');
+        $mail->setFrom('zppsuscholarshipoffice@gmail.com', 'ZPPSU Scholarship Office');
         $mail->addAddress($applicantEmail, $applicantName);
 
         // Content
@@ -72,7 +72,7 @@ function sendPendingEmail($applicantEmail, $applicantName)
         <p>Should you have any further questions or require assistance, please feel free to contact us.</p>
         <p>Best regards,</p>
         <p><strong>ZPPSU Office of Scholarship Programs</strong></p>";
-        
+
         if ($mail->send()) {
             return true;
         } else {
@@ -92,24 +92,24 @@ function sendRejectionEmail($applicantEmail, $applicantName, $rejectionReason = 
         $mail->isSMTP();
         $mail->Host = 'smtp.gmail.com';
         $mail->SMTPAuth = true;
-        $mail->Username = 'scholarshipofficezppsu@gmail.com';
-        $mail->Password = 'kmecdkhsrigdjjds';
+        $mail->Username = 'zppsuscholarshipoffice@gmail.com';
+        $mail->Password = 'llinaayecimnuzni';
         $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
         $mail->Port = 587;
 
         // Recipients
-        $mail->setFrom('scholarshipofficezppsu@gmail.com', 'ZPPSU Scholarship Office');
+        $mail->setFrom('zppsuscholarshipoffice@gmail.com', 'ZPPSU Scholarship Office');
         $mail->addAddress($applicantEmail, $applicantName);
 
         // Content
         $mail->isHTML(true);
         $mail->Subject = 'Application Status Update - Not Qualified';
-        
+
         $reasonText = '';
         if (!empty($rejectionReason)) {
             $reasonText = "<p><strong>Reason:</strong> $rejectionReason</p>";
         }
-        
+
         $mail->Body = "<h2>Dear $applicantName,</h2>
         <p>After careful review, we regret to inform you that your scholarship application has been marked as <strong>not qualified</strong>.</p>
         $reasonText
@@ -118,7 +118,7 @@ function sendRejectionEmail($applicantEmail, $applicantName, $rejectionReason = 
         <p>We wish you the best in your academic endeavors.</p>
         <p>Best regards,</p>
         <p><strong>ZPPSU Office of Scholarship Programs</strong></p>";
-        
+
         if ($mail->send()) {
             return true;
         } else {
