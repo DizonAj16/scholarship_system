@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Dec 22, 2025 at 04:44 AM
+-- Generation Time: Jan 05, 2026 at 02:53 AM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 7.4.33
 
@@ -239,7 +239,35 @@ INSERT INTO `logs` (`id`, `user_id`, `action`, `details`, `timestamp`) VALUES
 (514, 24, 'User logged in', 'User \'aj111\' logged in successfully.', '2025-12-22 00:57:56'),
 (515, 24, 'User logged out', 'User \'aj111\' logged out successfully.', '2025-12-22 01:02:42'),
 (516, 1, 'User logged in', 'User \'admin\' logged in successfully.', '2025-12-22 01:02:47'),
-(517, 1, 'Error', 'Email could not be sent: Message could not be sent. Mailer Error: SMTP Error: Could not authenticate.', '2025-12-22 01:05:46');
+(517, 1, 'Error', 'Email could not be sent: Message could not be sent. Mailer Error: SMTP Error: Could not authenticate.', '2025-12-22 01:05:46'),
+(518, 1, 'User logged in', 'User \'admin\' logged in successfully.', '2025-12-22 05:04:23'),
+(519, 1, 'User logged out', 'User \'admin\' logged out successfully.', '2025-12-22 05:04:40'),
+(520, 24, 'User logged in', 'User \'aj111\' logged in successfully.', '2025-12-22 05:04:46'),
+(521, 24, 'User logged out', 'User \'aj111\' logged out successfully.', '2025-12-22 05:05:46'),
+(522, 1, 'User logged in', 'User \'admin\' logged in successfully.', '2025-12-23 03:33:26'),
+(523, 1, 'Error', 'Email could not be sent: Message could not be sent. Mailer Error: SMTP Error: Could not authenticate.', '2025-12-23 03:34:03'),
+(524, 1, 'Application updated by admin', 'Application ID 20251222004552424 updated by admin', '2025-12-23 03:34:13'),
+(525, 1, 'Error', 'Email could not be sent: Message could not be sent. Mailer Error: SMTP Error: Could not authenticate.', '2025-12-23 03:34:30'),
+(526, 1, 'Application updated by admin', 'Application ID 20251222004552424 updated by admin', '2025-12-23 03:46:52'),
+(527, 1, 'User logged in', 'User \'admin\' logged in successfully.', '2026-01-05 02:32:53'),
+(528, 1, 'Error', 'Email could not be sent: Message could not be sent. Mailer Error: SMTP Error: Could not authenticate.', '2026-01-05 02:33:12'),
+(529, 1, 'Application updated by admin', 'Application ID 20251222004552424 updated by admin', '2026-01-05 02:33:41'),
+(530, 1, 'Application approved and notified', 'ID 20251222004552424 approved and notified.', '2026-01-05 02:45:43'),
+(531, 1, 'Application updated by admin', 'Application ID 20251222004552424 updated by admin', '2026-01-05 02:46:30'),
+(532, 1, 'Application Status Rejected', 'Application ID 20251222004552424 marked as \'not qualified\' without notification.', '2026-01-05 02:46:39'),
+(533, 1, 'Application Status Updated', 'Application ID 20251222004552424 marked as \'pending\' without notification.', '2026-01-05 02:47:01'),
+(534, 1, 'Application Status Rejected', 'Application ID 20251222004552424 marked as \'not qualified\' but email failed: Message could not be sent. Mailer Error: SMTP Error: Could not authenticate.', '2026-01-05 02:47:14'),
+(535, 1, 'Error Updating Status', 'No application found with ID 20251222004552424 or it has already been processed.', '2026-01-05 02:47:50'),
+(536, 1, 'Application Status Updated', 'Application ID 20251222004552424 marked as \'pending\' without notification.', '2026-01-05 02:47:56'),
+(537, 1, 'Application Status Rejected', 'Application ID 20251222004552424 marked as \'not qualified\' but email failed: Message could not be sent. Mailer Error: SMTP Error: Could not authenticate.', '2026-01-05 02:48:03'),
+(538, 1, 'Application Status Updated', 'Application ID 20251222004552424 marked as \'pending\' without notification.', '2026-01-05 02:48:21'),
+(539, 1, 'Application Status Rejected', 'Application ID 20251222004552424 marked as \'not qualified\' but email failed: Message could not be sent. Mailer Error: SMTP Error: Could not authenticate.', '2026-01-05 02:48:29'),
+(540, 1, 'Application Status Updated', 'Application ID 20251222004552424 marked as \'pending\' without notification.', '2026-01-05 02:50:04'),
+(541, 1, 'Application Status Rejected', 'Application ID 20251222004552424 marked as \'not qualified\' and notified.', '2026-01-05 02:50:16'),
+(542, 1, 'Application Status Updated', 'Application ID 20251222004552424 marked as \'pending\' without notification.', '2026-01-05 02:50:59'),
+(543, 1, 'Application approved and notified', 'ID 20251222004552424 approved and notified.', '2026-01-05 02:51:08'),
+(544, 1, 'User logged out', 'User \'admin\' logged out successfully.', '2026-01-05 02:52:05'),
+(545, 24, 'User logged in', 'User \'aj111\' logged in successfully.', '2026-01-05 02:52:11');
 
 -- --------------------------------------------------------
 
@@ -352,7 +380,7 @@ INSERT INTO `scholarship_applications` (`application_id`, `date`, `semester`, `s
 ('20251214110552298', '2025-12-14 19:04:07', '1st sem', '2025-2026', 'Nurjan Idjad', 'BS CE', '2A', 'ENGLISH', '09154785417', 'daisy road', 7000, 'daisy road', 'dizon.arjecjose@gmail.com', 'male', '1991-06-18', 34, 'Zamboanga City', 'single', 'roman catholic', 'CHED TDP (TULONG DULONG PROGRAM)', 'N/A', 'N/A', 'tfdytdytdu6yt', 1, 'pending', 0, ''),
 ('20251215104428645', '2025-12-15 18:42:36', '1st sem', '2025-2026', 'JESSICA A DIZON', 'BS CE', '2A', 'ENGLISH', '09548712364', 'daisy road', 7000, 'daisy road', 'dizon.arjecjose@gmail.com', 'male', '2009-06-16', 16, 'Zamboanga City', 'single', 'roman catholic', 'CHED TDP (TULONG DULONG PROGRAM)', 'N/A', 'N/A', 'abdvhysfdyafdsyuafdu\r\n', 16, 'pending', 0, ''),
 ('20251215120415457', '2025-12-15 20:01:54', '1st sem', '2025-2026', 'JESSICA A DIZON', 'BS CE', '1D', 'ENGLISH', '09548712364', 'daisy road', 7000, 'daisy road', 'dizon.arjecjose@gmail.com', 'male', '2009-05-15', 16, 'Zamboanga City', 'single', 'roman catholic', 'CHED TDP (TULONG DULONG PROGRAM)', 'N/A', 'N/A', 'qwwwwwwwwwwwwwwwww', 1, 'pending', 0, ''),
-('20251222004552424', '2025-12-22 08:43:53', '2nd sem', '2025-2026', 'Dizon Arjec Jose A.', 'BS INFOTECH', '4A', 'PROGRAMMING', '09158423449', 'daisy road', 7000, 'daisy road', 'dizon.arjecjose@gmail.com', 'male', '2004-04-16', 21, 'Zamboanga City', 'single', 'roman catholic', 'CHED TDP (TULONG DULONG PROGRAM)', 'N/A', 'N/A', 'qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq', 24, 'pending', 0, '');
+('20251222004552424', '2025-12-22 08:43:53', '2nd sem', '2025-2026', 'Dizon Arjec Jose A.', 'BS INFOTECH', '4A', 'PROGRAMMING', '09158423449', 'daisy road', 7000, 'daisy road', 'dizon.arjecjose@gmail.com', 'male', '2004-04-16', 21, 'Zamboanga City', 'single', 'roman catholic', 'CHED TDP (TULONG DULONG PROGRAM)', 'N/A', 'N/A', 'qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq', 24, 'approved', 0, '');
 
 -- --------------------------------------------------------
 
@@ -790,7 +818,7 @@ ALTER TABLE `house_info`
 -- AUTO_INCREMENT for table `logs`
 --
 ALTER TABLE `logs`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=518;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=546;
 
 --
 -- AUTO_INCREMENT for table `parents_info`
