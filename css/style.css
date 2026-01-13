@@ -20,7 +20,7 @@
   padding-bottom: 15px;
 }
 
-.phppot-container h1::after {
+/* .phppot-container h1::after {
   content: '';
   position: absolute;
   bottom: 0;
@@ -30,7 +30,7 @@
   height: 4px;
   background: linear-gradient(90deg, #8b0000, #ffc72c);
   border-radius: 2px;
-}
+} */
 
 /* Alert Messages Enhancement */
 .alert {

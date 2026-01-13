@@ -425,9 +425,40 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         // Commit transaction
         $pdo->commit();
-
         // Update existing applications list for the current request
         $existing_applications[] = $selected_grant;
+
+        // Send email notification to student about application submission
+// Send email notification to student about application submission
+        if ($user_role === 'student') {
+            require '../includes/send_email.php';
+
+            // Send application submission confirmation email
+            $emailStatus = sendApplicationSubmissionEmail(
+                $data['email'],
+                $data['full_name'],
+                $application_id,
+                $data['scholarship_grant'],
+                $data['semester'], // Add semester
+                $data['school_year'] // Add school year
+            );
+
+            if ($emailStatus === true) {
+                logActivity(
+                    $pdo,
+                    $user_id,
+                    "Application Submission Email Sent",
+                    "Confirmation email sent to {$data['full_name']} for Application ID: $application_id"
+                );
+            } else {
+                logActivity(
+                    $pdo,
+                    $user_id,
+                    "Application Submission Email Failed",
+                    "Failed to send confirmation email for Application ID: $application_id. Error: $emailStatus"
+                );
+            }
+        }
 
         // Log the activity
         $action = "Scholarship application submitted";
@@ -537,7 +568,7 @@ if (isset($_SESSION['error_message'])) {
             font-size: 40px;
             opacity: 0.2;
         }
-
+/* 
         h1.text-center::after {
             content: '📝';
             position: absolute;
@@ -546,7 +577,7 @@ if (isset($_SESSION['error_message'])) {
             transform: translateY(-50%);
             font-size: 40px;
             opacity: 0.2;
-        }
+        } */
 
         /* Semester Display Styles */
         .semester-display {
