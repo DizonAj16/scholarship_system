@@ -11,8 +11,12 @@ try {
     $applicationId = (int) $_GET['id'];
     $notify = isset($_GET['notify']) && $_GET['notify'] === 'yes';
 
-    // Fetch the applicant's details
-    $query = $pdo->prepare("SELECT full_name, email FROM scholarship_applications WHERE application_id = :id");
+    // Fetch the applicant's details including scholarship grant
+    $query = $pdo->prepare("
+        SELECT full_name, email, scholarship_grant 
+        FROM scholarship_applications 
+        WHERE application_id = :id
+    ");
     $query->bindParam(':id', $applicationId, PDO::PARAM_INT);
     $query->execute();
     $applicant = $query->fetch(PDO::FETCH_ASSOC);
@@ -23,6 +27,7 @@ try {
 
     $applicantEmail = $applicant['email'];
     $applicantName = $applicant['full_name'];
+    $scholarshipGrant = $applicant['scholarship_grant'];
 
     // Prepare the SQL query to update the application status to 'pending'
     $stmt = $pdo->prepare("
@@ -36,8 +41,8 @@ try {
     // Check if any row was updated
     if ($stmt->rowCount() > 0) {
         if ($notify) {
-            // Send notification email
-            $emailStatus = sendPendingEmail($applicantEmail, $applicantName);
+            // Send notification email with scholarship grant
+            $emailStatus = sendPendingEmail($applicantEmail, $applicantName, $scholarshipGrant);
             
             if ($emailStatus === true) {
                 $_SESSION['success_message'] = "Application ID $applicationId has been marked as 'pending' and notification sent to $applicantName.";

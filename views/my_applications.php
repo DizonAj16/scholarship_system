@@ -113,6 +113,7 @@ if (isset($_SESSION['error_message'])) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="../js/fontawesome.js" crossorigin="anonymous"></script>
     <link rel="stylesheet" href="../css/styles.css?v=<?php echo time(); ?>">
+    <link rel="stylesheet" href="../css/style.css?v=<?php echo time(); ?>">
     <link rel="stylesheet" href="../css/preloader.css?v=<?php echo time(); ?>">
     <link rel="stylesheet" href="../css/applications.css?v=<?php echo time(); ?>">
     <script src="../js/preloader.js?v=<?php echo time(); ?>"></script>

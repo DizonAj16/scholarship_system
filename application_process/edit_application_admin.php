@@ -159,8 +159,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             ':status' => $_POST['status'],
             ':application_id' => $application_id
         ]);
+        // Handle empty college fields
+        $college = !empty($_POST['college']) ? trim($_POST['college']) : '';
+        $college_year_grad = !empty($_POST['college_year_grad']) ? (int) $_POST['college_year_grad'] : NULL;
+        $college_honors = !empty($_POST['college_honors']) ? trim($_POST['college_honors']) : '';
 
-        // Update schools_attended table
+
         $stmt = $pdo->prepare("
     UPDATE schools_attended SET
         elementary = :elementary,
@@ -175,9 +179,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     WHERE application_id = :application_id
 ");
 
-        // Handle empty college year graduation - set to NULL if empty
-        $college_year_grad = !empty($_POST['college_year_grad']) ? $_POST['college_year_grad'] : NULL;
-
         $stmt->execute([
             ':elementary' => $_POST['elementary'],
             ':elementary_year_grad' => $_POST['elementary_year_grad'],
@@ -185,9 +186,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             ':secondary' => $_POST['secondary'],
             ':secondary_year_grad' => $_POST['secondary_year_grad'],
             ':secondary_honors' => $_POST['secondary_honors'] ?? '',
-            ':college' => $_POST['college'],
+            ':college' => $college,
             ':college_year_grad' => $college_year_grad,
-            ':college_honors' => $_POST['college_honors'] ?? '',
+            ':college_honors' => $college_honors,
             ':application_id' => $application_id
         ]);
         // Update parents_info table
@@ -764,20 +765,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         value="<?= htmlspecialchars($application['secondary_honors']) ?>">
                 </div>
                 <div class="form-row">
-                    <label for="college">College:</label>
+                    <label for="college" class="optional-label">College:</label>
                     <input type="text" name="college" id="college"
-                        value="<?= htmlspecialchars($application['college']) ?>" required>
+                        value="<?= htmlspecialchars($application['college']) ?>"
+                        placeholder="Leave blank if not applicable">
                 </div>
                 <div class="form-row">
                     <label for="college_year_grad" class="optional-label">College Year Graduated:</label>
                     <input type="number" name="college_year_grad" id="college_year_grad" min="1900"
                         max="<?= date('Y') ?>"
-                        value="<?= !empty($application['college_year_grad']) && $application['college_year_grad'] != '0000' ? htmlspecialchars($application['college_year_grad']) : '' ?>">
+                        value="<?= !empty($application['college_year_grad']) && $application['college_year_grad'] != '0000' ? htmlspecialchars($application['college_year_grad']) : '' ?>"
+                        placeholder="Leave blank if not applicable">
                 </div>
                 <div class="form-row">
                     <label for="college_honors" class="optional-label">College Honors:</label>
                     <input type="text" name="college_honors" id="college_honors"
-                        value="<?= htmlspecialchars($application['college_honors']) ?>">
+                        value="<?= htmlspecialchars($application['college_honors']) ?>"
+                        placeholder="Enter 'None' if not applicable">
                 </div>
             </div>
 

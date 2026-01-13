@@ -185,6 +185,7 @@ if (isset($_SESSION['error_message'])) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="../js/fontawesome.js" crossorigin="anonymous"></script>
     <link rel="stylesheet" href="../css/styles.css?v=<?php echo time(); ?>">
+        <link rel="stylesheet" href="../css/style.css?v=<?php echo time(); ?>">
     <link rel="stylesheet" href="../css/preloader.css?v=<?php echo time(); ?>">
     <link rel="stylesheet" href="../css/applications.css?v=<?php echo time(); ?>">
     <script src="../js/preloader.js?v=<?php echo time(); ?>"></script>
@@ -280,7 +281,11 @@ if (isset($_SESSION['error_message'])) {
 </head>
 
 <body>
-
+<!-- Global Loading Overlay -->
+<div id="globalLoadingOverlay" class="loading-overlay">
+    <div class="spinner"></div>
+    <div class="loading-text">Processing your request...</div>
+</div>
     <!-- <div class="preloader">
         <img src="../assets/images/icons/scholarship_seal.png" alt="" style="height: 70px; width: 70px;">
         <div class="lds-facebook">
@@ -519,6 +524,15 @@ if (isset($_SESSION['error_message'])) {
                 </tr>
             </thead>
             <tbody>
+                    <!-- Loading row (hidden by default) -->
+    <tr id="loadingRow" style="display: none;">
+        <td colspan="10" style="text-align: center; padding: 20px;">
+            <div style="display: inline-flex; align-items: center; gap: 10px;">
+                <div class="spinner-small"></div>
+                <span>Loading applications...</span>
+            </div>
+        </td>
+    </tr>
                 <?php if (count($rows) > 0): ?>
                     <?php foreach ($rows as $row): ?>
                         <tr>
@@ -659,7 +673,385 @@ if (isset($_SESSION['error_message'])) {
         </ul>
 
         <script>
-            // Simple loading functions
+// ================================
+// LOADING INDICATOR FUNCTIONS
+// ================================
+
+// Show global loading overlay
+function showGlobalLoading(message = 'Processing your request...') {
+    const overlay = document.getElementById('globalLoadingOverlay');
+    if (overlay) {
+        overlay.querySelector('.loading-text').textContent = message;
+        overlay.style.display = 'flex';
+        document.body.style.overflow = 'hidden'; // Prevent scrolling
+    }
+}
+
+// Hide global loading overlay
+function hideGlobalLoading() {
+    const overlay = document.getElementById('globalLoadingOverlay');
+    if (overlay) {
+        overlay.style.display = 'none';
+        document.body.style.overflow = 'auto'; // Restore scrolling
+    }
+}
+
+// Show loading for specific button
+function showButtonLoading(button, text = 'Processing...') {
+    if (!button) return;
+    
+    button.classList.add('btn-loading');
+    button.setAttribute('data-original-html', button.innerHTML);
+    button.setAttribute('data-original-text', button.textContent);
+    button.setAttribute('data-original-title', button.title || '');
+    button.disabled = true;
+    button.style.pointerEvents = 'none';
+    button.title = text;
+}
+
+// Hide loading for specific button
+function hideButtonLoading(button) {
+    if (!button) return;
+    
+    button.classList.remove('btn-loading');
+    const originalHtml = button.getAttribute('data-original-html');
+    const originalTitle = button.getAttribute('data-original-title');
+    
+    if (originalHtml) {
+        button.innerHTML = originalHtml;
+        button.removeAttribute('data-original-html');
+    }
+    
+    if (originalTitle !== null) {
+        button.title = originalTitle;
+        button.removeAttribute('data-original-title');
+    }
+    
+    button.disabled = false;
+    button.style.pointerEvents = 'auto';
+}
+
+// Show loading for table row
+function showRowLoading(row, message = 'Processing...') {
+    if (!row) return;
+    
+    row.classList.add('loading-row');
+    row.setAttribute('data-original-bg', row.style.backgroundColor || '');
+    row.style.backgroundColor = '#f9f9f9';
+    row.setAttribute('data-loading-message', message);
+    
+    // Add loading indicator to each cell
+    const cells = row.querySelectorAll('td');
+    cells.forEach(cell => {
+        cell.style.position = 'relative';
+    });
+}
+
+// Hide loading for table row
+function hideRowLoading(row) {
+    if (!row) return;
+    
+    row.classList.remove('loading-row');
+    const originalBg = row.getAttribute('data-original-bg');
+    if (originalBg) {
+        row.style.backgroundColor = originalBg;
+    } else {
+        row.style.backgroundColor = '';
+    }
+    
+    row.removeAttribute('data-loading-message');
+    
+    // Remove loading indicator from cells
+    const cells = row.querySelectorAll('td');
+    cells.forEach(cell => {
+        cell.style.position = '';
+    });
+}
+
+// Show loading for specific action in actions cell
+function showActionLoading(actionsCell, actionType) {
+    if (!actionsCell) return;
+    
+    const actions = actionsCell.querySelector('.actions');
+    if (!actions) return;
+    
+    // Find the specific action button
+    const actionButtons = actions.querySelectorAll('a');
+    actionButtons.forEach(button => {
+        const icon = button.querySelector('i');
+        if (icon && button.href.includes(actionType)) {
+            showButtonLoading(button);
+        }
+    });
+}
+
+// ================================
+// ACTION HANDLERS WITH LOADING
+// ================================
+
+// Enhanced approve action handler
+function handleApproveAction(link, actionType = 'approve') {
+    const row = link.closest('tr');
+    const actionsCell = row.querySelector('td:last-child');
+    
+    // Show global loading
+    showGlobalLoading(`Approving application ${actionType === 'notify' ? 'and notifying applicant' : 'only'}...`);
+    
+    // Show row loading
+    showRowLoading(row, `Approving${actionType === 'notify' ? ' and notifying' : ''}...`);
+    
+    // Show button loading
+    showButtonLoading(link, 'Approving...');
+    
+    // Disable other action buttons temporarily
+    disableOtherActions(row, link);
+    
+    return true;
+}
+
+// Enhanced reject action handler with confirmation dialog
+function handleRejectAction(link, actionType = 'reject') {
+    const row = link.closest('tr');
+    const applicationId = row.querySelector('td:first-child').textContent.trim();
+    const isNotifyAction = link.classList.contains('notify-reject-btn');
+    
+    if (isNotifyAction) {
+        // Custom dialog for reject with notification
+        const reason = prompt('Enter rejection reason (optional):\n\nThis will be included in the email notification.', '');
+        
+        if (reason === null) {
+            return false; // User cancelled
+        }
+        
+        if (!confirm(`Are you sure you want to reject application ID ${applicationId} and notify the applicant?`)) {
+            return false;
+        }
+        
+        // Show loading indicators
+        showGlobalLoading(`Rejecting application and notifying applicant...`);
+        showRowLoading(row, 'Rejecting and notifying...');
+        showButtonLoading(link, 'Rejecting...');
+        disableOtherActions(row, link);
+        
+        // Update the link with reason parameter
+        const encodedReason = encodeURIComponent(reason);
+        link.href = `../application_process/reject_application.php?id=${applicationId}&notify=yes&reason=${encodedReason}`;
+    } else {
+        // Regular reject without notification
+        if (!confirm('Are you sure you want to reject this application without notification?')) {
+            return false;
+        }
+        
+        // Show loading indicators
+        showGlobalLoading('Rejecting application...');
+        showRowLoading(row, 'Rejecting...');
+        showButtonLoading(link, 'Rejecting...');
+        disableOtherActions(row, link);
+    }
+    
+    return true;
+}
+
+// Enhanced pending action handler
+function handlePendingAction(link) {
+    const row = link.closest('tr');
+    const isNotifyAction = link.href.includes('notify=yes');
+    
+    if (!confirm(`Are you sure you want to change status to pending${isNotifyAction ? ' and notify the applicant' : ''}?`)) {
+        return false;
+    }
+    
+    // Show loading indicators
+    showGlobalLoading(`Changing status to pending${isNotifyAction ? ' and notifying applicant' : ''}...`);
+    showRowLoading(row, `Setting to pending${isNotifyAction ? ' and notifying' : ''}...`);
+    showButtonLoading(link, 'Processing...');
+    disableOtherActions(row, link);
+    
+    return true;
+}
+
+// Enhanced delete action handler
+function handleDeleteAction(link) {
+    if (!confirm('This action cannot be undone. Proceed with deletion?')) {
+        return false;
+    }
+    
+    const row = link.closest('tr');
+    
+    // Show loading indicators
+    showGlobalLoading('Deleting application...');
+    showRowLoading(row, 'Deleting...');
+    showButtonLoading(link, 'Deleting...');
+    disableOtherActions(row, link);
+    
+    return true;
+}
+
+// Enhanced view/edit action handler
+function handleViewEditAction(link) {
+    const row = link.closest('tr');
+    
+    // Show loading indicators
+    const isEdit = link.href.includes('edit');
+    showGlobalLoading(isEdit ? 'Loading edit form...' : 'Loading application details...');
+    showRowLoading(row, isEdit ? 'Loading edit form...' : 'Loading details...');
+    showButtonLoading(link, 'Loading...');
+    disableOtherActions(row, link);
+    
+    return true;
+}
+
+// Disable other action buttons temporarily
+function disableOtherActions(row, currentButton) {
+    const actionButtons = row.querySelectorAll('.actions a');
+    actionButtons.forEach(button => {
+        if (button !== currentButton) {
+            button.style.opacity = '0.5';
+            button.style.pointerEvents = 'none';
+            button.setAttribute('data-original-pointer-events', button.style.pointerEvents);
+        }
+    });
+}
+
+// Re-enable other action buttons
+function enableOtherActions(row) {
+    const actionButtons = row.querySelectorAll('.actions a');
+    actionButtons.forEach(button => {
+        button.style.opacity = '';
+        button.style.pointerEvents = button.getAttribute('data-original-pointer-events') || '';
+        button.removeAttribute('data-original-pointer-events');
+    });
+}
+
+// ================================
+// EVENT LISTENERS SETUP
+// ================================
+
+document.addEventListener('DOMContentLoaded', function() {
+    // Set up event delegation for all action buttons
+    document.addEventListener('click', function(e) {
+        const link = e.target.closest('a');
+        if (!link) return;
+        
+        const row = link.closest('tr');
+        const href = link.href;
+        
+        // Check which type of action and handle accordingly
+        if (href.includes('approve_application.php')) {
+            e.preventDefault();
+            if (handleApproveAction(link, href.includes('action=notify') ? 'notify' : 'approve')) {
+                setTimeout(() => {
+                    window.location.href = link.href;
+                }, 100); // Small delay to show loading state
+            }
+        }
+        else if (href.includes('reject_application.php') || link.classList.contains('notify-reject-btn')) {
+            e.preventDefault();
+            if (handleRejectAction(link)) {
+                setTimeout(() => {
+                    window.location.href = link.href;
+                }, 100);
+            }
+        }
+        else if (href.includes('pending_application.php')) {
+            e.preventDefault();
+            if (handlePendingAction(link)) {
+                setTimeout(() => {
+                    window.location.href = link.href;
+                }, 100);
+            }
+        }
+        else if (href.includes('delete_application.php')) {
+            e.preventDefault();
+            if (handleDeleteAction(link)) {
+                setTimeout(() => {
+                    window.location.href = link.href;
+                }, 100);
+            }
+        }
+        else if (href.includes('view_application_admin.php') || href.includes('edit_application_admin.php')) {
+            e.preventDefault();
+            if (handleViewEditAction(link)) {
+                setTimeout(() => {
+                    window.location.href = link.href;
+                }, 100);
+            }
+        }
+    });
+    
+    // Set up pagination loading
+    const paginationLinks = document.querySelectorAll('.pagination a');
+    paginationLinks.forEach(link => {
+        link.addEventListener('click', function(e) {
+            if (this.getAttribute('href') && !this.getAttribute('href').startsWith('#')) {
+                showGlobalLoading('Loading applications...');
+                
+                // Add small delay to show loading state
+                setTimeout(() => {
+                    hideGlobalLoading();
+                }, 3000); // Safety timeout
+            }
+        });
+    });
+    
+    // Set up form submission loading
+    const filterForm = document.getElementById('filterForm');
+    if (filterForm) {
+        filterForm.addEventListener('submit', function(e) {
+            showGlobalLoading('Applying filters...');
+            
+            // Add safety timeout
+            setTimeout(() => {
+                hideGlobalLoading();
+            }, 5000);
+        });
+    }
+    
+    // Set up reset button loading
+    const resetButton = document.getElementById('resetButton');
+    if (resetButton) {
+        resetButton.addEventListener('click', function(e) {
+            if (!this.href) { // If it's a button, not a link
+                showGlobalLoading('Resetting filters...');
+                
+                // Small delay before actual reset
+                setTimeout(() => {
+                    hideGlobalLoading();
+                }, 1000);
+            }
+        });
+    }
+    
+    // Set up export button loading
+    const exportButton = document.querySelector('.btn-export');
+    if (exportButton) {
+        exportButton.addEventListener('click', function(e) {
+            showGlobalLoading('Generating CSV export...');
+            showButtonLoading(this, 'Exporting...');
+            
+            // Safety timeout
+            setTimeout(() => {
+                hideGlobalLoading();
+                hideButtonLoading(this);
+            }, 10000);
+        });
+    }
+    
+    // Show/hide table loading when filtering
+    const tableFilters = document.querySelectorAll('.table-header-filter');
+    tableFilters.forEach(filter => {
+        filter.addEventListener('change', function() {
+            showTableLoading();
+            
+            // Safety timeout
+            setTimeout(() => {
+                hideTableLoading();
+            }, 5000);
+        });
+    });
+});
+
+// Table loading functions (existing, keep these)
 function showTableLoading() {
     document.getElementById('loadingRow').style.display = '';
     if (document.getElementById('noDataRow')) {
@@ -674,168 +1066,105 @@ function hideTableLoading() {
     }
 }
 
-            // Display the success or error message
-            var successMessage = document.getElementById("successMessage");
-            if (successMessage) {
-                successMessage.style.display = "inline-block";
-                setTimeout(function () {
-                    successMessage.style.display = "none";
-                }, 8000);
-            }
+// Update the existing table structure to include the loading row
+// Make sure you have this in your HTML:
+// <tr id="loadingRow" style="display: none;"><td colspan="10">Loading...</td></tr>
 
-            var errorMessage = document.getElementById("errorMessage");
-            if (errorMessage) {
-                errorMessage.style.display = "inline-block";
-                setTimeout(function () {
-                    errorMessage.style.display = "none";
-                }, 8000);
-            }
+// Auto-hide global loading if page takes too long (safety measure)
+setTimeout(() => {
+    hideGlobalLoading();
+}, 15000); // 15 second timeout for safety
 
-            function buildQueryString(params) {
-                const urlParams = new URLSearchParams();
-                
-                // Add existing parameters
-                <?php 
-                $currentParams = $_GET;
-                unset($currentParams['page']); // Remove page as we'll add it separately
-                foreach ($currentParams as $key => $value): 
-                ?>
-                    urlParams.set('<?php echo htmlspecialchars($key); ?>', '<?php echo htmlspecialchars($value); ?>');
-                <?php endforeach; ?>
-                
-                // Add new parameters
-                for (const key in params) {
-                    urlParams.set(key, params[key]);
-                }
-                
-                return urlParams.toString();
-            }
+// ================================
+// URL PARAMETER HANDLING (keep existing)
+// ================================
 
-            function resetFilters() {
-                // Redirect to the page with default parameters (page 1, no filters)
-                window.location.href = 'applications.php';
-            }
-
-            function updateSort(field) {
-                var sortValue = document.getElementById("sortDropdown").value;
-                if (sortValue === "") return; // Don't do anything if "Sort Order" is selected
-                
-                var url = new URL(window.location.href);
-                url.searchParams.set('sort', sortValue);
-                url.searchParams.set('sort_by', field);
-                url.searchParams.set('page', 1); // Reset to page 1
-                window.location.href = url.toString();
-            }
-
-            function applyTableFilter(selectElement) {
-                    showTableLoading();
-
-                const name = selectElement.name;
-                const value = selectElement.value;
-                
-                var url = new URL(window.location.href);
-                
-                if (value) {
-                    url.searchParams.set(name, value);
-                } else {
-                    url.searchParams.delete(name);
-                }
-                
-                // Reset to page 1 when filtering
-                url.searchParams.set('page', 1);
-                
-                // Remove sort parameters if not sorting by application_id
-                if (name !== 'sort') {
-                    url.searchParams.delete('sort');
-                    url.searchParams.delete('sort_by');
-                }
-                
-                window.location.href = url.toString();
-            }
-
-// Function to show reject dialog with reason input
-function showRejectDialog(applicationId) {
-    console.log('=== DEBUG: showRejectDialog called ===');
-    console.log('Parameter received:', applicationId);
-    console.log('Type of parameter:', typeof applicationId);
+function buildQueryString(params) {
+    const urlParams = new URLSearchParams();
     
-    // Check if it's a valid number
-    if (isNaN(applicationId) || applicationId <= 0) {
-        console.error('Invalid application ID:', applicationId);
-        alert('Error: Invalid application ID');
-        return;
+    // Add existing parameters
+    <?php 
+    $currentParams = $_GET;
+    unset($currentParams['page']);
+    foreach ($currentParams as $key => $value): 
+    ?>
+        urlParams.set('<?php echo htmlspecialchars($key); ?>', '<?php echo htmlspecialchars($value); ?>');
+    <?php endforeach; ?>
+    
+    // Add new parameters
+    for (const key in params) {
+        urlParams.set(key, params[key]);
     }
     
-    const reason = prompt('Enter rejection reason (optional):\n\nThis will be included in the email notification.', '');
-    
-    if (reason !== null) { // User didn't click cancel
-        console.log('User entered reason:', reason);
-        console.log('Confirming rejection for ID:', applicationId);
-        
-        if (confirm(`Are you sure you want to reject application ID ${applicationId} and notify the applicant?`)) {
-            // Encode the reason for URL
-            const encodedReason = encodeURIComponent(reason);
-            console.log('Redirecting to reject_application.php with ID:', applicationId);
-            window.location.href = `../application_process/reject_application.php?id=${applicationId}&notify=yes&reason=${encodedReason}`;
-        } else {
-            console.log('User cancelled the rejection');
-        }
-    } else {
-        console.log('User cancelled the prompt');
-    }
+    return urlParams.toString();
 }
-            
-// Remove the old showRejectDialog function and use event delegation
-document.addEventListener('DOMContentLoaded', function() {
-        const paginationLinks = document.querySelectorAll('.pagination a');
-    paginationLinks.forEach(link => {
-        link.addEventListener('click', function(e) {
-            if (this.getAttribute('href') && !this.getAttribute('href').startsWith('#')) {
-                showTableLoading();
-            }
-        });
-    });
-    // Event delegation for reject with notify buttons
-    document.addEventListener('click', function(e) {
-        if (e.target.closest('.notify-reject-btn')) {
-            e.preventDefault();
-            const button = e.target.closest('.notify-reject-btn');
-            const applicationId = button.getAttribute('data-application-id');
-            
-            // Find the table row to get the displayed ID
-            const row = button.closest('tr');
-            const displayedId = row.querySelector('td:first-child').textContent.trim();
-            
-            console.log('Button clicked - Data ID:', applicationId, 'Displayed ID:', displayedId);
-            
-            if (applicationId !== displayedId) {
-                console.warn('MISMATCH: Data attribute differs from displayed ID!');
-            }
-            
-            const reason = prompt('Enter rejection reason (optional):\n\nThis will be included in the email notification.', '');
-            
-            if (reason !== null) {
-                if (confirm(`Are you sure you want to reject application ID ${applicationId} and notify the applicant?`)) {
-                    const encodedReason = encodeURIComponent(reason);
-                    window.location.href = `../application_process/reject_application.php?id=${applicationId}&notify=yes&reason=${encodedReason}`;
-                }
-            }
-        }
-        
-        // For reject without notify buttons
-        if (e.target.closest('.btn-reject[href*="reject_application.php"]')) {
-            const link = e.target.closest('.btn-reject[href*="reject_application.php"]');
-            const url = new URL(link.href);
-            const applicationId = url.searchParams.get('id');
-            
-            console.log('Reject without notify clicked - ID:', applicationId);
-            
-            if (!confirm('Are you sure you want to reject this application without notification?')) {
-                e.preventDefault();
-            }
-        }
-    });
-});
+
+function resetFilters() {
+    showGlobalLoading('Resetting all filters...');
+    setTimeout(() => {
+        window.location.href = 'applications.php';
+    }, 500);
+}
+
+function updateSort(field) {
+    var sortValue = document.getElementById("sortDropdown").value;
+    if (sortValue === "") return;
+    
+    showGlobalLoading('Sorting applications...');
+    
+    var url = new URL(window.location.href);
+    url.searchParams.set('sort', sortValue);
+    url.searchParams.set('sort_by', field);
+    url.searchParams.set('page', 1);
+    
+    setTimeout(() => {
+        window.location.href = url.toString();
+    }, 500);
+}
+
+function applyTableFilter(selectElement) {
+    showGlobalLoading('Applying filter...');
+    showTableLoading();
+    
+    const name = selectElement.name;
+    const value = selectElement.value;
+    
+    var url = new URL(window.location.href);
+    
+    if (value) {
+        url.searchParams.set(name, value);
+    } else {
+        url.searchParams.delete(name);
+    }
+    
+    url.searchParams.set('page', 1);
+    
+    if (name !== 'sort') {
+        url.searchParams.delete('sort');
+        url.searchParams.delete('sort_by');
+    }
+    
+    setTimeout(() => {
+        window.location.href = url.toString();
+    }, 500);
+}
+
+// Display the success or error message (keep existing)
+var successMessage = document.getElementById("successMessage");
+if (successMessage) {
+    successMessage.style.display = "inline-block";
+    setTimeout(function () {
+        successMessage.style.display = "none";
+    }, 8000);
+}
+
+var errorMessage = document.getElementById("errorMessage");
+if (errorMessage) {
+    errorMessage.style.display = "inline-block";
+    setTimeout(function () {
+        errorMessage.style.display = "none";
+    }, 8000);
+}
         </script>
     </div>
 </div>

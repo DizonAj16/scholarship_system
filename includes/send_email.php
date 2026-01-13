@@ -127,7 +127,7 @@ function sendApplicationSubmissionEmail($applicantEmail, $applicantName, $applic
     }
 }
 
-function sendApprovalEmail($applicantEmail, $applicantName, $applicationId = '', $scholarshipGrant = '')
+function sendApprovalEmail($applicantEmail, $applicantName, $scholarshipGrant, $applicationStatus = '', $applicationId = '')
 {
     $mail = new PHPMailer(true);
 
@@ -147,7 +147,7 @@ function sendApprovalEmail($applicantEmail, $applicantName, $applicationId = '',
 
         // Content
         $mail->isHTML(true);
-        $mail->Subject = 'Congratulations! Your Scholarship Application Has Been Approved';
+        $mail->Subject = "Scholarship Application Approved - $scholarshipGrant";
 
         // Build application details if provided
         $applicationDetails = '';
@@ -156,6 +156,7 @@ function sendApprovalEmail($applicantEmail, $applicantName, $applicationId = '',
                 <h4>Application Details</h4>
                 <p><strong>Application ID:</strong> $applicationId</p>
                 <p><strong>Scholarship Grant:</strong> $scholarshipGrant</p>
+                <p><strong>Previous Status:</strong> " . htmlspecialchars($applicationStatus) . "</p>
                 <p><strong>Approval Date:</strong> " . date('F j, Y, g:ia') . "</p>
             </div>";
         }
@@ -180,7 +181,15 @@ function sendApprovalEmail($applicantEmail, $applicantName, $applicationId = '',
                     
                     <h4>Current Status: <span class='status-badge' style='background-color: #28a745;'>APPROVED</span></h4>
                     
-                    <p>Congratulations on this achievement! The Scholarship Committee has reviewed your application and determined that you meet all the necessary criteria.</p>
+                    <p>Congratulations on this achievement! The Scholarship Committee has reviewed your application for the <strong>$scholarshipGrant</strong> and determined that you meet all the necessary criteria.</p>
+                    
+                    <div class='section-title'>Scholarship Details</div>
+                    <ul>
+                        <li><strong>Grant Type:</strong> $scholarshipGrant</li>
+                        <li><strong>Status:</strong> Approved</li>
+                        <li><strong>Decision Date:</strong> " . date('F j, Y') . "</li>
+                        <li><strong>Notification:</strong> Official approval notification</li>
+                    </ul>
                     
                     <div class='section-title'>Next Steps for Awardees</div>
                     <ol>
@@ -192,7 +201,7 @@ function sendApprovalEmail($applicantEmail, $applicantName, $applicationId = '',
                     
                     <div class='section-title'>Important Information</div>
                     <ul>
-                        <li>Scholarship benefits are subject to compliance with all terms and conditions</li>
+                        <li>Scholarship benefits for <strong>$scholarshipGrant</strong> are subject to compliance with all terms and conditions</li>
                         <li>You must maintain satisfactory academic performance</li>
                         <li>Any changes in your enrollment status must be reported immediately</li>
                         <li>Scholarship may be revoked for violations of university policies</li>
@@ -200,7 +209,7 @@ function sendApprovalEmail($applicantEmail, $applicantName, $applicationId = '',
                     
                     <div class='contact-info'>
                         <h5>Scholarship Office Contact</h5>
-                        <p>If you have any questions about your award, please contact:<br>
+                        <p>If you have any questions about your award for <strong>$scholarshipGrant</strong>, please contact:<br>
                         <strong>ZPPSU Scholarship Office</strong><br>
                         Email: zppsuscholarshipoffice@gmail.com<br>
                         Office Hours: Monday-Friday, 8:00 AM - 5:00 PM</p>
@@ -230,7 +239,7 @@ function sendApprovalEmail($applicantEmail, $applicantName, $applicationId = '',
     }
 }
 
-function sendPendingEmail($applicantEmail, $applicantName, $applicationId = '', $scholarshipGrant = '')
+function sendPendingEmail($applicantEmail, $applicantName, $scholarshipGrant, $applicationId = '')
 {
     $mail = new PHPMailer(true);
 
@@ -250,7 +259,7 @@ function sendPendingEmail($applicantEmail, $applicantName, $applicationId = '', 
 
         // Content
         $mail->isHTML(true);
-        $mail->Subject = 'Scholarship Application Status Update - Pending Review';
+        $mail->Subject = "Scholarship Application Status Update - $scholarshipGrant";
 
         // Build application details if provided
         $applicationDetails = '';
@@ -283,9 +292,9 @@ function sendPendingEmail($applicantEmail, $applicantName, $applicationId = '', 
                     
                     <h4>Current Status: <span class='status-badge' style='background-color: #ff9800;'>PENDING REVIEW</span></h4>
                     
-                    <p>The Scholarship Committee is currently reviewing all applications. This status update means your application is in queue for evaluation.</p>
+                    <p>The Scholarship Committee is currently reviewing your application for the <strong>$scholarshipGrant</strong>. This status update means your application is in queue for evaluation.</p>
                     
-                    <div class='section-title'>Review Process Timeline</div>
+                    <div class='section-title'>Review Process for $scholarshipGrant</div>
                     <ul>
                         <li><strong>Stage 1:</strong> Initial documentation check (1-2 weeks)</li>
                         <li><strong>Stage 2:</strong> Eligibility verification (1-2 weeks)</li>
@@ -296,19 +305,19 @@ function sendPendingEmail($applicantEmail, $applicantName, $applicationId = '', 
                     <div class='section-title'>What You Can Do</div>
                     <ul>
                         <li>Ensure your contact information is current in our system</li>
-                        <li>Check your email regularly for updates</li>
+                        <li>Check your email regularly for updates regarding <strong>$scholarshipGrant</strong></li>
                         <li>Be prepared to provide additional information if requested</li>
                         <li>Monitor your application status through the portal</li>
                     </ul>
                     
                     <div class='contact-info'>
                         <h5>Contact Information</h5>
-                        <p>If you need to update your application or have questions:<br>
+                        <p>If you need to update your application or have questions about <strong>$scholarshipGrant</strong>:<br>
                         <strong>ZPPSU Scholarship Office</strong><br>
                         Email: zppsuscholarshipoffice@gmail.com</p>
                     </div>
                     
-                    <p>We appreciate your patience as we carefully review all applications. You will be notified as soon as a decision is made.</p>
+                    <p>We appreciate your patience as we carefully review all applications. You will be notified as soon as a decision is made on your <strong>$scholarshipGrant</strong> application.</p>
                     
                     <a href='http://yourwebsite.com/my_applications.php' class='button'>Check Your Application Status</a>
                 </div>
@@ -332,7 +341,7 @@ function sendPendingEmail($applicantEmail, $applicantName, $applicationId = '', 
     }
 }
 
-function sendRejectionEmail($applicantEmail, $applicantName, $rejectionReason = '', $applicationId = '', $scholarshipGrant = '')
+function sendRejectionEmail($applicantEmail, $applicantName, $rejectionReason, $scholarshipGrant, $applicationId = '')
 {
     $mail = new PHPMailer(true);
 
@@ -352,7 +361,7 @@ function sendRejectionEmail($applicantEmail, $applicantName, $rejectionReason = 
 
         // Content
         $mail->isHTML(true);
-        $mail->Subject = 'Scholarship Application Status Update';
+        $mail->Subject = "Scholarship Application Decision - $scholarshipGrant";
 
         // Build rejection reason section
         $reasonSection = '';
@@ -388,26 +397,34 @@ function sendRejectionEmail($applicantEmail, $applicantName, $rejectionReason = 
                 <div class='content'>
                     <h3>Dear $applicantName,</h3>
                     
-                    <p>After careful review by the Scholarship Committee, we regret to inform you that your application has been marked as <strong>NOT QUALIFIED</strong> for this cycle.</p>
+                    <p>After careful review by the Scholarship Committee, we regret to inform you that your application for <strong>$scholarshipGrant</strong> has been marked as <strong>NOT QUALIFIED</strong> for this cycle.</p>
                     
                     $applicationDetails
                     $reasonSection
                     
                     <h4>Current Status: <span class='status-badge' style='background-color: #dc3545;'>NOT QUALIFIED</span></h4>
                     
-                    <p>We understand this news may be disappointing and want to assure you that all applications undergo thorough evaluation based on established criteria.</p>
+                    <p>We understand this news may be disappointing and want to assure you that your application for <strong>$scholarshipGrant</strong> underwent thorough evaluation based on established criteria.</p>
+                    
+                    <div class='section-title'>Details of $scholarshipGrant Application</div>
+                    <ul>
+                        <li><strong>Grant Type:</strong> $scholarshipGrant</li>
+                        <li><strong>Status:</strong> Not Qualified</li>
+                        <li><strong>Review Date:</strong> " . date('F j, Y') . "</li>
+                        <li><strong>Eligibility:</strong> Did not meet current criteria</li>
+                    </ul>
                     
                     <div class='section-title'>Future Opportunities</div>
                     <ul>
-                        <li>New scholarship cycles are announced each semester</li>
-                        <li>You may reapply for future scholarship opportunities</li>
-                        <li>Consider exploring other financial aid options</li>
-                        <li>Check our website regularly for new programs</li>
+                        <li>New scholarship cycles for <strong>$scholarshipGrant</strong> are announced each semester</li>
+                        <li>You may reapply for future $scholarshipGrant opportunities</li>
+                        <li>Consider exploring other financial aid options at ZPPSU</li>
+                        <li>Check our website regularly for new programs and grants</li>
                     </ul>
                     
                     <div class='section-title'>Improving Your Application</div>
                     <ul>
-                        <li>Ensure all required documents are complete and legible</li>
+                        <li>Ensure all required documents for <strong>$scholarshipGrant</strong> are complete and legible</li>
                         <li>Submit applications before the deadline</li>
                         <li>Provide accurate and up-to-date information</li>
                         <li>Follow all application instructions carefully</li>
@@ -415,13 +432,13 @@ function sendRejectionEmail($applicantEmail, $applicantName, $rejectionReason = 
                     
                     <div class='contact-info'>
                         <h5>Feedback and Inquiries</h5>
-                        <p>If you would like feedback on your application or have questions:<br>
+                        <p>If you would like feedback on your <strong>$scholarshipGrant</strong> application or have questions:<br>
                         <strong>ZPPSU Scholarship Office</strong><br>
                         Email: zppsuscholarshipoffice@gmail.com<br>
                         Office Hours: Monday-Friday, 8:00 AM - 5:00 PM</p>
                     </div>
                     
-                    <p>We appreciate your interest in ZPPSU scholarships and encourage you to apply for future opportunities.</p>
+                    <p>We appreciate your interest in ZPPSU scholarships and encourage you to apply for future opportunities, including <strong>$scholarshipGrant</strong> in upcoming cycles.</p>
                     
                     <a href='http://yourwebsite.com/scholarship_form.php' class='button' style='background-color: #6c757d;'>View Other Scholarship Opportunities</a>
                 </div>
@@ -446,7 +463,7 @@ function sendRejectionEmail($applicantEmail, $applicantName, $rejectionReason = 
 }
 
 // Optional: Function to send a generic notification email
-function sendGenericNotificationEmail($applicantEmail, $applicantName, $subject, $message, $applicationId = '')
+function sendGenericNotificationEmail($applicantEmail, $applicantName, $subject, $message, $applicationId = '', $scholarshipGrant = '')
 {
     $mail = new PHPMailer(true);
 
@@ -471,9 +488,12 @@ function sendGenericNotificationEmail($applicantEmail, $applicantName, $subject,
         // Build application details if provided
         $applicationDetails = '';
         if (!empty($applicationId)) {
+            $grantInfo = !empty($scholarshipGrant) ? "<p><strong>Scholarship Grant:</strong> $scholarshipGrant</p>" : "";
             $applicationDetails = "<div class='info-box'>
                 <h4>Application Reference</h4>
                 <p><strong>Application ID:</strong> $applicationId</p>
+                $grantInfo
+                <p><strong>Notification Date:</strong> " . date('F j, Y, g:ia') . "</p>
             </div>";
         }
 

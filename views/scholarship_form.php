@@ -511,16 +511,32 @@ if (empty($sem_sy_list)) {
     die();
 }
 
-if (isset($_SESSION['success_message'])) {
-    echo "<div id='successMessage' class='alert success'>{$_SESSION['success_message']}</div>";
-    unset($_SESSION['success_message']);
-}
-if (isset($_SESSION['error_message'])) {
-    echo "<div id='errorMessage' class='alert error'>{$_SESSION['error_message']}</div>";
-    unset($_SESSION['error_message']);
-}
 ?>
+<?php if (isset($_SESSION['success_message'])): ?>
+    <div id='successMessage' class='alert success'>
+        <i class='fas fa-check-circle'></i>
+        <div class='alert-content'>
+            <div class='alert-title'>Success!</div>
+            <div class='alert-message'><?php echo htmlspecialchars($_SESSION['success_message']); ?></div>
+        </div>
+        <button class='alert-close' onclick="this.parentElement.classList.add('dismissing')">&times;</button>
+        <div class='alert-progress'></div>
+    </div>
+    <?php unset($_SESSION['success_message']); ?>
+<?php endif; ?>
 
+<?php if (isset($_SESSION['error_message'])): ?>
+    <div id='errorMessage' class='alert error'>
+        <i class='fas fa-exclamation-triangle'></i>
+        <div class='alert-content'>
+            <div class='alert-title'>Error!</div>
+            <div class='alert-message'><?php echo htmlspecialchars($_SESSION['error_message']); ?></div>
+        </div>
+        <button class='alert-close' onclick="this.parentElement.classList.add('dismissing')">&times;</button>
+        <div class='alert-progress'></div>
+    </div>
+    <?php unset($_SESSION['error_message']); ?>
+<?php endif; ?>
 <!DOCTYPE html>
 <html lang="en">
 
@@ -568,7 +584,8 @@ if (isset($_SESSION['error_message'])) {
             font-size: 40px;
             opacity: 0.2;
         }
-/* 
+
+        /* 
         h1.text-center::after {
             content: '📝';
             position: absolute;
@@ -3790,22 +3807,64 @@ if (isset($_SESSION['error_message'])) {
             // Update folder name preview initially
             updateFolderNamePreview();
 
-            // Handle success/error messages
-            var successMessage = document.getElementById("successMessage");
-            var errorMessage = document.getElementById("errorMessage");
+            // Auto-dismiss alerts after 5 seconds
+            const alerts = document.querySelectorAll('.alert');
 
-            if (successMessage) {
-                setTimeout(function () {
-                    successMessage.style.display = "none";
+            alerts.forEach(alert => {
+                // Auto dismiss after 5 seconds
+                setTimeout(() => {
+                    if (alert && alert.parentNode) {
+                        alert.classList.add('dismissing');
+                        setTimeout(() => {
+                            if (alert && alert.parentNode) {
+                                alert.parentNode.removeChild(alert);
+                            }
+                        }, 500);
+                    }
                 }, 5000);
-            }
 
-            if (errorMessage) {
-                setTimeout(function () {
-                    errorMessage.style.display = "none";
-                }, 5000);
-            }
+                // Handle close button click
+                const closeBtn = alert.querySelector('.alert-close');
+                if (closeBtn) {
+                    closeBtn.addEventListener('click', function () {
+                        alert.classList.add('dismissing');
+                        setTimeout(() => {
+                            if (alert && alert.parentNode) {
+                                alert.parentNode.removeChild(alert);
+                            }
+                        }, 500);
+                    });
+                }
 
+                // Pause auto-dismiss on hover
+                alert.addEventListener('mouseenter', function () {
+                    const progress = this.querySelector('.alert-progress');
+                    if (progress) {
+                        progress.style.animationPlayState = 'paused';
+                    }
+                });
+
+                alert.addEventListener('mouseleave', function () {
+                    const progress = this.querySelector('.alert-progress');
+                    if (progress) {
+                        progress.style.animationPlayState = 'running';
+                    }
+                });
+            });
+
+            // Remove dismissing alerts after animation
+            const style = document.createElement('style');
+            style.textContent = `
+        .alert.dismissing {
+            animation: slideOutRight 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards !important;
+        }
+        
+        .alert.dismissing .alert-progress {
+            animation-play-state: paused !important;
+            opacity: 0;
+        }
+    `;
+            document.head.appendChild(style);
             // Calculate age if date of birth is pre-filled
             const dobInput = document.getElementById('date_of_birth');
             if (dobInput && dobInput.value) {
